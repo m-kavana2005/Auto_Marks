@@ -143,6 +143,37 @@ export const endpoints = {
       student_name: s.student_name,
     };
   },
+  searchStudents: async (q: string, limit = 10): Promise<Array<{ usn: string; student_name: string; batch?: string; branch?: string }>> => {
+    return apiFetch('/student/search', { params: { q, limit } });
+  },
+  createStudent: async (data: { usn: string; student_name: string; batch: string; branch: string }): Promise<Student> => {
+    return apiFetch('/student', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+  addStudentSemester: async (
+    usn: string,
+    data: {
+      semester_number: number;
+      exam_month?: string;
+      exam_year?: number;
+      subjects: Array<{
+        subject_code: string;
+        subject_name: string;
+        credits?: number;
+        internal_marks?: number;
+        external_marks?: number;
+        total_marks?: number;
+        result_status?: string;
+      }>;
+    }
+  ): Promise<{ success: boolean; data: any }> => {
+    return apiFetch(`/student/${usn}/semester`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
   getResults: async (params: {
     usn?: string;
     semester?: number;
@@ -267,6 +298,12 @@ export const endpoints = {
       students_with_failures: res.students_with_failures ?? [],
     };
   },
+  getGradeDistribution: async (
+    semester: number,
+    opts?: { subject_code?: string; batch?: string; branch?: string; exam_year?: number; exam_month?: string }
+  ): Promise<Record<string, number>> => {
+    return apiFetch<Record<string, number>>(`/analytics/grade-distribution/${semester}`, { params: opts });
+  },
   getOverallStatistics: async (opts?: { batch?: string; branch?: string }) => {
     const res = await apiFetch<any>('/analytics/overall-statistics', { params: opts });
     return {
@@ -294,11 +331,15 @@ export const endpoints = {
     return apiFetch<string[]>('/meta/branches', { params: { batch } });
   },
 
+  getSemesters: async (batch?: string, branch?: string): Promise<number[]> => {
+    return apiFetch<number[]>('/meta/semesters', { params: { batch, branch } });
+  },
+
   getBatches: async (): Promise<string[]> => {
     return apiFetch<string[]>('/meta/batches');
   },
-  getSubjects: async (): Promise<Array<{ code: string; name: string }>> => {
-    return apiFetch<Array<{ code: string; name: string }>>('/meta/subjects');
+  getSubjects: async (batch?: string, semester?: number, branch?: string): Promise<Array<{ code: string; name: string }>> => {
+    return apiFetch<Array<{ code: string; name: string }>>('/meta/subjects', { params: { batch, semester, branch } });
   },
 
   getSubjectsWithCredits: async (): Promise<Array<{ code: string; name: string; credits?: number | null }>> => {
@@ -330,14 +371,39 @@ export const endpoints = {
   },
   exportUrl: (
     format: 'excel' | 'csv',
-    opts?: { semester?: number; batch?: string; branch?: string }
+    opts?: {
+      semester?: number;
+      batch?: string;
+      branch?: string;
+      usn?: string;
+      exam_year?: number;
+      exam_month?: string;
+      subject_code?: string;
+    }
   ) => {
     const params: Record<string, string> = {};
     if (opts?.semester !== undefined) params.semester = String(opts.semester);
     if (opts?.batch) params.batch = String(opts.batch);
     if (opts?.branch) params.branch = String(opts.branch);
+    if (opts?.usn) params.usn = String(opts.usn);
+    if (opts?.exam_year !== undefined) params.exam_year = String(opts.exam_year);
+    if (opts?.exam_month) params.exam_month = String(opts.exam_month);
+    if (opts?.subject_code) params.subject_code = String(opts.subject_code);
+
     const q = new URLSearchParams(params).toString();
     return `${API_BASE}/export/${format}${q ? `?${q}` : ''}`;
+  },
+  updateStudentResult: async (
+    usn: string,
+    subjectCode: string,
+    semester: number,
+    data: { internal_marks?: number; external_marks?: number; total_marks?: number; result_status?: string }
+  ): Promise<Result> => {
+    // Note: The backend expects 'subjectId' but treats it as subject_code logic.
+    return apiFetch(`/student/${usn}/subject/${subjectCode}?semester=${semester}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
   },
   deleteResult: async (resultId: number): Promise<{ message: string }> => {
     return apiFetch(`/results/${resultId}`, { method: 'DELETE' });

@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VTU Insight | Results Management</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -14,12 +19,24 @@
     body {
       font-family: 'Inter', sans-serif;
       background-color: #f8fafc;
+      transition: background-color 0.3s;
+    }
+
+    html.dark body {
+      background-color: #020617;
+      color: #e2e8f0;
     }
 
     .glass-card {
       background: rgba(255, 255, 255, 0.8);
       backdrop-filter: blur(12px);
       border: 1px solid rgba(255, 255, 255, 0.3);
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+
+    html.dark .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     /* Custom scrollbar */

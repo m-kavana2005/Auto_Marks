@@ -20,10 +20,11 @@ import {
   Bell,
   ChevronRight,
   Settings,
-  Globe,
   CheckCircle2,
   AlertCircle,
-  Clock
+  Clock,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { endpoints, getApiBase, setApiBaseOverride } from './api/client';
 
@@ -44,7 +45,7 @@ const SidebarLink = ({ to, icon: Icon, label, active, onClick }: any) => (
     onClick={onClick}
     className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${active
       ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-      : 'text-slate-500 hover:bg-slate-100 hover:text-indigo-600'
+      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400'
       }`}
   >
     <Icon size={20} className={active ? 'text-white' : 'group-hover:scale-110 transition-transform'} />
@@ -221,7 +222,7 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
   );
 };
 
-const ApiSettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
+const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const [url, setUrl] = useState(getApiBase());
   const [subjects, setSubjects] = useState<Array<{ code: string; name: string; credits?: number | null }>>([]);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
@@ -376,8 +377,8 @@ const ApiSettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
       <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[85vh]">
         <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 bg-white">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600"><Globe size={24} /></div>
-            <h3 className="text-xl font-bold text-slate-900">API Connection</h3>
+            <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600"><Settings size={24} /></div>
+            <h3 className="text-xl font-bold text-slate-900">Settings</h3>
           </div>
           <button
             onClick={onClose}
@@ -603,10 +604,50 @@ const ApiSettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
   );
 };
 
+const ProfileDropdown = ({ isOpen, onClose, onOpenSettings }: { isOpen: boolean, onClose: () => void, onOpenSettings: () => void }) => {
+  if (!isOpen) return null;
+  return (
+    <>
+      <div className="fixed inset-0 z-[60]" onClick={onClose} />
+      <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[70] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+        <div className="p-5 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
+          <h4 className="font-bold text-slate-900 dark:text-white">Registrar</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Administrator</p>
+        </div>
+        <div className="p-2 space-y-1">
+          <button onClick={() => { onClose(); onOpenSettings(); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 transition-all text-sm font-bold">
+            <Settings size={18} />
+            Settings
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
 const AppLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isNotifOpen, setNotifOpen] = useState(false);
+  const [isProfileOpen, setProfileOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return localStorage.getItem('theme') || 'light';
+    }
+    return 'light';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
   const location = useLocation();
 
   const navItems = [
@@ -619,8 +660,8 @@ const AppLayout = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-slate-50 relative overflow-x-hidden">
-      <ApiSettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950 relative overflow-x-hidden transition-colors duration-300">
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
@@ -629,14 +670,14 @@ const AppLayout = () => {
 
       {/* Sidebar - Strictly 64w on Desktop */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0
+        fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full p-6">
           <div className="flex items-center justify-between mb-10 px-2">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">V</div>
-              <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">VTU <span className="text-indigo-600">Insight</span></h1>
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">VTU <span className="text-indigo-600 dark:text-indigo-400">Insight</span></h1>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="md:hidden p-2 text-slate-400">
               <X size={20} />
@@ -654,21 +695,13 @@ const AppLayout = () => {
             ))}
           </nav>
 
-          <div className="mt-auto border-t border-slate-100 pt-6">
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-50 hover:text-indigo-600 transition-all group"
-            >
-              <Settings size={18} />
-              <span className="font-bold text-xs uppercase tracking-widest">Config</span>
-            </button>
-          </div>
+          <div className="mt-auto border-t border-slate-100 pt-6"></div>
         </div>
       </aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 max-w-full">
-        <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 md:px-6 py-4 flex items-center justify-between">
+        <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 md:px-6 py-4 flex items-center justify-between transition-colors duration-300">
           <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(true)}
@@ -676,12 +709,19 @@ const AppLayout = () => {
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-lg font-bold text-slate-800 md:hidden">
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 md:hidden">
               {navItems.find(i => i.to === location.pathname)?.label || 'VTU Insight'}
             </h2>
           </div>
 
           <div className="flex items-center gap-3 sm:gap-4">
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-slate-800 rounded-xl transition-all"
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
             <div className="relative">
               <button
                 onClick={() => setNotifOpen(!isNotifOpen)}
@@ -695,16 +735,23 @@ const AppLayout = () => {
 
             <div className="h-8 w-px bg-slate-200 mx-1 hidden sm:block"></div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-slate-900 leading-none">Registrar</p>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Administrator</p>
-              </div>
-              <img
-                src="/student-avatar.svg"
-                alt="Avatar"
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-slate-200 bg-white shadow-sm object-cover"
-              />
+            <div className="relative">
+              <button
+                onClick={() => setProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-3 p-1 pr-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200"
+              >
+                <img
+                  src="/student-avatar.svg"
+                  alt="Avatar"
+                  className="w-8 h-8 rounded-lg object-cover bg-indigo-100"
+                />
+                <div className="text-left hidden sm:block">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white leading-none">Registrar</p>
+                  <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">Admin</p>
+                </div>
+                <ChevronRight size={14} className={`text-slate-400 transition-transform ${isProfileOpen ? 'rotate-90' : ''}`} />
+              </button>
+              <ProfileDropdown isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} onOpenSettings={() => setSettingsOpen(true)} />
             </div>
           </div>
         </header>

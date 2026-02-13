@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM Models
+SQLAlchemy ORM Models — PostgreSQL
 """
 import enum
 
@@ -9,7 +9,6 @@ from sqlalchemy import (
     String,
     DateTime,
     ForeignKey,
-    Enum,
     Date,
     Text,
     Boolean,
@@ -79,9 +78,9 @@ class Result(Base):
     __tablename__ = "results"
     __table_args__ = (
         UniqueConstraint("student_id", "semester_id", "subject_id", name="uq_result_student_sem_subject"),
-        CheckConstraint("internal_marks IS NULL OR (internal_marks >= 0 AND internal_marks <= 50)", name="ck_internal_marks_range"),
-        CheckConstraint("external_marks IS NULL OR (external_marks >= 0 AND external_marks <= 100)", name="ck_external_marks_range"),
-        CheckConstraint("total_marks IS NULL OR (total_marks >= 0 AND total_marks <= 200)", name="ck_total_marks_range"),
+        CheckConstraint("internal_marks IS NULL OR (internal_marks >= 0 AND internal_marks <= 100)", name="ck_internal_marks_range"),
+        CheckConstraint("external_marks IS NULL OR (external_marks >= 0 AND external_marks <= 200)", name="ck_external_marks_range"),
+        CheckConstraint("total_marks IS NULL OR (total_marks >= 0 AND total_marks <= 300)", name="ck_total_marks_range"),
     )
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -115,7 +114,8 @@ class UploadLog(Base):
     failed_files = Column(Integer, default=0)
     current_file = Column(String(255), nullable=True)  # Currently processing file
     current_file_index = Column(Integer, default=0)  # Index of current file
-    status = Column(Enum(UploadStatus), default=UploadStatus.PENDING, index=True)
+    # Using String instead of DB-level ENUM for cross-database portability
+    status = Column(String(20), default=UploadStatus.PENDING.value, index=True)
     error_log = Column(Text)
     upload_timestamp = Column(DateTime(timezone=True), server_default=func.now())
     completed_timestamp = Column(DateTime(timezone=True))

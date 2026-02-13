@@ -1,119 +1,153 @@
 -- VTU Results Database Schema
--- MySQL Database Schema for VTU Student Results Management System
--- Run this script in MySQL terminal to set up the database
+-- PostgreSQL Database Schema for VTU Student Results Management System
+-- Run this script in psql terminal to set up the database
 
 -- INSTRUCTIONS TO RUN IN TERMINAL:
--- 1. Open Command Prompt/Terminal
--- 2. Connect to MySQL: mysql -u root -p
--- 3. Enter your MySQL root password when prompted
--- 4. Create database: CREATE DATABASE IF NOT EXISTS vtu_results;
--- 5. Use database: USE vtu_results;
--- 6. Run this file: SOURCE sql/schema.sql;
--- 7. Verify: SHOW TABLES;
--- 8. Exit: EXIT;
+-- 1. Open Terminal
+-- 2. Connect to PostgreSQL: psql -U postgres
+-- 3. Enter your PostgreSQL password when prompted
+-- 4. Create database: CREATE DATABASE vtu_results;
+-- 5. Connect to database: \c vtu_results
+-- 6. Run this file: \i sql/schema.sql
+-- 7. Verify: \dt
+-- 8. Exit: \q
+
+-- Drop existing views first (depends on tables)
+DROP VIEW IF EXISTS vw_subject_statistics;
+DROP VIEW IF EXISTS vw_semester_summary;
+DROP VIEW IF EXISTS vw_student_results;
 
 -- Drop existing tables if they exist (in correct order due to foreign keys)
-DROP TABLE IF EXISTS results;
-DROP TABLE IF EXISTS subjects;
-DROP TABLE IF EXISTS students;
-DROP TABLE IF EXISTS semesters;
-DROP TABLE IF EXISTS upload_logs;
-DROP TABLE IF EXISTS notifications;
+DROP TABLE IF EXISTS results CASCADE;
+DROP TABLE IF EXISTS subjects CASCADE;
+DROP TABLE IF EXISTS students CASCADE;
+DROP TABLE IF EXISTS semesters CASCADE;
+DROP TABLE IF EXISTS upload_logs CASCADE;
+DROP TABLE IF EXISTS notifications CASCADE;
 
 -- Create Students table
 CREATE TABLE students (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     usn VARCHAR(20) UNIQUE NOT NULL,
     student_name VARCHAR(255) NOT NULL,
     batch VARCHAR(9),
     branch VARCHAR(10),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX idx_usn (usn),
-    INDEX idx_student_name (student_name),
-    INDEX idx_batch (batch),
-    INDEX idx_branch (branch)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_students_usn ON students (usn);
+CREATE INDEX idx_students_student_name ON students (student_name);
+CREATE INDEX idx_students_batch ON students (batch);
+CREATE INDEX idx_students_branch ON students (branch);
 
 -- Create Semesters table
 CREATE TABLE semesters (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     semester_number INT NOT NULL,
     exam_month VARCHAR(50),
     exam_year INT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_semester (semester_number),
-    UNIQUE KEY unique_semester (semester_number, exam_month, exam_year)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (semester_number, exam_month, exam_year)
+);
+
+CREATE INDEX idx_semesters_semester_number ON semesters (semester_number);
 
 -- Create Subjects table
 CREATE TABLE subjects (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     subject_code VARCHAR(20) UNIQUE NOT NULL,
     subject_name VARCHAR(500) NOT NULL,
     credits INT DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_subject_code (subject_code)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_subjects_subject_code ON subjects (subject_code);
 
 -- Create Results table
 CREATE TABLE results (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT NOT NULL,
-    semester_id INT NOT NULL,
-    subject_id INT NOT NULL,
+    id SERIAL PRIMARY KEY,
+    student_id INT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    semester_id INT NOT NULL REFERENCES semesters(id) ON DELETE CASCADE,
+    subject_id INT NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
     internal_marks INT DEFAULT NULL,
     external_marks INT DEFAULT NULL,
     total_marks INT DEFAULT NULL,
     upload_batch_id VARCHAR(50) DEFAULT NULL,
     result_status VARCHAR(4) DEFAULT NULL,
     announced_date DATE DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
-    FOREIGN KEY (semester_id) REFERENCES semesters(id) ON DELETE CASCADE,
-    FOREIGN KEY (subject_id) REFERENCES subjects(id) ON DELETE CASCADE,
-    INDEX idx_student (student_id),
-    INDEX idx_semester (semester_id),
-    INDEX idx_subject (subject_id),
-    INDEX idx_result_status (result_status),
-    INDEX idx_upload_batch (upload_batch_id),
-    UNIQUE KEY unique_result (student_id, semester_id, subject_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (student_id, semester_id, subject_id),
+    CONSTRAINT ck_internal_marks_range CHECK (internal_marks IS NULL OR (internal_marks >= 0 AND internal_marks <= 50)),
+    CONSTRAINT ck_external_marks_range CHECK (external_marks IS NULL OR (external_marks >= 0 AND external_marks <= 50)),
+    CONSTRAINT ck_total_marks_range CHECK (total_marks IS NULL OR (total_marks >= 0 AND total_marks <= 100))
+);
+
+CREATE INDEX idx_results_student_id ON results (student_id);
+CREATE INDEX idx_results_semester_id ON results (semester_id);
+CREATE INDEX idx_results_subject_id ON results (subject_id);
+CREATE INDEX idx_results_result_status ON results (result_status);
+CREATE INDEX idx_results_upload_batch_id ON results (upload_batch_id);
 
 -- Create Upload Logs table (to track batch uploads)
 CREATE TABLE upload_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     batch_id VARCHAR(50) UNIQUE NOT NULL,
     total_files INT DEFAULT 0,
     processed_files INT DEFAULT 0,
     failed_files INT DEFAULT 0,
     current_file VARCHAR(255) DEFAULT NULL,
     current_file_index INT DEFAULT 0,
-    status ENUM('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED') DEFAULT 'PENDING',
+    status VARCHAR(20) DEFAULT 'PENDING',
     error_log TEXT,
-    upload_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_timestamp TIMESTAMP NULL,
-    INDEX idx_batch_id (batch_id),
-    INDEX idx_status (status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    upload_timestamp TIMESTAMPTZ DEFAULT NOW(),
+    completed_timestamp TIMESTAMPTZ
+);
+
+CREATE INDEX idx_upload_logs_batch_id ON upload_logs (batch_id);
+CREATE INDEX idx_upload_logs_status ON upload_logs (status);
 
 -- Create Notifications table
 CREATE TABLE notifications (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     detail TEXT DEFAULT NULL,
     level VARCHAR(20) NOT NULL DEFAULT 'info',
     cleared BOOLEAN NOT NULL DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_level (level),
-    INDEX idx_cleared (cleared),
-    INDEX idx_created_at (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_level ON notifications (level);
+CREATE INDEX idx_notifications_cleared ON notifications (cleared);
+CREATE INDEX idx_notifications_created_at ON notifications (created_at);
+
+-- ============================================
+-- Auto-update updated_at trigger (PostgreSQL)
+-- ============================================
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_students_updated_at
+    BEFORE UPDATE ON students
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER trg_results_updated_at
+    BEFORE UPDATE ON results
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ============================================
+-- Views
+-- ============================================
 
 -- Create a view for easy result retrieval with all details
 CREATE VIEW vw_student_results AS
-SELECT 
+SELECT
     st.usn,
     st.student_name,
     sem.semester_number,
@@ -134,7 +168,7 @@ JOIN subjects sub ON r.subject_id = sub.id;
 
 -- Create a view for semester-wise performance summary
 CREATE VIEW vw_semester_summary AS
-SELECT 
+SELECT
     st.usn,
     st.student_name,
     sem.semester_number,
@@ -153,7 +187,7 @@ GROUP BY st.id, sem.id, st.usn, st.student_name, sem.semester_number, sem.exam_m
 
 -- Create a view for subject-wise statistics
 CREATE VIEW vw_subject_statistics AS
-SELECT 
+SELECT
     sem.semester_number,
     sub.subject_code,
     sub.subject_name,
@@ -186,9 +220,7 @@ GROUP BY sem.semester_number, sub.id, sub.subject_code, sub.subject_name;
 -- SELECT DISTINCT usn, student_name FROM vw_student_results WHERE result_status = 'F';
 
 -- Query 5: Get top performers in a subject
--- SELECT usn, student_name, total_marks 
--- FROM vw_student_results 
--- WHERE subject_code = 'BCS501' 
+-- SELECT usn, student_name, total_marks
+-- FROM vw_student_results
+-- WHERE subject_code = 'BCS501'
 -- ORDER BY total_marks DESC LIMIT 10;
-
-COMMIT;

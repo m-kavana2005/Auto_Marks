@@ -51,21 +51,24 @@ const Analytics: React.FC = () => {
   const [topPerformers, setTopPerformers] = useState<TopPerformer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [gradeDistribution, setGradeDistribution] = useState<Record<string, number>>({});
 
   const fetchAnalytics = async () => {
     setIsLoading(true);
     setError(null);
     try {
       const batchOpts = batch || branch ? { batch, branch } : undefined;
-      // Parallel fetch to improve speed, but wrapped to handle global failure
-      const [stats, failures, tops] = await Promise.all([
+      // Parallel fetch to improve speed
+      const [stats, failures, tops, grades] = await Promise.all([
         endpoints.getSubjectStats(semester, batchOpts),
         endpoints.getFailureAnalysis(semester, batchOpts),
-        endpoints.getTopPerformers(semester, undefined, 10, { ...(batchOpts || {}), rank_by: 'sgpa' })
+        endpoints.getTopPerformers(semester, undefined, 10, { ...(batchOpts || {}), rank_by: 'sgpa' }),
+        endpoints.getGradeDistribution(semester, batchOpts)
       ]);
       setSubjectStats(stats);
       setFailureAnalysis(failures);
       setTopPerformers(tops);
+      setGradeDistribution(grades);
     } catch (err: any) {
       console.error("Analytics fetch failed:", err);
       setError(err.message || "Unable to load analytics data.");
@@ -436,6 +439,63 @@ const Analytics: React.FC = () => {
               <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl text-slate-400">
                 <AlertTriangle size={32} className="mb-2 opacity-20" />
                 <p className="font-bold">No Trend Data Available</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="glass-card rounded-[2.5rem] p-8 min-h-[400px] flex flex-col">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+              <Award size={20} />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900">Grade Distribution</h3>
+          </div>
+          <div className="h-[300px] flex-1">
+            {isLoading ? (
+              <div className="w-full h-full flex items-center justify-center bg-slate-50/50 rounded-2xl animate-pulse">
+                <BarChart3 size={32} className="text-slate-200" />
+              </div>
+            ) : Object.keys(gradeDistribution).length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={Object.entries(gradeDistribution).map(([grade, count]) => ({ grade, count }))}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis
+                    dataKey="grade"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 13, fontWeight: 800, fill: '#475569' }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: '#f8fafc' }}
+                    contentStyle={{ border: 'none', borderRadius: '16px', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', fontWeight: 'bold' }}
+                    formatter={(value: any) => [value, 'Students']}
+                  />
+                  <Bar dataKey="count" radius={[10, 10, 0, 0]} animationDuration={1800}>
+                    {Object.entries(gradeDistribution).map(([grade], index) => {
+                      const colors: Record<string, string> = {
+                        'O': '#10b981', // Emerald
+                        'S': '#3b82f6', // Blue
+                        'A': '#6366f1', // Indigo
+                        'B': '#8b5cf6', // Violet
+                        'C': '#a855f7', // Purple
+                        'D': '#f59e0b', // Amber
+                        'E': '#f43f5e', // Rose
+                        'F': '#64748b'  // Slate
+                      };
+                      return <Cell key={`cell-${index}`} fill={colors[grade] || '#cbd5e1'} />;
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-400 font-bold italic">
+                No grade results found for these filters.
               </div>
             )}
           </div>

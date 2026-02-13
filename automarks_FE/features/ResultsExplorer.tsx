@@ -14,13 +14,14 @@ import {
 } from 'lucide-react';
 import { endpoints, getApiBase } from '../api/client';
 import { Result } from '../types';
-import { getBatchOptions } from '../utils/batches';
 
 const ResultsExplorer: React.FC = () => {
   const [results, setResults] = useState<Result[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [branches, setBranches] = useState<string[]>([]);
+  const [batches, setBatches] = useState<string[]>([]);
+  const [semesters, setSemesters] = useState<number[]>([]);
   const [subjects, setSubjects] = useState<Array<{ code: string; name: string }>>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -56,21 +57,33 @@ const ResultsExplorer: React.FC = () => {
   }, [filters.skip, filters.limit, statusFilter]);
 
   useEffect(() => {
-    // Refresh branch options when batch changes
-    endpoints
-      .getBranches(filters.batch)
-      .then((res) => setBranches(res || []))
-      .catch(() => setBranches([]));
-    // Reset branch filter if batch changes
-    setFilters((f) => ({ ...f, branch: undefined }));
-  }, [filters.batch]);
+    // 0. Fetch Batches on mount
+    endpoints.getBatches().then((res) => setBatches(res || [])).catch(() => setBatches([]));
+  }, []);
 
   useEffect(() => {
+    // 1. Fetch Branches & Semesters when Batch (or Branch) changes
+    if (filters.batch) {
+      // Parallel fetch possible, but Branch usually depends only on Batch
+      endpoints.getBranches(filters.batch).then((res) => setBranches(res || [])).catch(() => setBranches([]));
+
+      // Semester might depend on Branch too (e.g. if a branch started late)
+      endpoints.getSemesters(filters.batch, filters.branch)
+        .then((res) => setSemesters(res || []))
+        .catch(() => setSemesters([]));
+    } else {
+      setBranches([]);
+      setSemesters([]);
+    }
+  }, [filters.batch, filters.branch]);
+
+  useEffect(() => {
+    // 2. Fetch Subjects when Batch, Semester, or Branch changes
     endpoints
-      .getSubjects()
+      .getSubjects(filters.batch, filters.semester, filters.branch)
       .then((res) => setSubjects(res || []))
       .catch(() => setSubjects([]));
-  }, []);
+  }, [filters.batch, filters.semester, filters.branch]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +110,26 @@ const ResultsExplorer: React.FC = () => {
     }
   };
 
+  const handleExport = () => {
+    const exportParams: any = {};
+    if (filters.batch) exportParams.batch = filters.batch;
+    if (filters.branch) exportParams.branch = filters.branch;
+    if (filters.semester) exportParams.semester = filters.semester;
+    if (filters.usn) exportParams.usn = filters.usn;
+    if (filters.subject_code) exportParams.subject_code = filters.subject_code;
+
+    const url = endpoints.exportUrl('excel', exportParams);
+
+    // Trigger download by creating a temporary link
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `results_export.xlsx`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -104,9 +137,20 @@ const ResultsExplorer: React.FC = () => {
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">Results Explorer</h2>
           <p className="text-slate-500 font-medium">Browse and filter granular result data for all students.</p>
         </div>
-        <button className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-2xl font-bold shadow-lg hover:bg-indigo-700 transition-all">
-          <Download size={18} /> Export Current View
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExport}
+            className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <Download className="mr-2 h-4 w-4" /> Export Current View
+          </button>
+          <button
+            onClick={handleSearch}
+            className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <RefreshCcw className="mr-2 h-4 w-4" /> Sync Records
+          </button>
+        </div>
       </div>
 
       <div className="glass-card p-4 rounded-[2rem] shadow-sm border border-slate-100 mb-6">
@@ -152,10 +196,13 @@ const ResultsExplorer: React.FC = () => {
               <select
                 className="w-full pl-7 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-700 shadow-sm cursor-pointer"
                 value={filters.semester || ''}
-                onChange={(e) => setFilters(f => ({ ...f, semester: e.target.value ? parseInt(e.target.value) : undefined }))}
+                onChange={(e) => {
+                  const val = e.target.value ? parseInt(e.target.value) : undefined;
+                  setFilters(f => ({ ...f, semester: val, subject_code: '' }));
+                }}
               >
                 <option value="">All</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>{s}</option>)}
+                {semesters.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
           </div>
@@ -188,10 +235,20 @@ const ResultsExplorer: React.FC = () => {
               <select
                 className="w-full pl-7 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-700 shadow-sm cursor-pointer"
                 value={filters.batch || ''}
-                onChange={(e) => setFilters((f) => ({ ...f, batch: e.target.value ? e.target.value : undefined }))}
+                onChange={(e) => {
+                  const val = e.target.value ? e.target.value : undefined;
+                  setFilters((f) => ({
+                    ...f,
+                    batch: val,
+                    // Reset dependent filters
+                    semester: undefined,
+                    branch: undefined,
+                    subject_code: ''
+                  }));
+                }}
               >
-                <option value="">All</option>
-                {getBatchOptions().map((b) => (
+                <option value="">Select Batch</option>
+                {batches.map((b) => (
                   <option key={b} value={b}>{b}</option>
                 ))}
               </select>
@@ -206,7 +263,10 @@ const ResultsExplorer: React.FC = () => {
               <select
                 className="w-full pl-7 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-700 shadow-sm cursor-pointer"
                 value={filters.branch || ''}
-                onChange={(e) => setFilters((f) => ({ ...f, branch: e.target.value ? e.target.value : undefined }))}
+                onChange={(e) => {
+                  const val = e.target.value ? e.target.value : undefined;
+                  setFilters((f) => ({ ...f, branch: val, subject_code: '' }));
+                }}
               >
                 <option value="">All</option>
                 {branches.map((b) => (

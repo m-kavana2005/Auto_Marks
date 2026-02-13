@@ -139,6 +139,32 @@ class ExtractedStudentResult(BaseModel):
     subjects: List[ExtractedSubjectResult]
 
 
+# Manual Entry Schemas
+class ManualSubjectResult(BaseModel):
+    subject_code: str
+    subject_name: str
+    credits: Optional[int] = 4
+    internal_marks: Optional[int] = Field(None, ge=0, le=100)
+    external_marks: Optional[int] = Field(None, ge=0, le=200)
+    total_marks: Optional[int] = Field(None, ge=0, le=300)
+    result_status: Optional[str] = None
+    announced_date: Optional[date] = None
+
+
+class ManualSemesterInput(BaseModel):
+    semester_number: int = Field(..., ge=1, le=8)
+    exam_month: Optional[str] = None
+    exam_year: Optional[int] = None
+    subjects: List[ManualSubjectResult]
+
+
+class ResultUpdate(BaseModel):
+    internal_marks: Optional[int] = Field(None, ge=0, le=100)
+    external_marks: Optional[int] = Field(None, ge=0, le=200)
+    total_marks: Optional[int] = Field(None, ge=0, le=300)
+    result_status: Optional[str] = None
+
+
 # Upload Log Schemas
 class UploadLogCreate(BaseModel):
     batch_id: str

@@ -8,7 +8,6 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional, Set
 import os
-import shutil
 import uuid
 from pathlib import Path
 from datetime import datetime, date
@@ -16,8 +15,9 @@ from dotenv import load_dotenv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import asyncio
 import json
+import aiofiles  # Added for async file operations
 from logging.handlers import RotatingFileHandler
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect, text, distinct, or_
 import pandas as pd
 
 from app.database import get_db, init_db, engine
@@ -26,9 +26,10 @@ from app.schemas import (
     StudentResponse, SubjectResponse, SemesterResponse, ResultResponse,
     StudentCreate, SubjectCreate, SemesterCreate, ResultCreate,
     APIResponse, BatchUploadResponse, ExtractedStudentResult,
-    SubjectStatistics, SemesterSummary
+    SubjectStatistics, SemesterSummary,
+    ManualSemesterInput, ResultUpdate
 )
-from app.services.extractor import extract_pdf, VTUResultExtractor
+from app.services.extractor import extract_pdf, VTUResultExtractor, _extract_branch_from_usn
 from app.services.analyzer import ResultAnalyzer
 import logging
 
@@ -166,13 +167,13 @@ async def startup_event():
 
         if "batch" not in student_cols:
             with engine.begin() as conn:
-                conn.execute(text("ALTER TABLE students ADD COLUMN batch VARCHAR(9) NULL"))
-                conn.execute(text("CREATE INDEX ix_students_batch ON students (batch)"))
+                conn.execute(text("ALTER TABLE students ADD COLUMN IF NOT EXISTS batch VARCHAR(9) NULL"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_students_batch ON students (batch)"))
 
         if "branch" not in student_cols:
             with engine.begin() as conn:
-                conn.execute(text("ALTER TABLE students ADD COLUMN branch VARCHAR(10) NULL"))
-                conn.execute(text("CREATE INDEX ix_students_branch ON students (branch)"))
+                conn.execute(text("ALTER TABLE students ADD COLUMN IF NOT EXISTS branch VARCHAR(10) NULL"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_students_branch ON students (branch)"))
 
         # Track upload batch UUID on results for batch-level deletes/auditing
         try:
@@ -182,8 +183,8 @@ async def startup_event():
 
         if "upload_batch_id" not in result_cols:
             with engine.begin() as conn:
-                conn.execute(text("ALTER TABLE results ADD COLUMN upload_batch_id VARCHAR(50) NULL"))
-                conn.execute(text("CREATE INDEX ix_results_upload_batch_id ON results (upload_batch_id)"))
+                conn.execute(text("ALTER TABLE results ADD COLUMN IF NOT EXISTS upload_batch_id VARCHAR(50) NULL"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_results_upload_batch_id ON results (upload_batch_id)"))
 
         # Credits metadata for CBCS SGPA/CGPA
         try:
@@ -193,7 +194,7 @@ async def startup_event():
 
         if "credits" not in subject_cols:
             with engine.begin() as conn:
-                conn.execute(text("ALTER TABLE subjects ADD COLUMN credits INT NULL"))
+                conn.execute(text("ALTER TABLE subjects ADD COLUMN IF NOT EXISTS credits INT NULL"))
 
         # Best-effort backfill for branch on existing students
         try:
@@ -221,7 +222,8 @@ async def startup_event():
             # Backfill should never block startup
             pass
 
-        logger.info("Database initialized successfully")
+        db_type = os.getenv("DB_TYPE", "postgresql").upper()
+        logger.info(f"Database initialized successfully ({db_type})")
     except Exception as e:
         logger.error(f"Error initializing database: {str(e)}")
 
@@ -296,8 +298,11 @@ async def upload_single_pdf(
     try:
         # Save uploaded file
         file_path = UPLOAD_DIR / file.filename
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # Save uploaded file
+        file_path = UPLOAD_DIR / file.filename
+        async with aiofiles.open(file_path, "wb") as buffer:
+            content = await file.read()
+            await buffer.write(content)
 
         # Extract data from PDF
         extracted_data = extract_pdf(str(file_path))
@@ -352,7 +357,7 @@ async def upload_single_pdf(
         try:
             error_logger.error(
                 str(e.detail),
-                extra={"batch_id": "SINGLE", "filename": file.filename},
+                extra={"batch_id": "SINGLE", "file_name": file.filename},
             )
         except Exception:
             pass
@@ -364,7 +369,7 @@ async def upload_single_pdf(
         try:
             error_logger.error(
                 str(e),
-                extra={"batch_id": "SINGLE", "filename": file.filename},
+                extra={"batch_id": "SINGLE", "file_name": file.filename},
             )
         except Exception:
             pass
@@ -398,18 +403,19 @@ async def upload_batch_pdfs(
     upload_log = UploadLog(
         batch_id=batch_id,
         total_files=total_files,
-        status=UploadStatus.PENDING
+        status=UploadStatus.PENDING.value
     )
     db.add(upload_log)
     db.commit()
 
-    # Save files to disk immediately (don't pass file objects to background task)
+    # Save files to disk asynchronously
     saved_files = []
     for idx, file in enumerate(files):
         if file.filename.endswith('.pdf'):
             file_path = UPLOAD_DIR / f"{batch_id}_{idx}_{file.filename}"
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
+            async with aiofiles.open(file_path, "wb") as buffer:
+                content = await file.read()
+                await buffer.write(content)
             saved_files.append((str(file_path), file.filename))
 
     # Start background processing with thread pool
@@ -427,24 +433,25 @@ async def upload_batch_pdfs(
 async def process_batch_files_async(batch_id: str, files: List[tuple], batch: str):
     """
     Production-grade async batch processor with thread pool and WebSocket updates
-    Features:
-    - Thread pool for parallel PDF processing (8 workers)
-    - Bulk commits every 10 PDFs
-    - Real-time WebSocket broadcasts
-    - Error-only logging to file
-    - Continue on failure with error notifications
+    Optimized for performance and stability
     """
     from app.database import SessionLocal
     
-    # Create new DB session for background task
-    db = SessionLocal()
+    # Use running loop instead of get_event_loop
+    loop = asyncio.get_running_loop()
     
     try:
-        # Update status to processing
-        upload_log = db.query(UploadLog).filter(UploadLog.batch_id == batch_id).first()
-        upload_log.status = UploadStatus.PROCESSING
-        db.commit()
+        # Helper for DB updates to avoid blocking loop and sharing sessions
+        def update_batch_app_status(status_val):
+             with SessionLocal() as db:
+                upload_log = db.query(UploadLog).filter(UploadLog.batch_id == batch_id).first()
+                if upload_log:
+                    upload_log.status = status_val
+                    db.commit()
 
+        await loop.run_in_executor(None, update_batch_app_status, UploadStatus.PROCESSING.value)
+
+        # Initial broadcast
         await manager.broadcast({
             "batch_id": batch_id,
             "status": "processing",
@@ -456,8 +463,8 @@ async def process_batch_files_async(batch_id: str, files: List[tuple], batch: st
 
         processed = 0
         failed = 0
-        failed_files = []  # Track failed files for popup notification
-        pending_commits = []  # Buffer for bulk commits
+        failed_files = [] 
+        pending_commits = []
 
         def process_single_pdf(file_path: str, filename: str, index: int):
             """Process single PDF in thread pool"""
@@ -471,154 +478,152 @@ async def process_batch_files_async(batch_id: str, files: List[tuple], batch: st
                     return ("failed", filename, "Failed to extract data", index)
 
             except Exception as e:
+                # Log the error but don't crash
                 return ("error", filename, str(e), index)
 
             finally:
-                # Avoid filling data/raw with processed PDFs
                 if not KEEP_RAW_FILES:
                     try:
                         p = Path(file_path)
                         if p.exists():
                             p.unlink()
                     except Exception:
-                        # Deletion failure should never kill processing
                         pass
 
-        # Submit all tasks to thread pool
-        futures = {
-            executor.submit(process_single_pdf, file_path, filename, idx): (filename, idx)
-            for idx, (file_path, filename) in enumerate(files, 1)
-        }
+        def save_and_commit(data_list):
+            """Helper to save data in a thread with its own session"""
+            with SessionLocal() as db:
+                for data in data_list:
+                    save_extracted_data(db, data, batch=batch, upload_batch_id=batch_id)
+                db.commit()
 
-        # Process completed tasks as they finish
-        for future in as_completed(futures):
-            filename, idx = futures[future]
-            
+        # Update Log Helper
+        def update_log_current(current_processed, current_failed, current_fname, current_idx):
+            with SessionLocal() as db:
+                ul = db.query(UploadLog).filter(UploadLog.batch_id == batch_id).first()
+                if ul:
+                    if current_fname:
+                        ul.current_file = current_fname
+                        ul.current_file_index = current_idx
+                    ul.processed_files = current_processed
+                    ul.failed_files = current_failed
+                    db.commit()
+
+        # Wrapper to enforce timeout
+        async def process_with_timeout(file_path, filename, idx):
             try:
-                status, fname, result, file_index = future.result()
+                # 60 second timeout per file
+                return await asyncio.wait_for(
+                    loop.run_in_executor(executor, process_single_pdf, file_path, filename, idx),
+                    timeout=60.0
+                )
+            except asyncio.TimeoutError:
+                return ("failed", filename, "Processing timed out (>60s)", idx)
+            except Exception as e:
+                return ("error", filename, str(e), idx)
+
+        # Submit all tasks
+        tasks = []
+        for idx, (file_path, filename) in enumerate(files, 1):
+            task = process_with_timeout(file_path, filename, idx)
+            tasks.append(task)
+            
+        logger.info(f"Submitted {len(tasks)} PDF processing tasks to thread pool")
+
+        # Process results as they complete
+        # We use as_completed to process them safely
+        for completed_task in asyncio.as_completed(tasks):
+            try:
+                status, fname, result, file_index = await completed_task
                 
-                # Update current file in database
-                upload_log = db.query(UploadLog).filter(UploadLog.batch_id == batch_id).first()
-                upload_log.current_file = fname
-                upload_log.current_file_index = file_index
-                
+                # Update counts
                 if status == "success":
-                    # Add to pending commits buffer
                     pending_commits.append(result)
                     processed += 1
-                    
-                    # Bulk commit every 10 PDFs (Option B)
-                    if len(pending_commits) >= 10:
-                        for data in pending_commits:
-                            save_extracted_data(db, data, batch=batch, upload_batch_id=batch_id)
-                        db.commit()
-                        pending_commits.clear()
-                    
-                    upload_log.processed_files = processed
-                    db.commit()
                 else:
-                    # Handle failure
                     failed += 1
-                    failed_files.append({"filename": fname, "error": result})
-                    upload_log.failed_files = failed
-                    db.commit()
+                    failed_files.append({"filename": fname, "error": str(result)})
+                    error_logger.error(str(result), extra={"batch_id": batch_id, "file_name": fname})
+
+                # BATCHED DB & WS UPDATES
+                # Update DB and WS every 5 files or on the last file
+                # This reduces overhead significantly
+                total_done = processed + failed
+                if total_done % 5 == 0 or total_done == len(files):
+                    # DB Update
+                    await loop.run_in_executor(None, update_log_current, processed, failed, fname, file_index)
                     
-                    # Log error to file
-                    error_logger.error(
-                        result,
-                        extra={"batch_id": batch_id, "filename": fname}
-                    )
-                
-                # Broadcast real-time update via WebSocket
-                percentage = int((processed + failed) / len(files) * 100)
-                await manager.broadcast({
-                    "batch_id": batch_id,
-                    "current_file": fname,
-                    "current_file_index": file_index,
-                    "processed": processed,
-                    "failed": failed,
-                    "total": len(files),
-                    "percentage": percentage,
-                    "status": "processing",
-                    "failed_files": failed_files  # Send failed files for popup
-                })
+                    # WebSocket Update
+                    percentage = int(total_done / len(files) * 100)
+                    await manager.broadcast({
+                        "batch_id": batch_id,
+                        "current_file": fname,
+                        "current_file_index": file_index,
+                        "processed": processed,
+                        "failed": failed,
+                        "total": len(files),
+                        "percentage": percentage,
+                        "status": "processing",
+                        "failed_files": failed_files[-5:] # only send recent failures to save bandwidth
+                    })
+
+                # Batch commit results (every 10)
+                if len(pending_commits) >= 10:
+                    await loop.run_in_executor(None, save_and_commit, list(pending_commits))
+                    pending_commits.clear()
                 
             except Exception as e:
+                # Should not happen due to wrapper, but safety net
                 failed += 1
-                failed_files.append({"filename": filename, "error": str(e)})
-                error_logger.error(
-                    str(e),
-                    extra={"batch_id": batch_id, "filename": filename}
-                )
+                logger.error(f"Critical task loop error: {e}")
 
-        # Commit any remaining PDFs in buffer
+        # Commit remaining results
         if pending_commits:
-            for data in pending_commits:
-                save_extracted_data(db, data, batch=batch, upload_batch_id=batch_id)
-            db.commit()
+            await loop.run_in_executor(None, save_and_commit, list(pending_commits))
 
-        # Final update
-        upload_log = db.query(UploadLog).filter(UploadLog.batch_id == batch_id).first()
-        upload_log.processed_files = processed
-        upload_log.failed_files = failed
-        upload_log.status = UploadStatus.COMPLETED if failed == 0 else UploadStatus.FAILED
-        upload_log.completed_timestamp = datetime.now()
-        upload_log.current_file = None
-        db.commit()
+        # Final DB Update
+        def final_update_log(final_processed, final_failed):
+            with SessionLocal() as db:
+                ul = db.query(UploadLog).filter(UploadLog.batch_id == batch_id).first()
+                if ul:
+                    ul.processed_files = final_processed
+                    ul.failed_files = final_failed
+                    ul.status = UploadStatus.COMPLETED.value if final_failed < len(files) else UploadStatus.FAILED.value
+                    ul.completed_timestamp = datetime.now()
+                    ul.current_file = None
+                    db.commit()
+            
+        await loop.run_in_executor(None, final_update_log, processed, failed)
 
-        # Final WebSocket broadcast
+        # Final Broadcast
         await manager.broadcast({
             "batch_id": batch_id,
             "processed": processed,
             "failed": failed,
             "total": len(files),
             "percentage": 100,
-            "status": "completed" if failed == 0 else "failed",
+            "status": "completed", # Always mark completed if we finished the loop
             "failed_files": failed_files
         })
 
-        # Summary notification (real)
-        try:
-            level = "success" if failed == 0 else "error"
-            n = _create_notification(
-                db,
-                title=f"Batch {batch_id} finished ({processed} ok, {failed} failed)",
-                detail=f"Batch: {batch}; Total files: {len(files)}",
-                level=level,
-            )
-            await notification_manager.broadcast(
-                {
-                    "type": "notification",
-                    "data": {
-                        "id": n.id,
-                        "title": n.title,
-                        "detail": n.detail,
-                        "level": n.level,
-                        "created_at": n.created_at.isoformat() if n.created_at else None,
-                    },
-                }
-            )
-        except Exception:
-            pass
-
     except Exception as e:
         logger.error(f"Batch processing error: {str(e)}")
-        error_logger.error(str(e), extra={"batch_id": batch_id, "filename": "BATCH_ERROR"})
+        error_logger.error(str(e), extra={"batch_id": batch_id, "file_name": "BATCH_ERROR"})
         
-        upload_log = db.query(UploadLog).filter(UploadLog.batch_id == batch_id).first()
-        if upload_log:
-            upload_log.status = UploadStatus.FAILED
-            upload_log.error_log = str(e)
-            db.commit()
+        def set_failed_status(err_msg):
+            with SessionLocal() as db:
+                ul = db.query(UploadLog).filter(UploadLog.batch_id == batch_id).first()
+                if ul:
+                    ul.status = UploadStatus.FAILED.value
+                    ul.error_log = err_msg
+                    db.commit()
+        await loop.run_in_executor(None, set_failed_status, str(e))
             
         await manager.broadcast({
             "batch_id": batch_id,
             "status": "error",
             "error": str(e)
         })
-    
-    finally:
-        db.close()
 
 
 
@@ -661,13 +666,237 @@ async def get_students(
     return students
 
 
-@app.get("/students/{usn}", response_model=StudentResponse)
-async def get_student(usn: str, db: Session = Depends(get_db)):
-    """Get student by USN"""
+@app.post("/student", response_model=StudentResponse)
+async def create_student(student: StudentCreate, db: Session = Depends(get_db)):
+    """Create a new student manually"""
+    # Check if student exists
+    existing = db.query(Student).filter(Student.usn == student.usn).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Student with this USN already exists")
+    
+    new_student = Student(
+        usn=student.usn,
+        student_name=student.student_name,
+        batch=student.batch,
+        branch=student.branch
+    )
+    db.add(new_student)
+    db.commit()
+    db.refresh(new_student)
+    
+    # Audit notification
+    try:
+         # Notification uses asyncio, but we can't await easily here if using sync DB session manner without connection manager?
+         # Actually we are async def, so we can await manager.broadcast
+         await notification_manager.broadcast({
+            "type": "notification",
+            "data": {
+                "title": f"Manual Entry: {new_student.usn}",
+                "detail": f"Created student {new_student.student_name}",
+                "level": "info",
+                "created_at": datetime.now().isoformat()
+            }
+         })
+    except Exception:
+        pass
+
+    return new_student
+
+
+@app.post("/student", response_model=StudentResponse)
+async def create_student(
+    student: StudentCreate,
+    db: Session = Depends(get_db)
+):
+    """
+    Create a new student manually if not exists.
+    """
+    db_student = db.query(Student).filter(Student.usn == student.usn).first()
+    if db_student:
+        raise HTTPException(status_code=400, detail="Student with this USN already exists")
+    
+    new_student = Student(
+        usn=student.usn,
+        student_name=student.student_name,
+        batch=student.batch,
+        branch=student.branch
+    )
+    db.add(new_student)
+    db.commit()
+    db.refresh(new_student)
+    return new_student
+
+
+@app.post("/student/{usn}/semester", response_model=APIResponse)
+async def add_student_semester(
+    usn: str, 
+    data: ManualSemesterInput, 
+    db: Session = Depends(get_db)
+):
+    """Add a full semester result for a student manually"""
     student = db.query(Student).filter(Student.usn == usn).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
-    return student
+
+    # Find or create Semester
+    semester = db.query(Semester).filter(
+        Semester.semester_number == data.semester_number,
+        Semester.exam_year == data.exam_year,
+        Semester.exam_month == data.exam_month
+    ).first()
+
+    if not semester:
+        semester = Semester(
+            semester_number=data.semester_number,
+            exam_month=data.exam_month,
+            exam_year=data.exam_year
+        )
+        db.add(semester)
+        db.commit()
+        db.refresh(semester)
+
+    added_count = 0
+    updated_count = 0
+
+    for subj_data in data.subjects:
+        # Find or create Subject
+        subject = db.query(Subject).filter(Subject.subject_code == subj_data.subject_code).first()
+        if not subject:
+            subject = Subject(
+                subject_code=subj_data.subject_code,
+                subject_name=subj_data.subject_name,
+                credits=subj_data.credits
+            )
+            db.add(subject)
+            db.commit()
+            db.refresh(subject)
+        
+        # Check for existing result
+        result = db.query(Result).filter(
+            Result.student_id == student.id,
+            Result.semester_id == semester.id,
+            Result.subject_id == subject.id
+        ).first()
+
+        if result:
+            # Update existing
+            result.internal_marks = subj_data.internal_marks
+            result.external_marks = subj_data.external_marks
+            result.total_marks = subj_data.total_marks
+            result.result_status = subj_data.result_status
+            result.upload_batch_id = "MANUAL"
+            if subj_data.announced_date:
+                result.announced_date = subj_data.announced_date
+            updated_count += 1
+        else:
+            # Create new
+            new_result = Result(
+                student_id=student.id,
+                semester_id=semester.id,
+                subject_id=subject.id,
+                internal_marks=subj_data.internal_marks,
+                external_marks=subj_data.external_marks,
+                total_marks=subj_data.total_marks,
+                result_status=subj_data.result_status,
+                upload_batch_id="MANUAL",
+                announced_date=subj_data.announced_date or date.today()
+            )
+            db.add(new_result)
+            added_count += 1
+    
+    db.commit()
+
+    return APIResponse(
+        success=True,
+        message=f"Processed semester {data.semester_number} for {usn}",
+        data={"added": added_count, "updated": updated_count}
+    )
+
+
+@app.put("/student/{usn}/subject/{subjectId}", response_model=ResultResponse)
+async def update_student_result(
+    usn: str,
+    subjectId: str, # Assuming subject_code or ID. As per plan, treating as subject_code mostly
+    result_update: ResultUpdate,
+    semester: int = Query(..., description="Semester number to identify the specific result"),
+    db: Session = Depends(get_db)
+):
+    """
+    Update marks or details for a specific subject of a student.
+    'subjectId' should be the Subject Code (e.g., 18CS33) for clarity.
+    Requires 'semester' query param to identify the exact result record.
+    """
+    student = db.query(Student).filter(Student.usn == usn).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+
+    # Find subject by code (subjectId interpreted as code)
+    subject = db.query(Subject).filter(Subject.subject_code == subjectId).first()
+    if not subject:
+        # Fallback: try ID if integer
+        if subjectId.isdigit():
+             subject = db.query(Subject).filter(Subject.id == int(subjectId)).first()
+    
+    if not subject:
+         raise HTTPException(status_code=404, detail="Subject not found")
+
+    # Find semester by number (and student's results)
+    # We need the specific result row
+    result = db.query(Result).join(Semester).filter(
+        Result.student_id == student.id,
+        Result.subject_id == subject.id,
+        Semester.semester_number == semester
+    ).first()
+
+    if not result:
+        raise HTTPException(status_code=404, detail="Result record not found for this student/subject/semester")
+
+    # Update fields if provided
+    if result_update.internal_marks is not None:
+        result.internal_marks = result_update.internal_marks
+    if result_update.external_marks is not None:
+        result.external_marks = result_update.external_marks
+    if result_update.total_marks is not None:
+        result.total_marks = result_update.total_marks
+    if result_update.result_status is not None:
+        result.result_status = result_update.result_status
+    
+    result.upload_batch_id = "MANUAL_UPDATE"
+    db.commit()
+    db.refresh(result)
+
+    # Log/Audit
+    logger.info(f"Manual update for {usn} - {subject.subject_code}: {result_update.dict(exclude_unset=True)}")
+
+    return result
+
+
+
+
+@app.get("/student/search")
+async def search_students(
+    q: str = Query(..., min_length=2, description="Search by name or USN"),
+    limit: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db)
+):
+    """Search for students by USN or Name (case-insensitive partial match)"""
+    search_pattern = f"%{q}%"
+    students = db.query(Student).filter(
+        or_(
+            Student.usn.ilike(search_pattern),
+            Student.student_name.ilike(search_pattern)
+        )
+    ).limit(limit).all()
+    
+    return [
+        {
+            "usn": s.usn,
+            "student_name": s.student_name,
+            "batch": s.batch,
+            "branch": s.branch
+        }
+        for s in students
+    ]
 
 
 # ==================== RESULTS ENDPOINTS ====================
@@ -681,6 +910,7 @@ async def get_results(
     status: Optional[str] = None,
     exam_year: Optional[int] = Query(None, ge=2000, le=2100),
     exam_month: Optional[str] = None,
+    subject: Optional[str] = None,
     subject_code: Optional[str] = None,
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -708,6 +938,14 @@ async def get_results(
         query = query.filter(Semester.exam_year == exam_year)
     if exam_month:
         query = query.filter(Semester.exam_month.ilike(exam_month))
+    # 'subject' can match either code or name loosely
+    if subject:
+        pattern = f"%{subject}%"
+        query = query.filter(or_(
+            Subject.subject_code.ilike(pattern),
+            Subject.subject_name.ilike(pattern)
+        ))
+    # keep specific subject_code filter if needed (though subject covers it)
     if subject_code:
         query = query.filter(Subject.subject_code == subject_code)
 
@@ -726,6 +964,48 @@ async def get_results(
             "result_status": normalize_result_status(r.result_status, to_output=True),  # Ensure this function is defined
         "announced_date": r.announced_date
     } for r in results]
+
+
+# ==================== DISCOVERY ENDPOINTS ====================
+
+@app.get("/batches/{batch}/semesters", response_model=List[int])
+async def get_batch_semesters(
+    batch: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Fetch all distinct semester numbers recorded for a specific batch.
+    """
+    semesters = (
+        db.query(distinct(Semester.semester_number))
+        .join(Result, Result.semester_id == Semester.id)
+        .join(Student, Result.student_id == Student.id)
+        .filter(Student.batch == batch)
+        .order_by(Semester.semester_number)
+        .all()
+    )
+    return [s[0] for s in semesters]
+
+
+@app.get("/batch/{batch}/semester/{sem}/subjects", response_model=List[SubjectResponse])
+async def get_batch_semester_subjects(
+    batch: str,
+    sem: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Fetch all subjects recorded for a specific semester of a batch.
+    """
+    subjects = (
+        db.query(Subject)
+        .join(Result, Result.subject_id == Subject.id)
+        .join(Student, Result.student_id == Student.id)
+        .join(Semester, Result.semester_id == Semester.id)
+        .filter(Student.batch == batch, Semester.semester_number == sem)
+        .distinct()
+        .all()
+    )
+    return subjects
 
 
 # ==================== ANALYTICS ENDPOINTS ====================
@@ -869,6 +1149,10 @@ async def export_to_excel(
     semester: Optional[int] = None,
     batch: Optional[str] = None,
     branch: Optional[str] = None,
+    usn: Optional[str] = None,
+    subject_code: Optional[str] = None,
+    exam_year: Optional[int] = Query(None, ge=2000, le=2100),
+    exam_month: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Export results to Excel file"""
@@ -878,7 +1162,16 @@ async def export_to_excel(
         filepath = EXPORT_DIR / filename
         
         analyzer = ResultAnalyzer(db)
-        analyzer.export_to_excel(str(filepath), semester=semester, batch=normalized_batch, branch=branch)
+        analyzer.export_to_excel(
+            str(filepath), 
+            semester=semester, 
+            batch=normalized_batch, 
+            branch=branch,
+            usn=usn,
+            subject_code=subject_code,
+            exam_year=exam_year,
+            exam_month=exam_month
+        )
         
         return FileResponse(
             path=str(filepath),
@@ -894,6 +1187,10 @@ async def export_to_csv(
     semester: Optional[int] = None,
     batch: Optional[str] = None,
     branch: Optional[str] = None,
+    usn: Optional[str] = None,
+    subject_code: Optional[str] = None,
+    exam_year: Optional[int] = Query(None, ge=2000, le=2100),
+    exam_month: Optional[str] = None,
     db: Session = Depends(get_db)
 ):
     """Export results to CSV file"""
@@ -903,7 +1200,16 @@ async def export_to_csv(
         filepath = EXPORT_DIR / filename
         
         analyzer = ResultAnalyzer(db)
-        analyzer.export_to_csv(str(filepath), semester=semester, batch=normalized_batch, branch=branch)
+        analyzer.export_to_csv(
+            str(filepath), 
+            semester=semester, 
+            batch=normalized_batch, 
+            branch=branch,
+            usn=usn,
+            subject_code=subject_code,
+            exam_year=exam_year,
+            exam_month=exam_month
+        )
         
         return FileResponse(
             path=str(filepath),
@@ -1362,14 +1668,52 @@ async def get_batches(db: Session = Depends(get_db)):
     return sorted(set(batches))
 
 
+@app.get("/meta/semesters")
+async def get_semesters(
+    batch: Optional[str] = None,
+    branch: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Get distinct semesters, optionally filtered by batch/branch."""
+    normalized_batch = _validate_batch(batch)
+    q = db.query(Semester.semester_number)
+    
+    if normalized_batch or branch:
+        q = q.join(Result).join(Student)
+        if normalized_batch:
+            q = q.filter(Student.batch == normalized_batch)
+        if branch:
+            q = q.filter(Student.branch == branch)
+            
+    rows = q.distinct().order_by(Semester.semester_number.asc()).all()
+    return [r[0] for r in rows if r[0]]
+
+
 @app.get("/meta/subjects")
-async def get_subjects(db: Session = Depends(get_db)):
-    """Get all distinct subjects (code and name)"""
-    subjects = (
-        db.query(Subject.subject_code, Subject.subject_name, Subject.credits)
-        .order_by(Subject.subject_code.asc())
-        .all()
-    )
+async def get_subjects(
+    batch: Optional[str] = None,
+    semester: Optional[int] = None,
+    branch: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """Get subjects (code and name), optionally filtered by context."""
+    normalized_batch = _validate_batch(batch)
+    q = db.query(Subject.subject_code, Subject.subject_name, Subject.credits)
+
+    if normalized_batch or semester or branch:
+        q = q.join(Result).join(Student)
+        # Explicitly join Semester if filtering by semester number
+        if semester:
+            q = q.join(Semester).filter(Semester.semester_number == semester)
+            
+        if normalized_batch:
+            q = q.filter(Student.batch == normalized_batch)
+        if branch:
+            q = q.filter(Student.branch == branch)
+
+    subjects = q.distinct().order_by(Subject.subject_code.asc()).all()
+    # Deduplicate by code in python if needed, though distinct() on select fields usually works.
+    # Note: Subject codes might have different names in different contexts, strictly we group by code.
     return [{"code": s.subject_code, "name": s.subject_name, "credits": s.credits} for s in subjects]
 
 

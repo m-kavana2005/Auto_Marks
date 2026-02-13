@@ -11,13 +11,19 @@ from datetime import datetime
 from pypdf import PdfReader
 from app.schemas import ExtractedStudentResult, ExtractedSubjectResult
 import logging
+import re
+from app.services.extractor_helper import _extract_branch_from_usn
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Try to enable Docling if available; fall back to lightweight pypdf.
 try:  # Optional dependency path
-    from docling.document_converter import DocumentConverter
+    import warnings
+    # Suppress Pydantic protected namespace warnings from docling/layoutparser
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning, message="Field \"model_.*\" in .* has conflict with protected namespace \"model_\".*")
+        from docling.document_converter import DocumentConverter
 
     _docling_available = True
 except Exception:  # noqa: BLE001

@@ -1,203 +1,201 @@
-# VTU Results System - College Server Deployment Guide
+# College Deployment Guide — VTU Results System
 
-## Overview
-This guide provides step-by-step instructions to deploy the VTU Results Extraction and Management System on a college server using MySQL.
+This guide provides step-by-step instructions to deploy the VTU Results Extraction and Management System on a college server using **PostgreSQL**.
 
 ## Prerequisites
 
-### System Requirements
-- **OS**: Windows/Linux/macOS
 - **Python**: 3.11 or higher
-- **MySQL**: 8.0 or higher
-- **RAM**: Minimum 4GB
-- **Storage**: 10GB free space
+- **PostgreSQL**: 14 or higher
+- **pip / uv**: Package manager for Python dependencies
+- **Git**: Version control
 
-### Required Software
-1. **Python 3.11+**: Download from [python.org](https://python.org)
-2. **MySQL Server 8.0+**: Download from [mysql.com](https://dev.mysql.com/downloads/mysql/)
-3. **uv Package Manager**: Install with `pip install uv`
+## Step-by-Step Setup
 
-## Installation Steps
+### 1. Install Prerequisites
 
-### 1. Install uv Package Manager
+1. **Python 3.11+**: Download from [python.org](https://www.python.org/downloads/)
+2. **PostgreSQL 14+**: Download from [postgresql.org](https://www.postgresql.org/download/)
+   - During installation, note the password you set for the `postgres` user.
+
+### 2. Clone the Repository
+
 ```bash
-pip install uv
+git clone https://github.com/ANJAN672/Auto_Marks.git
+cd Auto_Marks/automarks_BE
 ```
 
-### 2. Clone/Download the Project
-```bash
-# If using git
-git clone <repository-url>
-cd vtu-results-system
+### 3. Install Python Dependencies
 
-# Or extract the project files to a directory
+```bash
+pip install -r requirements.txt
 ```
 
-### 3. Install Dependencies
+Or using **uv** (faster):
+
 ```bash
 uv sync
 ```
 
-### 4. Set Up MySQL Database
+### 4. Set Up PostgreSQL Database
 
-#### Option A: Using MySQL Workbench/Command Line
-1. Open MySQL Workbench or command line client
-2. Create database:
+#### Option A: Using psql (Command Line)
+
+1. Open a terminal and connect to PostgreSQL:
+
+```bash
+psql -U postgres
+```
+
+2. Create the database:
+
 ```sql
 CREATE DATABASE vtu_results;
-```
-3. Create user (optional, but recommended):
-```sql
-CREATE USER 'vtu_user'@'localhost' IDENTIFIED BY 'secure_password';
-GRANT ALL PRIVILEGES ON vtu_results.* TO 'vtu_user'@'localhost';
-FLUSH PRIVILEGES;
+\q
 ```
 
-#### Option B: Using XAMPP/WAMP (Windows)
-1. Install XAMPP from [apachefriends.org](https://www.apachefriends.org/)
-2. Start MySQL service
-3. Open phpMyAdmin (http://localhost/phpmyadmin)
-4. Create database `vtu_results`
+3. (Optional) Run the schema script:
+
+```bash
+psql -U postgres -d vtu_results -f sql/schema.sql
+```
+
+> **Note:** The application auto-creates tables on first startup via SQLAlchemy, so step 3 is optional.
+
+#### Option B: Using pgAdmin
+
+1. Open pgAdmin and connect to your local PostgreSQL server.
+2. Right-click on **Databases** → **Create** → **Database…**
+3. Enter `vtu_results` as the database name and click **Save**.
 
 ### 5. Configure Environment Variables
-Create a `.env` file in the project root:
+
+Edit the `.env` file in the project root:
+
 ```env
 # Database Configuration
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=vtu_results
-DB_USER=root
-DB_PASSWORD=your_mysql_password
+DB_TYPE=postgresql
 
-# Server Configuration
-HOST=0.0.0.0
-PORT=8000
-RELOAD=false
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_postgres_password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=vtu_results
 
-# PDF Processing
-USE_DOCLING=false
+# API Base URL for frontend
+API_BASE_URL=http://localhost:8000
+
+# Application Settings
+APP_ENV=production
+DEBUG=False
+SECRET_KEY=change-this-to-a-random-string
 ```
 
-### 6. Initialize Database Schema
+### 6. Run the Application
+
 ```bash
-# Create tables
-mysql -u root -p
-
-# Inside MySQL prompt:
-CREATE DATABASE IF NOT EXISTS vtu_results;
-USE vtu_results;
-SOURCE sql/schema.sql;
-EXIT;
-
-# Alternative one-liner (database must already exist):
-# mysql -u root -p vtu_results < sql/schema.sql
+python run_api.py
 ```
 
-### 7. Start the Application
+Or directly with uvicorn:
+
 ```bash
-# Production mode (recommended for server)
-uv run python run_api.py
-
-# Or using the script
-uv run run-api
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-The application will be available at `http://localhost:8000`
+The API opens at: `http://localhost:8000`  
+Interactive docs at: `http://localhost:8000/docs`
 
-## API Endpoints
-
-### Main Endpoints
-- **API Documentation**: `http://localhost:8000/docs`
-- **Health Check**: `GET /health`
-- **Upload Results**: `POST /upload-results`
-- **Get Student Results**: `GET /students/{usn}`
-- **Analytics Dashboard**: `GET /analytics`
-
-### File Upload
-- **Endpoint**: `POST /upload-results`
-- **Content-Type**: `multipart/form-data`
-- **Parameters**:
-  - `file`: PDF file containing VTU results
-  - `semester`: Semester number (optional)
+---
 
 ## Troubleshooting
 
-### Common Issues
+#### 1. PostgreSQL Connection Error
 
-#### 1. MySQL Connection Error
-**Error**: `Can't connect to MySQL server`
-**Solution**:
-- Ensure MySQL service is running
-- Check credentials in `.env` file
-- Verify MySQL port (default: 3306)
+**Error**: `could not connect to server: Connection refused`
 
-#### 2. Port Already in Use
-**Error**: `Port 8000 is already in use`
-**Solution**:
-- Change port in `.env`: `PORT=8001`
-- Or kill process using the port
+- Ensure the PostgreSQL service is running:
+  - **Linux**: `sudo systemctl start postgresql`
+  - **Windows**: Start "PostgreSQL" from Windows Services
+  - **macOS**: `brew services start postgresql`
+- Check that the credentials in `.env` match your PostgreSQL setup.
+- Verify PostgreSQL port (default: 5432).
 
-#### 3. PDF Processing Issues
-**Error**: `PDF extraction failed`
-**Solution**:
-- Ensure PDF is not password-protected
-- Check PDF format (should be text-based, not scanned images)
-- Try setting `USE_DOCLING=true` in `.env` for better OCR
+#### 2. Database Does Not Exist
 
-#### 4. Permission Errors
-**Error**: `Permission denied`
-**Solution**:
-- Run as administrator/sudo
-- Check file permissions on data directories
+**Error**: `database "vtu_results" does not exist`
 
-### Logs and Monitoring
-- Application logs are displayed in the terminal
-- Database connection logs show successful connections
-- Check `data/` directory for processed files
+- Create the database manually:
 
-## Security Considerations
-
-### For Production Deployment
-1. **Change Default Passwords**: Update MySQL root password
-2. **Use Environment Variables**: Never hardcode credentials
-3. **Firewall Configuration**: Restrict access to necessary ports only
-4. **SSL/TLS**: Configure HTTPS for production
-5. **User Permissions**: Create dedicated MySQL user with limited privileges
-
-### Backup Strategy
 ```bash
-# Database backup
-mysqldump -u username -p vtu_results > backup.sql
-
-# Restore backup
-mysql -u username -p vtu_results < backup.sql
+psql -U postgres -c "CREATE DATABASE vtu_results;"
 ```
 
-## Performance Optimization
+#### 3. Permission Denied
 
-### For High Load
-1. **Database Indexing**: Ensure proper indexes on frequently queried columns
-2. **Connection Pooling**: Configure SQLAlchemy connection pool settings
-3. **Caching**: Implement Redis caching for frequently accessed data
-4. **Load Balancing**: Use nginx or similar for multiple instances
+**Error**: `password authentication failed for user "postgres"`
 
-### Memory Usage
-- Monitor memory usage with large PDF files
-- Consider increasing server RAM for batch processing
-- Use `USE_DOCLING=false` for faster processing (less accurate)
+- Verify the password in `.env` matches your installation.
+- Consider creating a dedicated application user:
 
-## Support
+```sql
+CREATE USER vtu_app WITH PASSWORD 'secure-password';
+GRANT ALL PRIVILEGES ON DATABASE vtu_results TO vtu_app;
+-- After connecting to the vtu_results database:
+GRANT ALL ON SCHEMA public TO vtu_app;
+```
 
-For issues or questions:
-1. Check the API documentation at `/docs`
-2. Review application logs
-3. Verify database connectivity
-4. Test with sample data
+#### 4. Port Conflict
 
-## Recent Updates
+If port 8000 is in use:
 
-- ✅ MySQL-backed storage
-- ✅ Improved PDF extraction (now extracts all 9 subjects)
-- ✅ Migrated to uv package manager
-- ✅ Fixed enum compatibility issues
-- ✅ Enhanced error handling and logging
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port 8080
+```
+
+---
+
+## Security Recommendations
+
+1. **Change Default Passwords**: Use a strong password for the `postgres` user.
+2. **Use a Dedicated DB User**: Don't run the application as `postgres` superuser.
+3. **Enable SSL**: Configure PostgreSQL for SSL connections in production.
+4. **Firewall**: Only expose port 5432 to the application server, not the internet.
+5. **Environment Variables**: Never commit `.env` files with real credentials.
+
+## Backup & Restore
+
+### Backup
+
+```bash
+pg_dump -U postgres vtu_results > backup.sql
+```
+
+### Restore
+
+```bash
+psql -U postgres vtu_results < backup.sql
+```
+
+---
+
+## Architecture Summary
+
+| Component     | Technology     |
+|---------------|----------------|
+| Backend       | FastAPI + Python |
+| Database      | PostgreSQL 14+ |
+| ORM           | SQLAlchemy 2.0 |
+| PDF Extraction| Docling / pypdf |
+| Data Analysis | Pandas + NumPy |
+| Frontend      | React (Vite)   |
+
+### Features
+
+- ✅ AI-powered PDF extraction (VTU results)
+- ✅ PostgreSQL-backed storage (production-grade)
+- ✅ Real-time WebSocket progress tracking
+- ✅ Subject-wise analytics & GPA calculations
+- ✅ Excel/CSV export
+- ✅ Batch upload with thread pool processing
+- ✅ Admin purge endpoints with confirmation
+- ✅ Notification system
