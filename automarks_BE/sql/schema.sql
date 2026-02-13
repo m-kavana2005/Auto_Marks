@@ -79,9 +79,10 @@ CREATE TABLE results (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     UNIQUE (student_id, semester_id, subject_id),
-    CONSTRAINT ck_internal_marks_range CHECK (internal_marks IS NULL OR (internal_marks >= 0 AND internal_marks <= 50)),
-    CONSTRAINT ck_external_marks_range CHECK (external_marks IS NULL OR (external_marks >= 0 AND external_marks <= 50)),
-    CONSTRAINT ck_total_marks_range CHECK (total_marks IS NULL OR (total_marks >= 0 AND total_marks <= 100))
+
+    CONSTRAINT ck_internal_marks_range CHECK (internal_marks IS NULL OR (internal_marks >= 0 AND internal_marks <= 100)),
+    CONSTRAINT ck_external_marks_range CHECK (external_marks IS NULL OR (external_marks >= 0 AND external_marks <= 200)),
+    CONSTRAINT ck_total_marks_range CHECK (total_marks IS NULL OR (total_marks >= 0 AND total_marks <= 300))
 );
 
 CREATE INDEX idx_results_student_id ON results (student_id);

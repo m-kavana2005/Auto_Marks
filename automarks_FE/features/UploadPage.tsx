@@ -117,12 +117,16 @@ const UploadPage: React.FC = () => {
     if (e.target.files) {
       // Explicitly type 'f' as File to avoid unknown property errors
       const files = Array.from(e.target.files).filter((f: File) => f.type === 'application/pdf');
-      if (files.length < e.target.files.length) {
+      if (files.length > 100) {
+        setError("Maximum 100 files allowed per upload.");
+        setSelectedFiles(files.slice(0, 100)); // Limit selection
+      } else if (files.length < e.target.files.length) {
         setError("Only PDF files are supported.");
+        setSelectedFiles(activeTab === 'single' ? [files[0]] : files);
       } else {
         setError(null);
+        setSelectedFiles(activeTab === 'single' ? [files[0]] : files);
       }
-      setSelectedFiles(activeTab === 'single' ? [files[0]] : files);
     }
   };
 

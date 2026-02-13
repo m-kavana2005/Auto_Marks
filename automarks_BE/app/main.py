@@ -662,7 +662,7 @@ async def get_students(
     db: Session = Depends(get_db)
 ):
     """Get all students with pagination"""
-    students = db.query(Student).offset(skip).limit(limit).all()
+    students = db.query(Student).order_by(Student.created_at.desc()).offset(skip).limit(limit).all()
     return students
 
 
@@ -703,28 +703,37 @@ async def create_student(student: StudentCreate, db: Session = Depends(get_db)):
     return new_student
 
 
-@app.post("/student", response_model=StudentResponse)
-async def create_student(
-    student: StudentCreate,
-    db: Session = Depends(get_db)
-):
-    """
-    Create a new student manually if not exists.
-    """
-    db_student = db.query(Student).filter(Student.usn == student.usn).first()
-    if db_student:
-        raise HTTPException(status_code=400, detail="Student with this USN already exists")
-    
-    new_student = Student(
-        usn=student.usn,
-        student_name=student.student_name,
-        batch=student.batch,
-        branch=student.branch
+# ==================== METADATA DISCOVERY ENDPOINTS ====================
+
+@app.get("/batches/{batch}/semesters", response_model=List[int])
+def get_batch_semesters(batch: str, db: Session = Depends(get_db)):
+    """Fetch all semesters recorded for a specific batch."""
+    semesters = (
+        db.query(Semester.semester_number)
+        .join(Result, Result.semester_id == Semester.id)
+        .join(Student, Result.student_id == Student.id)
+        .filter(Student.batch == batch)
+        .distinct()
+        .order_by(Semester.semester_number)
+        .all()
     )
-    db.add(new_student)
-    db.commit()
-    db.refresh(new_student)
-    return new_student
+    return [s[0] for s in semesters]
+
+
+@app.get("/batch/{batch}/semester/{sem}/subjects", response_model=List[SubjectResponse])
+def get_batch_semester_subjects(batch: str, sem: int, db: Session = Depends(get_db)):
+    """Fetch all subjects recorded for a specific semester of a batch."""
+    subjects = (
+        db.query(Subject)
+        .join(Result, Result.subject_id == Subject.id)
+        .join(Semester, Result.semester_id == Semester.id)
+        .join(Student, Result.student_id == Student.id)
+        .filter(Student.batch == batch)
+        .filter(Semester.semester_number == sem)
+        .distinct()
+        .all()
+    )
+    return subjects
 
 
 @app.post("/student/{usn}/semester", response_model=APIResponse)

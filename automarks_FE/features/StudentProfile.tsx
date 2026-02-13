@@ -288,14 +288,8 @@ const StudentProfile: React.FC = () => {
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-3xl font-black text-slate-900 tracking-tight">Student Profile</h2>
-            <p className="text-slate-500 font-medium">Search by Name or USN to view or edit academic history.</p>
+            <p className="text-slate-500 font-medium">Search by Name or USN to view academic history.</p>
           </div>
-          <button
-            onClick={() => setShowManualEntry(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all active:scale-95"
-          >
-            <Plus size={20} /> Manual Entry
-          </button>
         </div>
 
         <div className="flex gap-4">

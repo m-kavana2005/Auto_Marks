@@ -36,12 +36,15 @@ const StatCard = ({ title, value, icon: Icon, color, trend }: any) => (
   </div>
 );
 
+import { Student } from '../types';
+
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState({
     passRate: 0,
     avgCgpa: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [recentStudents, setRecentStudents] = useState<Student[]>([]);
 
   const [semesterOverview, setSemesterOverview] = useState<
     Array<{ semester: number; total_records: number; total_students: number; avg_total_marks: number; pass_rate: number }>
@@ -73,9 +76,10 @@ const Dashboard: React.FC = () => {
     const fetchStats = async () => {
       setIsLoading(true);
       try {
-        const [overallStats, overview] = await Promise.all([
+        const [overallStats, overview, students] = await Promise.all([
           endpoints.getOverallStatistics(undefined),
           endpoints.getSemesterOverview(undefined),
+          endpoints.getStudents(0, 5)
         ]);
 
         setStats({
@@ -84,6 +88,7 @@ const Dashboard: React.FC = () => {
         });
 
         setSemesterOverview(overview);
+        setRecentStudents(students);
       } catch (error) {
         console.error('Failed to fetch dashboard stats:', error);
         // Keep previous values on error
@@ -115,12 +120,6 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="flex">
           <Link
-            to="/profile"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-indigo-600 px-8 py-4 sm:py-3.5 rounded-2xl font-black shadow-sm border border-slate-100 hover:bg-slate-50 transition-all active:scale-95 mr-3"
-          >
-            <Edit2 size={20} /> <span className="text-sm">Manual Entry</span>
-          </Link>
-          <Link
             to="/upload"
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 sm:py-3.5 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
           >
@@ -147,44 +146,81 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-        <div className="lg:col-span-2 glass-card rounded-[2.5rem] p-6 sm:p-10 flex flex-col">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
-                <Zap size={20} />
+        <div className="lg:col-span-2 space-y-6">
+          {/* Semester Overview */}
+          <div className="glass-card rounded-[2.5rem] p-6 sm:p-10 flex flex-col">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <Zap size={20} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Semester Overview</h3>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Semester Overview</h3>
+              <Link to="/analytics" className="text-indigo-600 font-black text-xs uppercase tracking-widest hover:underline hidden sm:block">Details</Link>
             </div>
-            <Link to="/analytics" className="text-indigo-600 font-black text-xs uppercase tracking-widest hover:underline hidden sm:block">Details</Link>
-          </div>
 
-          {isLoading ? (
-            <div className="w-full h-[240px] bg-slate-50 dark:bg-slate-900/50 rounded-2xl animate-pulse" />
-          ) : semesterOverview.length === 0 ? (
-            <div className="w-full h-[240px] bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-sm">
-              No data for current filters
-            </div>
-          ) : (
-            <div className={`grid ${overviewGridClass} gap-4`}>
-              {semesterOverview.map((s) => (
-                <div key={s.semester} className="p-5 rounded-[1.75rem] bg-slate-50 dark:bg-slate-900 border border-slate-100">
-                  <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Semester {s.semester}</p>
-                  <p className="text-slate-900 dark:text-white font-black text-2xl tracking-tight mt-2">{Math.round(s.pass_rate)}%</p>
-                  <p className="text-slate-500 dark:text-slate-400 font-bold text-xs mt-1">Pass Rate</p>
-                  <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 p-3">
-                      <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Avg</p>
-                      <p className="text-slate-900 dark:text-white font-black text-sm mt-1">{s.avg_total_marks.toFixed(1)}</p>
-                    </div>
-                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 p-3">
-                      <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Students</p>
-                      <p className="text-slate-900 dark:text-white font-black text-sm mt-1">{s.total_students.toLocaleString()}</p>
+            {isLoading ? (
+              <div className="w-full h-[240px] bg-slate-50 dark:bg-slate-900/50 rounded-2xl animate-pulse" />
+            ) : semesterOverview.length === 0 ? (
+              <div className="w-full h-[240px] bg-slate-50 dark:bg-slate-900 rounded-2xl flex items-center justify-center text-slate-400 font-bold text-sm">
+                No data for current filters
+              </div>
+            ) : (
+              <div className={`grid ${overviewGridClass} gap-4`}>
+                {semesterOverview.map((s) => (
+                  <div key={s.semester} className="p-5 rounded-[1.75rem] bg-slate-50 dark:bg-slate-900 border border-slate-100">
+                    <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Semester {s.semester}</p>
+                    <p className="text-slate-900 dark:text-white font-black text-2xl tracking-tight mt-2">{Math.round(s.pass_rate)}%</p>
+                    <p className="text-slate-500 dark:text-slate-400 font-bold text-xs mt-1">Pass Rate</p>
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 p-3">
+                        <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Avg</p>
+                        <p className="text-slate-900 dark:text-white font-black text-sm mt-1">{s.avg_total_marks.toFixed(1)}</p>
+                      </div>
+                      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 p-3">
+                        <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest">Students</p>
+                        <p className="text-slate-900 dark:text-white font-black text-sm mt-1">{s.total_students.toLocaleString()}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Recent Students */}
+          <div className="glass-card rounded-[2.5rem] p-6 sm:p-10">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white">Recent Uploads</h3>
+              <Link to="/profile" className="text-indigo-600 font-black text-xs uppercase tracking-widest hover:underline">View All</Link>
             </div>
-          )}
+            {isLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map(i => <div key={i} className="h-16 bg-slate-50 rounded-2xl animate-pulse"></div>)}
+              </div>
+            ) : recentStudents.length === 0 ? (
+              <p className="text-slate-400 font-medium text-sm text-center py-8">No students found.</p>
+            ) : (
+              <div className="space-y-3">
+                {recentStudents.map(student => (
+                  <Link key={student.usn} to={`/profile?usn=${student.usn}`} onClick={() => { /* Need to handle query param in Profile possibly, generally Link works if Profile reads it */ }} className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors group">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold">
+                        {student.student_name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">{student.student_name}</p>
+                        <p className="text-xs font-bold text-slate-400">{student.usn}</p>
+                      </div>
+                    </div>
+                    <div className="text-indigo-600">
+                      <ArrowRight size={18} />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-6 sm:space-y-8">

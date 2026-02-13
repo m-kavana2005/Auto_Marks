@@ -85,5 +85,30 @@ def test_manual_entry():
         print(f"Error updating result: {e}")
         # print(resp.text)
 
+
+    # 4. Metadata Discovery
+    print(f"\n4. Testing Metadata Discovery...")
+    try:
+        batch = "2024-2028"
+        # Semesters
+        resp = requests.get(f"{BASE_URL}/batches/{batch}/semesters")
+        resp.raise_for_status()
+        sems = resp.json()
+        print(f"Semesters for batch {batch}: {sems}")
+        if 1 in sems:
+            print("Verified: Semester 1 found.")
+
+        # Subjects
+        resp = requests.get(f"{BASE_URL}/batch/{batch}/semester/1/subjects")
+        resp.raise_for_status()
+        subs = resp.json()
+        print(f"Subjects for batch {batch}, sem 1: {len(subs)} found.")
+        codes = [s['subject_code'] for s in subs]
+        if "24MAT11" in codes:
+            print("Verified: 24MAT11 found.")
+
+    except Exception as e:
+        print(f"Error in metadata discovery: {e}")
+
 if __name__ == "__main__":
     test_manual_entry()

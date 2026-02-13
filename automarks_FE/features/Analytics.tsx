@@ -40,7 +40,7 @@ import { SubjectStats, FailureAnalysis, TopPerformer } from '../types';
 import { getBatchOptions } from '../utils/batches';
 
 const Analytics: React.FC = () => {
-  const [semester, setSemester] = useState(5);
+  const [semester, setSemester] = useState<number | undefined>(undefined);
   const [batch, setBatch] = useState<string | undefined>(undefined);
   const [branch, setBranch] = useState<string | undefined>(undefined);
   const [branches, setBranches] = useState<string[]>([]);
@@ -53,7 +53,30 @@ const Analytics: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [gradeDistribution, setGradeDistribution] = useState<Record<string, number>>({});
 
+  const [availableSemesters, setAvailableSemesters] = useState<number[]>([]);
+
+  // Initial load: determine active semester and fetch data
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const overview = await endpoints.getSemesterOverview();
+        if (overview && overview.length > 0) {
+          const sems = overview.map(o => o.semester).sort((a, b) => b - a); // Descending
+          setAvailableSemesters(sems);
+          setSemester(sems[0]); // Default to latest
+        } else {
+          // Fallback if no data
+          setSemester(5);
+        }
+      } catch (e) {
+        console.error("Failed to init analytics:", e);
+      }
+    };
+    init();
+  }, []);
+
   const fetchAnalytics = async () => {
+    if (!semester) return; // Wait for semester selection
     setIsLoading(true);
     setError(null);
     try {

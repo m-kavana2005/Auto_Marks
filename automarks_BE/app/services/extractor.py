@@ -109,21 +109,27 @@ class VTUResultExtractor:
             logger.debug(f"Content preview (first 500 chars): {content[:500]}")
             
             # Extract USN (University Seat Number)
-            usn_match = re.search(r'University Seat Number\s*:?\s*([A-Z0-9]+)', content, re.IGNORECASE)
+            # Allow "USN" or "University Seat Number"
+            usn_match = re.search(r'(?:University Seat Number|USN)\s*[:.-]?\s*([1-9][A-Z]{2}\d{2}[A-Z]{2}\d{3})', content, re.IGNORECASE)
+            if not usn_match:
+                 # Fallback: Try generic alphanumeric if specific format fails (e.g. 1SV...)
+                 usn_match = re.search(r'(?:University Seat Number|USN)\s*[:.-]?\s*([A-Z0-9]{10})', content, re.IGNORECASE)
+
             if not usn_match:
                 logger.error(f"USN not found in document. Content length: {len(content)}, Preview: {content[:200]}")
                 return None
             usn = usn_match.group(1).strip()
 
             # Extract Student Name
-            name_match = re.search(r'Student Name\s*:?\s*([A-Z\s]+?)(?:\n|Semester)', content, re.IGNORECASE)
+            # Stop at Semester, Branch, USN, or end of line
+            name_match = re.search(r'(?:Student Name|Name)\s*[:.-]?\s*([A-Z\s.]+?)(?:\n|Semester|Branch|USN|Credit)', content, re.IGNORECASE)
             if not name_match:
                 logger.error("Student name not found in document")
                 return None
             student_name = name_match.group(1).strip()
 
             # Extract Semester
-            semester_match = re.search(r'Semester\s*:?\s*(\d+)', content, re.IGNORECASE)
+            semester_match = re.search(r'(?:Semester|Sem)\s*[:.-]?\s*(\d+)', content, re.IGNORECASE)
             if not semester_match:
                 logger.error("Semester not found in document")
                 return None
@@ -132,7 +138,7 @@ class VTUResultExtractor:
             # Extract exam period (month and year)
             exam_month = None
             exam_year = None
-            exam_period_match = re.search(r'(December|January|June|July)-(\d{4})', content, re.IGNORECASE)
+            exam_period_match = re.search(r'(December|January|June|July)[- ]?(\d{4})', content, re.IGNORECASE)
             if exam_period_match:
                 exam_month = exam_period_match.group(1)
                 exam_year = int(exam_period_match.group(2))
@@ -171,8 +177,10 @@ class VTUResultExtractor:
         subjects: List[ExtractedSubjectResult] = []
 
         # VTU status codes can be more than just P/F
+        # Regex for marks: Int(3) Ext(3) Tot(3) Result(Code) Date(YYYY-MM-DD, optional)
         marks_re = re.compile(
-            r"(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})\s+(P|F|A|W|X|NE)\s+(\d{4}-\d{2}-\d{2})"
+            r"(\d{1,3})\s+(\d{1,3})\s+(\d{1,3})\s+(P|F|A|W|X|NE)(?:\s+(\d{4}-\d{2}-\d{2}))?",
+            re.IGNORECASE
         )
 
         # Subject code appears at the start of a line.

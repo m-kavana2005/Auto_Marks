@@ -174,6 +174,12 @@ export const endpoints = {
       body: JSON.stringify(data),
     });
   },
+  getBatchSemesters: async (batch: string): Promise<number[]> => {
+    return apiFetch(`/batches/${batch}/semesters`);
+  },
+  getBatchSemesterSubjects: async (batch: string, semester: number): Promise<Array<{ id: number; subject_code: string; subject_name: string }>> => {
+    return apiFetch(`/batch/${batch}/semester/${semester}/subjects`);
+  },
   getResults: async (params: {
     usn?: string;
     semester?: number;
