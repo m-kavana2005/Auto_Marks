@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   User,
@@ -63,6 +63,21 @@ const StudentProfile: React.FC = () => {
     subjects: [{ subject_code: '', subject_name: '', credits: 4, internal_marks: 0, external_marks: 0, total_marks: 0, result_status: 'P' }]
   });
 
+  // Check URL params for manual mode trigger
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'manual') {
+      setShowManualEntry(true);
+      // Clean up URL without refresh
+      window.history.replaceState({}, '', '/profile');
+    }
+    const usnParam = params.get('usn');
+    if (usnParam) {
+      setQuery(usnParam);
+      performSearch(usnParam);
+    }
+  }, []);
+
   const handleManualEntryChange = (field: string, value: any) => {
     setManualEntryData(prev => ({ ...prev, [field]: value }));
   };
@@ -101,6 +116,13 @@ const StudentProfile: React.FC = () => {
       }
       if (manualEntryData.subjects.length === 0 || manualEntryData.subjects.some(s => !s.subject_code || !s.subject_name)) {
         throw new Error("At least one subject with code and name is required.");
+      }
+
+      // Check for duplicate subject codes
+      const subjectCodes = manualEntryData.subjects.map(s => s.subject_code.trim().toUpperCase());
+      const uniqueCodes = new Set(subjectCodes);
+      if (uniqueCodes.size !== subjectCodes.length) {
+        throw new Error("Duplicate subject codes found. Each subject must have a unique code.");
       }
 
       // Check if student exists
@@ -310,6 +332,13 @@ const StudentProfile: React.FC = () => {
               className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95"
             >
               {isLoading ? '...' : 'Search'}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowManualEntry(true)}
+              className="bg-white text-indigo-600 border-2 border-indigo-100 px-6 py-4 rounded-2xl font-bold hover:bg-indigo-50 transition-all active:scale-95 flex items-center gap-2"
+            >
+              <Plus size={20} /> <span className="hidden sm:inline">Manual Entry</span>
             </button>
           </form>
         </div>
@@ -652,6 +681,233 @@ const StudentProfile: React.FC = () => {
           </div>
           <h3 className="text-2xl font-black text-slate-400">Search to view profile</h3>
           <p className="text-slate-400 mt-2 max-w-xs mx-auto">Enter Name or USN to see detailed performance metrics and history.</p>
+          <button
+            onClick={() => setShowManualEntry(true)}
+            className="mt-8 text-indigo-600 font-bold hover:underline"
+          >
+            Or add a record manually
+          </button>
+        </div>
+      )}
+
+      {/* Manual Entry Modal */}
+      {showManualEntry && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-3xl max-h-[90vh] rounded-[2rem] shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-[2rem]">
+              <div>
+                <h3 className="text-xl font-black text-slate-900">Manual Entry</h3>
+                <p className="text-xs font-bold text-slate-500">Add a new student record or semester result</p>
+              </div>
+              <button
+                onClick={() => setShowManualEntry(false)}
+                className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              {/* Student Details */}
+              <div className="space-y-4">
+                <h4 className="flex items-center gap-2 text-sm font-black text-indigo-600 uppercase tracking-wider">
+                  <User size={16} /> Student Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 ml-1">USN <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 1SV22CS001"
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 uppercase"
+                      value={manualEntryData.usn}
+                      onChange={(e) => handleManualEntryChange('usn', e.target.value.toUpperCase())}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 ml-1">Student Name <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500"
+                      value={manualEntryData.student_name}
+                      onChange={(e) => handleManualEntryChange('student_name', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 ml-1">Batch</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 2022"
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500"
+                      value={manualEntryData.batch}
+                      onChange={(e) => handleManualEntryChange('batch', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 ml-1">Branch</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. CSE"
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 uppercase"
+                      value={manualEntryData.branch}
+                      onChange={(e) => handleManualEntryChange('branch', e.target.value.toUpperCase())}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Semester Details */}
+              <div className="space-y-4">
+                <h4 className="flex items-center gap-2 text-sm font-black text-indigo-600 uppercase tracking-wider">
+                  <Calendar size={16} /> Semester Info
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 ml-1">Semester <span className="text-rose-500">*</span></label>
+                    <select
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500"
+                      value={manualEntryData.semester}
+                      onChange={(e) => handleManualEntryChange('semester', e.target.value)}
+                    >
+                      <option value="">Select</option>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 ml-1">Exam Month <span className="text-rose-500">*</span></label>
+                    <select
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500"
+                      value={manualEntryData.exam_month}
+                      onChange={(e) => handleManualEntryChange('exam_month', e.target.value)}
+                    >
+                      <option value="">Select</option>
+                      {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-500 ml-1">Exam Year <span className="text-rose-500">*</span></label>
+                    <input
+                      type="number"
+                      placeholder="YYYY"
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500"
+                      value={manualEntryData.exam_year}
+                      onChange={(e) => handleManualEntryChange('exam_year', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Subjects */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="flex items-center gap-2 text-sm font-black text-indigo-600 uppercase tracking-wider">
+                    <BookOpen size={16} /> Subjects
+                  </h4>
+                  <button
+                    onClick={addSubjectRow}
+                    className="px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1"
+                  >
+                    <Plus size={14} /> Add Subject
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {manualEntryData.subjects.map((subj, idx) => (
+                    <div key={idx} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 relative group">
+                      <button
+                        onClick={() => removeSubjectRow(idx)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-200"
+                      >
+                        <X size={12} strokeWidth={3} />
+                      </button>
+
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+                        {/* Subject Info */}
+                        <div className="md:col-span-3 space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Code</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 21CS41"
+                            className="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm font-bold uppercase"
+                            value={subj.subject_code}
+                            onChange={(e) => handleSubjectChange(idx, 'subject_code', e.target.value.toUpperCase())}
+                          />
+                        </div>
+                        <div className="md:col-span-4 space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Name</label>
+                          <input
+                            type="text"
+                            placeholder="Subject Name"
+                            className="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm font-bold"
+                            value={subj.subject_name}
+                            onChange={(e) => handleSubjectChange(idx, 'subject_name', e.target.value)}
+                          />
+                        </div>
+                        <div className="md:col-span-1 space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Cred</label>
+                          <input
+                            type="number"
+                            className="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-center"
+                            value={subj.credits}
+                            onChange={(e) => handleSubjectChange(idx, 'credits', e.target.value)}
+                          />
+                        </div>
+
+                        {/* Marks */}
+                        <div className="md:col-span-1 space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Int</label>
+                          <input
+                            type="number"
+                            className="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-center"
+                            value={subj.internal_marks}
+                            onChange={(e) => handleSubjectChange(idx, 'internal_marks', e.target.value)}
+                          />
+                        </div>
+                        <div className="md:col-span-1 space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Ext</label>
+                          <input
+                            type="number"
+                            className="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm font-bold text-center"
+                            value={subj.external_marks}
+                            onChange={(e) => handleSubjectChange(idx, 'external_marks', e.target.value)}
+                          />
+                        </div>
+                        <div className="md:col-span-2 space-y-1">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase">Result</label>
+                          <select
+                            className="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm font-bold"
+                            value={subj.result_status}
+                            onChange={(e) => handleSubjectChange(idx, 'result_status', e.target.value)}
+                          >
+                            <option value="P">PASS</option>
+                            <option value="F">FAIL</option>
+                            <option value="A">ABSENT</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 rounded-b-[2rem] flex justify-end gap-3">
+              <button
+                onClick={() => setShowManualEntry(false)}
+                className="px-6 py-3 font-bold text-slate-500 hover:bg-slate-200 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitManualEntryFinal}
+                disabled={isLoading}
+                className="px-8 py-3 bg-indigo-600 text-white font-black rounded-xl shadow-lg hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95"
+              >
+                {isLoading ? 'Saving...' : 'Save Entry'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

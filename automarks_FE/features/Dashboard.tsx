@@ -11,11 +11,12 @@ import {
   Users,
   BarChart2,
   Zap,
-  Loader2,
-  Edit2
+  Edit2,
+  Plus
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { endpoints } from '../api/client';
+import StudentProfile from './StudentProfile';
 
 const StatCard = ({ title, value, icon: Icon, color, trend }: any) => (
   <div className="glass-card p-6 rounded-[2rem] shadow-sm flex flex-col gap-4 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-transparent hover:border-indigo-100">
@@ -52,6 +53,26 @@ const Dashboard: React.FC = () => {
 
   const [branches, setBranches] = useState<string[]>([]);
   const [batches, setBatches] = useState<string[]>([]);
+
+  // State for manual entry modal - reusing logic from StudentProfile would be ideal, 
+  // but for now we can redirect or show a simplified trigger.
+  // Actually, let's toggle a state that we might pass to a modal if we had one global,
+  // but since the Manual Entry logic is inside StudentProfile, we might just link to it 
+  // or duplicate the modal state here if the user wants it ON Dashboard.
+  // Given the request "i cannot see manual entry button on dashboard", let's add a button 
+  // that links to the profile page with a query param or state to open the modal, 
+  // OR strictly implement a button that opens the modal here.
+  // Re-implementing the modal here would be duplication. 
+  // A better approach: The "Manual Entry" feature is heavily tied to Student Profile creation.
+  // Let's add a direct button that navigates to `/profile?action=manual_entry`.
+  // AND/OR we can lift the state up, but for now let's guide the user to the profile page 
+  // where the feature resides, or render the StudentProfile component in a hidden way? No.
+
+  // Simplest and most robust: Add a button that says "Manual Entry" which goes to the profile page
+  // and automatically opens the modal. We need to handle that in StudentProfile.
+
+  // HOWEVER, the user asked to "Add a manual entry system...".
+  // If we want it ON the dashboard, we should probably add the button here.
 
   useEffect(() => {
     const loadMeta = async () => {
@@ -118,7 +139,13 @@ const Dashboard: React.FC = () => {
           <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Academic Oversight</h2>
           <p className="text-slate-500 dark:text-slate-400 font-medium text-sm sm:text-base mt-1">Holistic performance metrics across all university departments.</p>
         </div>
-        <div className="flex">
+        <div className="flex flex-wrap gap-3">
+          <Link
+            to="/profile?mode=manual"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-indigo-600 border-2 border-indigo-100 px-6 py-4 sm:py-3.5 rounded-2xl font-bold hover:bg-indigo-50 transition-all active:scale-95"
+          >
+            <Edit2 size={20} /> <span className="text-sm">Manual Entry</span>
+          </Link>
           <Link
             to="/upload"
             className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 sm:py-3.5 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
@@ -203,7 +230,7 @@ const Dashboard: React.FC = () => {
             ) : (
               <div className="space-y-3">
                 {recentStudents.map(student => (
-                  <Link key={student.usn} to={`/profile?usn=${student.usn}`} onClick={() => { /* Need to handle query param in Profile possibly, generally Link works if Profile reads it */ }} className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors group">
+                  <Link key={student.usn} to={`/profile?usn=${student.usn}`} className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors group">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center font-bold">
                         {student.student_name.charAt(0)}
