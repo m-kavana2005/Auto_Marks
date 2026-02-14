@@ -410,3 +410,57 @@ class ResultAnalyzer:
             pivot.to_excel(writer, sheet_name="Student View", index=False)
 
         logger.info(f"Excel exported to {output_path}")
+
+    # ---------------- OVERALL STATS ---------------- #
+
+    def get_overall_statistics(self, batch: Optional[str] = None, branch: Optional[str] = None) -> Dict:
+        """
+        Calculate overall statistics: pass rate, total students, total records, average CGPA.
+        """
+        df = self.get_results_dataframe(batch=batch, branch=branch)
+        
+        if df.empty:
+            return {
+                "pass_rate": 0,
+                "total_students": 0,
+                "total_records": 0,
+                "average_cgpa": 0
+            }
+
+        total_students = int(df['usn'].nunique())
+        total_records = len(df)
+        
+        # Pass Rate (Result level)
+        # Using 'P' as the indicator for pass
+        pass_count = (df['result_status'].str.upper() == 'P').sum()
+        pass_rate = (pass_count / total_records * 100) if total_records > 0 else 0
+        
+        # Average CGPA calculation
+        # This is an approximation based on available data
+        df['credits'] = pd.to_numeric(df['credits'], errors='coerce').fillna(0)
+        
+        # Use existing logic to calculate Grade Points
+        def calc_gp(row):
+            pct = self._marks_to_percentage(row['total_marks'])
+            return self._percentage_to_grade_points(pct, row['result_status'])
+            
+        df['grade_points'] = df.apply(calc_gp, axis=1)
+        
+        # Calculate average GPA per student first
+        student_gpas = []
+        # Group by USN to calculate each student's average GPA (SGPA-like)
+        for usn, group in df.groupby('usn'):
+            total_credits = group['credits'].sum()
+            weighted_points = (group['grade_points'] * group['credits']).sum()
+            if total_credits > 0:
+                student_gpas.append(weighted_points / total_credits)
+        
+        # Data-wide average CGPA
+        average_cgpa = sum(student_gpas) / len(student_gpas) if student_gpas else 0
+        
+        return {
+            "pass_rate": round(pass_rate, 2),
+            "total_students": total_students,
+            "total_records": total_records,
+            "average_cgpa": round(average_cgpa, 2)
+        }

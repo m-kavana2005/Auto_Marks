@@ -194,6 +194,7 @@ class SubjectStatistics(BaseModel):
     avg_internal: Optional[float] = None
     avg_external: Optional[float] = None
     avg_total: Optional[float] = None
+    avg_percentage: Optional[float] = None
     max_marks: Optional[int] = None
     min_marks: Optional[int] = None
     pass_count: int
