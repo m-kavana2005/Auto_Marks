@@ -59,6 +59,23 @@ class ResultAnalyzer:
         if percent >= 40: return 4
         return 0
 
+    @staticmethod
+    def _percentage_to_grade_letter(percent: Optional[float], result_status: Optional[str]) -> str:
+        if str(result_status or "").upper() not in {"", "P", "PASS"}:
+            return "F"
+        if percent is None or pd.isna(percent):
+            return "F"
+        
+        if percent >= 90: return "O"
+        if percent >= 80: return "S"
+        if percent >= 70: return "A"
+        if percent >= 60: return "B"
+        if percent >= 50: return "C"
+        if percent >= 45: return "D"
+        if percent >= 40: return "E"
+        return "F"
+
+
     # ---------------- DATAFRAME ---------------- #
 
     def get_results_dataframe(
@@ -467,6 +484,110 @@ class ResultAnalyzer:
             "total_records": total_records,
             "average_cgpa": round(average_cgpa, 2)
         }
+
+    # ---------------- FAILURE ANALYSIS ---------------- #
+
+    def get_failure_analysis(
+        self,
+        semester: int,
+        batch: Optional[str] = None,
+        branch: Optional[str] = None,
+        exam_year: Optional[int] = None,
+        exam_month: Optional[str] = None
+    ) -> Dict:
+        df = self.get_results_dataframe(
+            semester=semester,
+            batch=batch,
+            branch=branch,
+            exam_year=exam_year,
+            exam_month=exam_month
+        )
+
+        if df.empty:
+            return {
+                "total_results": 0,
+                "total_failures": 0,
+                "failure_rate": 0.0,
+                "subject_wise_failures": {},
+                "students_with_failures": []
+            }
+
+        # 1. Subject-wise failures
+        subject_failures = {}
+        for code in df['subject_code'].unique():
+            s = df[df['subject_code'] == code]
+            fail_count = int((s['result_status'] == 'F').astype(int).sum())
+            if fail_count > 0:
+                subject_failures[code] = fail_count
+
+        # 2. Student-wise failures
+        students_failed = []
+        total_students = df['usn'].nunique()
+        failed_student_count = 0
+
+        for (usn, name), group in df.groupby(['usn', 'student_name']):
+            failed_subjects = group[group['result_status'] == 'F']
+            f_count = len(failed_subjects)
+            if f_count > 0:
+                failed_student_count += 1
+                students_failed.append({
+                    "usn": usn,
+                    "name": name,
+                    "failed_subjects_count": f_count,
+                    "failed_subjects": failed_subjects['subject_code'].tolist()
+                })
+
+        # Sort by failure count desc
+        students_failed.sort(key=lambda x: x['failed_subjects_count'], reverse=True)
+
+        return {
+            "total_results": total_students,
+            "total_failures": failed_student_count,
+            "failure_rate": round((failed_student_count / total_students * 100), 2) if total_students > 0 else 0.0,
+            "subject_wise_failures": subject_failures,
+            "students_with_failures": students_failed
+        }
+
+    # ---------------- GRADE DISTRIBUTION ---------------- #
+
+    def get_grade_distribution(
+        self,
+        semester: int,
+        subject_code: Optional[str] = None,
+        batch: Optional[str] = None,
+        branch: Optional[str] = None,
+        exam_year: Optional[int] = None,
+        exam_month: Optional[str] = None
+    ) -> Dict[str, int]:
+        df = self.get_results_dataframe(
+            semester=semester,
+            subject_code=subject_code,
+            batch=batch,
+            branch=branch,
+            exam_year=exam_year,
+            exam_month=exam_month
+        )
+
+        distribution = {"O": 0, "S": 0, "A": 0, "B": 0, "C": 0, "D": 0, "E": 0, "F": 0}
+        
+        if df.empty:
+            return distribution
+
+        def map_grade(row):
+            pct = self._marks_to_percentage(row['total_marks'])
+            return self._percentage_to_grade_letter(pct, row['result_status'])
+
+        grades = df.apply(map_grade, axis=1)
+        counts = grades.value_counts().to_dict()
+        
+        for g, count in counts.items():
+            if g in distribution:
+                distribution[g] = count
+            else:
+                 # Handle unexpected
+                 pass
+
+        return distribution
 
     # ---------------- MATRIX VIEW ---------------- #
 
