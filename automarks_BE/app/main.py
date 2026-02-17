@@ -1149,7 +1149,9 @@ async def get_top_performers(
         exam_year=exam_year,
         exam_month=exam_month,
     )
-    return top_performers.to_dict('records')
+
+    return top_performers
+
 
 
 @app.get("/analytics/failure-analysis/{semester}")
@@ -1165,6 +1167,22 @@ async def get_failure_analysis(
     analyzer = ResultAnalyzer(db)
     analysis = analyzer.get_failure_analysis(semester, batch=batch, branch=branch, exam_year=exam_year, exam_month=exam_month)
     return analysis
+
+
+@app.get("/analytics/grade-distribution/{semester}")
+async def get_grade_distribution(
+    semester: int,
+    batch: Optional[str] = None,
+    branch: Optional[str] = None,
+    exam_year: Optional[int] = Query(None, ge=2000, le=2100),
+    exam_month: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """Get grade distribution for a semester"""
+    analyzer = ResultAnalyzer(db)
+    distribution = analyzer.get_grade_distribution(semester, batch=batch, branch=branch, exam_year=exam_year, exam_month=exam_month)
+    return distribution
+
 
 
 @app.get("/analytics/semester-overview")

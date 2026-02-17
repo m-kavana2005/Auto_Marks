@@ -120,8 +120,12 @@ const Analytics: React.FC = () => {
         </div>
         <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Analytics Offline</h2>
         <p className="text-slate-500 max-w-lg mx-auto mb-10 font-medium leading-relaxed">
-          We encountered a connection error while trying to reach the analytics engine at <code className="bg-slate-100 px-1 rounded font-bold">{getApiBase()}</code>.
-          Please verify your backend service is active.
+          {error || (
+            <>
+              We encountered a connection error while trying to reach the analytics engine at <code className="bg-slate-100 px-1 rounded font-bold">{getApiBase()}</code>.
+              Please verify your backend service is active.
+            </>
+          )}
         </p>
         <div className="flex gap-4">
           <button

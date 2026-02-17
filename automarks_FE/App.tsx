@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  HashRouter,
+  BrowserRouter,
   MemoryRouter,
   Routes,
   Route,
@@ -773,7 +773,7 @@ const DashboardLayout = () => {
 };
 
 export default function App() {
-  const RouterComponent = isBlobEnvironment ? MemoryRouter : HashRouter;
+  const RouterComponent = isBlobEnvironment ? MemoryRouter : BrowserRouter;
   return (
     <RouterComponent>
       <Routes>
