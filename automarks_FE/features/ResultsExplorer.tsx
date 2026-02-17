@@ -1,49 +1,45 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Search,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-  MoreHorizontal,
   Download,
   WifiOff,
   RefreshCcw,
-  AlertCircle,
-  Trash2
+  Search,
+  Filter,
+  CheckCircle,
+  XCircle,
+  Users
 } from 'lucide-react';
 import { endpoints, getApiBase } from '../api/client';
-import { Result } from '../types';
+import { ResultMatrix } from '../types';
 
 const ResultsExplorer: React.FC = () => {
-  const [results, setResults] = useState<Result[]>([]);
+  const [matrix, setMatrix] = useState<ResultMatrix | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [branches, setBranches] = useState<string[]>([]);
-  const [batches, setBatches] = useState<string[]>([]);
-  const [semesters, setSemesters] = useState<number[]>([]);
-  const [subjects, setSubjects] = useState<Array<{ code: string; name: string }>>([]);
-  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pass' | 'fail'>('all');
-  const [filters, setFilters] = useState({
-    usn: '',
-    semester: undefined as number | undefined,
-    batch: undefined as string | undefined,
-    branch: undefined as string | undefined,
-    subject_code: '',
-    skip: 0,
-    limit: 15
-  });
 
-  const statusParam = statusFilter === 'all' ? undefined : statusFilter;
+  // Meta options
+  const [batches, setBatches] = useState<string[]>([]);
+  const [branches, setBranches] = useState<string[]>([]);
+  const [semesters, setSemesters] = useState<number[]>([]);
+
+  const [filters, setFilters] = useState({
+    batch: '' as string,
+    branch: '' as string,
+    semester: '' as string | number, // can be empty
+    usn: '',
+  });
 
   const fetchData = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await endpoints.getResults({ ...filters, status: statusParam });
-      setResults(res);
+      const res = await endpoints.getResultMatrix({
+        batch: filters.batch || undefined,
+        branch: filters.branch || undefined,
+        semester: filters.semester ? Number(filters.semester) : undefined,
+      });
+      setMatrix(res);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "An unexpected error occurred while fetching results.");
@@ -52,25 +48,15 @@ const ResultsExplorer: React.FC = () => {
     }
   };
 
+  // Initial Load & Dependencies
   useEffect(() => {
-    fetchData();
-  }, [filters.skip, filters.limit, statusFilter]);
-
-  useEffect(() => {
-    // 0. Fetch Batches on mount
     endpoints.getBatches().then((res) => setBatches(res || [])).catch(() => setBatches([]));
   }, []);
 
   useEffect(() => {
-    // 1. Fetch Branches & Semesters when Batch (or Branch) changes
     if (filters.batch) {
-      // Parallel fetch possible, but Branch usually depends only on Batch
       endpoints.getBranches(filters.batch).then((res) => setBranches(res || [])).catch(() => setBranches([]));
-
-      // Semester might depend on Branch too (e.g. if a branch started late)
-      endpoints.getSemesters(filters.batch, filters.branch)
-        .then((res) => setSemesters(res || []))
-        .catch(() => setSemesters([]));
+      endpoints.getSemesters(filters.batch, filters.branch || undefined).then((res) => setSemesters(res || [])).catch(() => setSemesters([]));
     } else {
       setBranches([]);
       setSemesters([]);
@@ -78,371 +64,235 @@ const ResultsExplorer: React.FC = () => {
   }, [filters.batch, filters.branch]);
 
   useEffect(() => {
-    // 2. Fetch Subjects when Batch, Semester, or Branch changes
-    endpoints
-      .getSubjects(filters.batch, filters.semester, filters.branch)
-      .then((res) => setSubjects(res || []))
-      .catch(() => setSubjects([]));
-  }, [filters.batch, filters.semester, filters.branch]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFilters(prev => ({ ...prev, skip: 0 }));
+    // Configurable: Fetch on any filter change or wait for manual sync?
+    // For typical "Explorer", auto-fetch is better UX if dataset isn't massive.
     fetchData();
-  };
+  }, [filters.batch, filters.branch, filters.semester]);
 
-  const handleDelete = async (resultId: number) => {
-    if (!confirm('Are you sure you want to delete this result? This action cannot be undone.')) {
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      await endpoints.deleteResult(resultId);
-      // Remove the deleted result from the local state
-      setResults(prev => prev.filter(r => r.id !== resultId));
-      setDeleteConfirm(null);
-    } catch (err: any) {
-      console.error('Delete failed:', err);
-      alert('Failed to delete result. Please try again.');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const handleExport = () => {
     const exportParams: any = {};
     if (filters.batch) exportParams.batch = filters.batch;
     if (filters.branch) exportParams.branch = filters.branch;
     if (filters.semester) exportParams.semester = filters.semester;
-    if (filters.usn) exportParams.usn = filters.usn;
-    if (filters.subject_code) exportParams.subject_code = filters.subject_code;
 
+    // Using existing export endpoint which might support matrix format or raw
+    // Ideally backend should support format='excel-matrix'. 
+    // For now using default excel export.
     const url = endpoints.exportUrl('excel', exportParams);
 
-    // Trigger download by creating a temporary link
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `results_export.xlsx`);
+    link.setAttribute('download', `results_matrix.xlsx`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
+  // Filtered Data (Client-side USN search)
+  const filteredData = matrix?.data.filter(d =>
+    d.usn.toLowerCase().includes(filters.usn.toLowerCase()) ||
+    d.name.toLowerCase().includes(filters.usn.toLowerCase())
+  ) || [];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-10">
+
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Results Explorer</h2>
-          <p className="text-slate-500 font-medium">Browse and filter granular result data for all students.</p>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Results Matrix</h2>
+          <p className="text-slate-500 font-medium">Comprehensive view of student performance across all subjects.</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleExport}
-            className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="flex items-center px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
           >
-            <Download className="mr-2 h-4 w-4" /> Export Current View
+            <Download className="mr-2 h-4 w-4" /> Export Excel
           </button>
           <button
-            onClick={handleSearch}
-            className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            onClick={fetchData}
+            className="flex items-center px-4 py-2 text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-colors shadow-sm"
           >
-            <RefreshCcw className="mr-2 h-4 w-4" /> Sync Records
+            <RefreshCcw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> Sync
           </button>
         </div>
       </div>
 
-      <div className="glass-card p-4 rounded-[2rem] shadow-sm border border-slate-100 mb-6">
-        <form onSubmit={handleSearch} className="flex flex-wrap items-end gap-2.5">
-          {/* USN */}
-          <div className="min-w-[130px] flex-1">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1 block px-1">USN</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <input
-                type="text"
-                placeholder="1SV22AD005"
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 transition-all text-sm text-slate-900 placeholder:text-slate-300 font-bold shadow-sm"
-                value={filters.usn}
-                onChange={(e) => setFilters(f => ({ ...f, usn: e.target.value.toUpperCase() }))}
-              />
+      {/* Stats Cards */}
+      {matrix && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Total Students</p>
+              <p className="text-3xl font-black text-slate-900 mt-1">{matrix.summary.total_students}</p>
+            </div>
+            <div className="h-12 w-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-600">
+              <Users size={24} />
             </div>
           </div>
-
-          {/* Subject Filter */}
-          <div className="min-w-[180px] flex-[1.5]">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1 block px-1">Course</label>
-            <div className="relative">
-              <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <select
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-700 truncate shadow-sm cursor-pointer"
-                value={filters.subject_code || ''}
-                onChange={(e) => setFilters(f => ({ ...f, subject_code: e.target.value }))}
-              >
-                <option value="">All Subjects</option>
-                {subjects.map(s => (
-                  <option key={s.code} value={s.code}>{s.code} - {s.name}</option>
-                ))}
-              </select>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-emerald-600/60 uppercase tracking-wider">Passed</p>
+              <p className="text-3xl font-black text-emerald-600 mt-1">{matrix.summary.passed}</p>
+            </div>
+            <div className="h-12 w-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600">
+              <CheckCircle size={24} />
             </div>
           </div>
-
-          {/* Semester Filter */}
-          <div className="min-w-[70px] flex-none">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1 block px-1">Sem</label>
-            <div className="relative">
-              <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <select
-                className="w-full pl-7 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-700 shadow-sm cursor-pointer"
-                value={filters.semester || ''}
-                onChange={(e) => {
-                  const val = e.target.value ? parseInt(e.target.value) : undefined;
-                  setFilters(f => ({ ...f, semester: val, subject_code: '' }));
-                }}
-              >
-                <option value="">All</option>
-                {semesters.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-rose-600/60 uppercase tracking-wider">Failed</p>
+              <p className="text-3xl font-black text-rose-600 mt-1">{matrix.summary.failed}</p>
+            </div>
+            <div className="h-12 w-12 bg-rose-50 rounded-full flex items-center justify-center text-rose-600">
+              <XCircle size={24} />
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Status Filter */}
-          <div className="min-w-[90px] flex-none">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1 block px-1">Status</label>
-            <div className="relative">
-              <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <select
-                className="w-full pl-7 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-700 shadow-sm cursor-pointer"
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value as 'all' | 'pass' | 'fail');
-                  setFilters((f) => ({ ...f, skip: 0 }));
-                }}
-              >
-                <option value="all">Any</option>
-                <option value="pass">P</option>
-                <option value="fail">F</option>
-              </select>
-            </div>
+      {/* Filters Bar */}
+      <div className="glass-card p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-end gap-3">
+        <div className="w-full md:w-48">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Batch</label>
+          <select
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+            value={filters.batch}
+            onChange={e => setFilters(f => ({ ...f, batch: e.target.value, branch: '', semester: '' }))}
+          >
+            <option value="">Select Batch</option>
+            {batches.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
+        <div className="w-full md:w-40">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Branch</label>
+          <select
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+            value={filters.branch}
+            onChange={e => setFilters(f => ({ ...f, branch: e.target.value }))}
+          >
+            <option value="">All Branches</option>
+            {branches.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+        </div>
+        <div className="w-full md:w-32">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Semester</label>
+          <select
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+            value={filters.semester}
+            onChange={e => setFilters(f => ({ ...f, semester: e.target.value }))}
+          >
+            <option value="">All</option>
+            {semesters.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Search Student</label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input
+              type="text"
+              placeholder="Search by Name or USN..."
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 placeholder:font-medium"
+              value={filters.usn}
+              onChange={e => setFilters(f => ({ ...f, usn: e.target.value }))}
+            />
           </div>
-
-          {/* Batch Filter */}
-          <div className="min-w-[110px] flex-none">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1 block px-1">Batch</label>
-            <div className="relative">
-              <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <select
-                className="w-full pl-7 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-700 shadow-sm cursor-pointer"
-                value={filters.batch || ''}
-                onChange={(e) => {
-                  const val = e.target.value ? e.target.value : undefined;
-                  setFilters((f) => ({
-                    ...f,
-                    batch: val,
-                    // Reset dependent filters
-                    semester: undefined,
-                    branch: undefined,
-                    subject_code: ''
-                  }));
-                }}
-              >
-                <option value="">Select Batch</option>
-                {batches.map((b) => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Branch Filter */}
-          <div className="min-w-[100px] flex-none">
-            <label className="text-[9px] font-black text-slate-400 uppercase tracking-tighter mb-1 block px-1">Branch</label>
-            <div className="relative">
-              <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-              <select
-                className="w-full pl-7 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-slate-700 shadow-sm cursor-pointer"
-                value={filters.branch || ''}
-                onChange={(e) => {
-                  const val = e.target.value ? e.target.value : undefined;
-                  setFilters((f) => ({ ...f, branch: val, subject_code: '' }));
-                }}
-              >
-                <option value="">All</option>
-                {branches.map((b) => (
-                  <option key={b} value={b}>{b}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <button type="submit" className="bg-slate-900 text-white px-5 py-2 rounded-xl font-black shadow-lg shadow-slate-200 hover:bg-slate-800 transition-all active:scale-[0.98] text-xs">
-            Sync Records
-          </button>
-        </form>
+        </div>
       </div>
 
-      <div className="glass-card rounded-[2rem] overflow-hidden shadow-sm min-h-[400px] flex flex-col">
+      {/* Main Content */}
+      <div className="glass-card rounded-[2rem] overflow-hidden shadow-sm min-h-[400px] flex flex-col border border-slate-200/60">
         {error ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
             <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mb-6">
               <WifiOff size={40} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Connection Failure</h3>
-            <p className="text-slate-500 max-w-md mx-auto mb-8 font-medium">
-              We couldn't reach the API at <code className="bg-slate-100 px-1 rounded text-rose-600">{getApiBase()}</code>.
-              {error.includes('Network Error') ? ' Ensure the backend server is running and CORS is enabled.' : error}
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={fetchData}
-                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all"
-              >
-                <RefreshCcw size={18} /> Try Again
-              </button>
-            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">Data Unavailable</h3>
+            <p className="text-slate-500 max-w-md mx-auto mb-8 font-medium">{error}</p>
+            <button onClick={fetchData} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all">
+              Retry
+            </button>
+          </div>
+        ) : isLoading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : !matrix || filteredData.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-20">
+            <Search size={48} className="mb-4 opacity-20" />
+            <p className="font-bold text-lg">No records found.</p>
+            <p className="text-sm">Try adjusting your filters.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto flex-1">
+          <div className="overflow-auto max-h-[70vh] relative">
             <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">USN</th>
-                  <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Student</th>
-                  <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Sem</th>
-                  <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Subject</th>
-                  <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Internal</th>
-                  <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">External</th>
-                  <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest text-center">Total</th>
-                  <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                  <th className="px-6 py-5 text-xs font-black text-slate-400 uppercase tracking-widest"></th>
+              <thead className="bg-slate-50 sticky top-0 z-20 shadow-sm">
+                <tr>
+                  <th className="sticky left-0 z-30 bg-slate-50 px-4 py-4 text-[11px] font-black text-slate-500 uppercase tracking-widest border-b border-r border-slate-200 min-w-[140px]">USN</th>
+                  <th className="sticky left-[140px] z-30 bg-slate-50 px-4 py-4 text-[11px] font-black text-slate-500 uppercase tracking-widest border-b border-r border-slate-200 min-w-[180px]">Student Name</th>
+                  <th className="px-4 py-4 text-[11px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-200 text-center w-[100px]">Total</th>
+                  <th className="px-4 py-4 text-[11px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-200 text-center w-[100px]">Result</th>
+                  {matrix.columns.map(col => (
+                    <th key={col.code} className="px-4 py-4 text-[11px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-200 min-w-[100px] text-center" title={col.name}>
+                      <div className="flex flex-col">
+                        <span>{col.code}</span>
+                        {/* <span className="text-[9px] opacity-50 font-normal truncate max-w-[80px] mx-auto">{col.name}</span> */}
+                      </div>
+                    </th>
+                  ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {isLoading ? (
-                  [1, 2, 3, 4, 5, 6].map(i => (
-                    <tr key={i} className="animate-pulse">
-                      <td colSpan={9} className="px-6 py-6"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
-                    </tr>
-                  ))
-                ) : results.length > 0 ? (
-                  results.map((res) => (
-                    <tr key={res.id} className={`transition-colors group cursor-pointer relative ${res.result_status === 'F'
-                      ? 'bg-rose-50 hover:bg-rose-100 border-l-4 border-rose-500'
-                      : 'hover:bg-slate-50'
-                      }`}>
-                      <td className={`px-6 py-5 font-bold ${res.result_status === 'F' ? 'text-rose-600' : 'text-indigo-600'
-                        }`}>{res.usn}</td>
-                      <td className={`px-6 py-5 font-medium ${res.result_status === 'F' ? 'text-rose-700' : 'text-slate-600'
-                        }`}>{res.student_name}</td>
-                      <td className={`px-6 py-5 font-semibold ${res.result_status === 'F' ? 'text-rose-600' : 'text-slate-500'
-                        }`}>{res.semester}</td>
-                      <td className="px-6 py-5">
-                        <p className={`font-bold leading-tight ${res.result_status === 'F' ? 'text-rose-700' : 'text-slate-900'
-                          }`}>{res.subject_code}</p>
-                        <p className={`text-xs mt-0.5 ${res.result_status === 'F' ? 'text-rose-500' : 'text-slate-400'
-                          }`}>{res.subject_name}</p>
-                      </td>
-                      <td className={`px-6 py-5 ${res.result_status === 'F' ? 'text-rose-700 font-bold' : 'text-slate-600'
-                        }`}>{res.internal_marks}</td>
-                      <td className={`px-6 py-5 ${res.result_status === 'F' ? 'text-rose-700 font-bold' : 'text-slate-600'
-                        }`}>{res.external_marks}</td>
-                      <td className={`px-6 py-5 text-center font-black ${res.result_status === 'F' ? 'text-rose-700' : 'text-slate-900'
-                        }`}>{res.total_marks}</td>
-                      <td className="px-6 py-5 text-center">
-                        <span className={`px-3 py-1.5 rounded-lg text-xs font-black tracking-tight ${res.result_status === 'P' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                          }`}>
-                          {res.result_status === 'P' ? 'PASS' : 'FAIL'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setDeleteConfirm(deleteConfirm === res.id ? null : res.id)}
-                            className="p-2 text-slate-300 hover:text-rose-600 transition-colors"
-                            disabled={isDeleting}
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                          {deleteConfirm === res.id && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 z-10">
-                              <div className="p-3">
-                                <p className="text-sm text-slate-600 mb-3">Delete this result?</p>
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={() => handleDelete(res.id)}
-                                    disabled={isDeleting}
-                                    className="px-3 py-1.5 bg-rose-600 text-white text-xs font-bold rounded hover:bg-rose-700 transition-colors"
-                                  >
-                                    {isDeleting ? 'Deleting...' : 'Delete'}
-                                  </button>
-                                  <button
-                                    onClick={() => setDeleteConfirm(null)}
-                                    className="px-3 py-1.5 bg-slate-200 text-slate-700 text-xs font-bold rounded hover:bg-slate-300 transition-colors"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={9} className="px-6 py-20 text-center">
-                      <div className="flex flex-col items-center justify-center text-slate-400">
-                        <AlertCircle size={32} className="mb-4 opacity-20" />
-                        <p className="font-bold">No results found matching your filters.</p>
-                      </div>
+              <tbody className="divide-y divide-slate-100 bg-white">
+                {filteredData.map((row) => (
+                  <tr key={row.usn} className="hover:bg-slate-50 transition-colors group">
+                    <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 px-4 py-3 text-xs font-bold text-indigo-600 border-r border-slate-100 whitespace-nowrap">
+                      {row.usn}
                     </td>
+                    <td className="sticky left-[140px] z-10 bg-white group-hover:bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-700 border-r border-slate-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" title={row.name}>
+                      {row.name}
+                    </td>
+                    <td className="px-4 py-3 text-xs font-black text-slate-800 text-center bg-slate-50/50">
+                      {row.total_marks}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${row.result === 'PASS'
+                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                        : 'bg-rose-50 text-rose-600 border-rose-100'
+                        }`}>
+                        {row.result}
+                      </span>
+                    </td>
+                    {matrix.columns.map(col => {
+                      const subResult = row[col.code];
+                      return (
+                        <td key={col.code} className={`px-4 py-3 text-center border-l border-slate-50 ${subResult?.result === 'F' ? 'bg-rose-50/30' : ''
+                          }`}>
+                          {subResult ? (
+                            <div className="flex flex-col items-center">
+                              <span className={`text-xs font-bold ${subResult.result === 'F' ? 'text-rose-600' : 'text-slate-600'
+                                }`}>
+                                {subResult.total}
+                              </span>
+                              {subResult.result === 'F' && (
+                                <span className="text-[9px] font-black text-rose-400 leading-none mt-0.5">F</span>
+                              )}
+                              {subResult.result === 'A' && (
+                                <span className="text-[9px] font-black text-amber-500 leading-none mt-0.5">ABS</span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-slate-300 text-xs">-</span>
+                          )}
+                        </td>
+                      );
+                    })}
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
-          </div>
-        )}
-
-        {!error && !isLoading && (
-          <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <p className="text-sm font-semibold text-slate-500">
-                Showing page {Math.floor(filters.skip / filters.limit) + 1}
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-slate-500">Rows</span>
-                <select
-                  className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500"
-                  value={filters.limit}
-                  onChange={(e) => {
-                    const nextLimit = parseInt(e.target.value, 10);
-                    setFilters((f) => ({ ...f, limit: nextLimit, skip: 0 }));
-                  }}
-                >
-                  {[10, 50, 100].map((n) => (
-                    <option key={n} value={n}>{n}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFilters((f) => ({ ...f, skip: Math.max(0, f.skip - f.limit) }))}
-                disabled={filters.skip === 0}
-                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 transition-colors"
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={() => setFilters((f) => ({ ...f, skip: f.skip + f.limit }))}
-                disabled={results.length < filters.limit}
-                className="p-2 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 disabled:opacity-50 transition-colors"
-              >
-                <ChevronRight size={18} />
-              </button>
-            </div>
           </div>
         )}
       </div>

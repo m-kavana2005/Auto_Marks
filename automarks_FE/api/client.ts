@@ -6,7 +6,8 @@ import {
   SubjectStats,
   StudentSummary,
   TopPerformer,
-  FailureAnalysis
+  FailureAnalysis,
+  ResultMatrix
 } from '../types';
 
 // Detect environment variables from both Vite and Next.js naming conventions
@@ -321,10 +322,14 @@ export const endpoints = {
   },
 
   getSemesterOverview: async (opts?: { batch?: string; branch?: string; exam_year?: number; exam_month?: string }) => {
-    return apiFetch<Array<{ semester: number; total_records: number; total_students: number; avg_total_marks: number; pass_rate: number }>>(
+    return apiFetch<Array<{ batch: string; semester: number; total_records: number; total_students: number; avg_total_marks: number; pass_rate: number }>>(
       '/analytics/semester-overview',
       { params: opts }
     );
+  },
+
+  getResultMatrix: async (opts?: { semester?: number; batch?: string; branch?: string; exam_year?: number; exam_month?: string }): Promise<ResultMatrix> => {
+    return apiFetch<ResultMatrix>('/analytics/matrix', { params: opts });
   },
 
   getStudentGpa: async (usn: string) => {

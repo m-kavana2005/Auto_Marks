@@ -27,7 +27,8 @@ from app.schemas import (
     StudentCreate, SubjectCreate, SemesterCreate, ResultCreate,
     APIResponse, BatchUploadResponse, ExtractedStudentResult,
     SubjectStatistics, SemesterSummary,
-    ManualSemesterInput, ResultUpdate
+    ManualSemesterInput, ResultUpdate, ResultMatrixResponse,
+    StudentHistoryResponse
 )
 from app.services.extractor import extract_pdf, VTUResultExtractor, _extract_branch_from_usn
 from app.services.analyzer import ResultAnalyzer
@@ -653,6 +654,29 @@ async def get_upload_status(batch_id: str, db: Session = Depends(get_db)):
 
 
 
+@app.get("/analytics/matrix", response_model=ResultMatrixResponse)
+def get_result_matrix(
+    semester: Optional[int] = Query(None),
+    batch: Optional[str] = Query(None),
+    branch: Optional[str] = Query(None),
+    exam_year: Optional[int] = Query(None),
+    exam_month: Optional[str] = Query(None),
+    db: Session = Depends(get_db)
+):
+    """
+    Get results in a matrix format (Students x Subjects)
+    Suitable for result sheets or broad overview.
+    """
+    analyzer = ResultAnalyzer(db)
+    return analyzer.get_result_matrix(
+        semester=semester,
+        batch=batch,
+        branch=branch,
+        exam_year=exam_year,
+        exam_month=exam_month
+    )
+
+
 # ==================== STUDENT ENDPOINTS ====================
 
 @app.get("/students", response_model=List[StudentResponse])
@@ -702,6 +726,42 @@ async def create_student(student: StudentCreate, db: Session = Depends(get_db)):
 
     return new_student
 
+
+# ==================== HISTORY ENDPOINTS ====================
+
+@app.get("/student/history/{usn_or_name}", response_model=StudentHistoryResponse)
+def get_comprehensive_history(
+    usn_or_name: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Get comprehensive academic history for a student.
+    Searchable by USN (exact) or Name (partial match).
+    """
+    # 1. Try to find student by USN
+    student = db.query(Student).filter(Student.usn == usn_or_name).first()
+    
+    if not student:
+        # Try finding by name (case insensitive)
+        matches = db.query(Student).filter(Student.student_name.ilike(f"%{usn_or_name}%")).all()
+        
+        if not matches:
+            raise HTTPException(status_code=404, detail=f"Student '{usn_or_name}' not found")
+            
+        if len(matches) > 1:
+            msg = f"Multiple students found matching '{usn_or_name}'. Please use USN. Candidates: {', '.join([s.student_name + ' (' + s.usn + ')' for s in matches[:5]])}"
+            raise HTTPException(status_code=400, detail=msg)
+            
+        student = matches[0]
+
+    # 2. Get history
+    analyzer = ResultAnalyzer(db)
+    history = analyzer.get_student_comprehensive_history(student.usn)
+    
+    if not history:
+        raise HTTPException(status_code=404, detail="History data could not be generated")
+        
+    return history
 
 # ==================== METADATA DISCOVERY ENDPOINTS ====================
 
@@ -1112,8 +1172,10 @@ async def get_semester_overview(
     if df.empty:
         return []
 
-    # Compute per-semester aggregates
-    grouped = df.groupby("semester").agg(
+    # Compute per-semester aggregates, grouped by Batch if available
+    df["batch"] = df["batch"].fillna("Unknown")
+    group_cols = ["batch", "semester"]
+    grouped = df.groupby(group_cols).agg(
         total_records=("usn", "count"),
         total_students=("usn", pd.Series.nunique),
         avg_total_marks=("total_marks", "mean"),
@@ -1122,10 +1184,11 @@ async def get_semester_overview(
 
     grouped["avg_total_marks"] = grouped["avg_total_marks"].round(2)
     grouped["pass_rate"] = grouped["pass_rate"].round(2)
-    grouped = grouped.sort_values("semester")
+    grouped = grouped.sort_values(["batch", "semester"])
 
     return [
         {
+            "batch": str(r.batch) if pd.notna(r.batch) else "Unknown",
             "semester": int(r.semester),
             "total_records": int(r.total_records),
             "total_students": int(r.total_students),

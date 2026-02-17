@@ -8,7 +8,10 @@ import numpy as np
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from app.models import Student, Result, Subject, Semester
-from app.schemas import SubjectStatistics, SemesterSummary
+from app.schemas import (
+    SubjectStatistics, SemesterSummary, ResultMatrixResponse,
+    StudentHistoryResponse, StudentHistorySemester, StudentHistorySubject, StudentResponse
+)
 import logging
 from openpyxl.styles import PatternFill, Font
 
@@ -464,3 +467,223 @@ class ResultAnalyzer:
             "total_records": total_records,
             "average_cgpa": round(average_cgpa, 2)
         }
+
+    # ---------------- MATRIX VIEW ---------------- #
+
+    def get_result_matrix(
+        self,
+        semester: Optional[int] = None,
+        batch: Optional[str] = None,
+        branch: Optional[str] = None,
+        exam_year: Optional[int] = None,
+        exam_month: Optional[str] = None
+    ) -> ResultMatrixResponse:
+        
+        df = self.get_results_dataframe(
+            semester=semester,
+            batch=batch,
+            branch=branch,
+            exam_year=exam_year,
+            exam_month=exam_month
+        )
+
+        if df.empty:
+            return ResultMatrixResponse(
+                columns=[],
+                data=[],
+                summary={"total_students": 0, "passed": 0, "failed": 0}
+            )
+
+        # 1. Identify all unique subjects in this view (sorted by code)
+        subjects = df[['subject_code', 'subject_name']].drop_duplicates().sort_values('subject_code')
+        columns = [{"code": r.subject_code, "name": r.subject_name} for _, r in subjects.iterrows()]
+        
+        # 2. Group by Student (USN)
+        student_data = []
+        
+        # Pre-aggregation stats
+        pass_students = 0
+        fail_students = 0
+        
+        # Group by USN
+        grouped = df.groupby(['usn', 'student_name'])
+        
+        for (usn, name), group in grouped:
+            
+            # Student-level pass/fail logic:
+            # A student passes if ALL subjects in this view have result_status='P'
+            statuses = group['result_status'].fillna('F').str.upper()
+            is_pass = (statuses == 'P').all() and (len(statuses) > 0)
+            
+            if is_pass:
+                pass_students += 1
+            else:
+                fail_students += 1
+                
+            student_entry = {
+                "usn": usn,
+                "name": name,
+                "total_marks": int(group['total_marks'].sum()),
+                "result": "PASS" if is_pass else "FAIL"
+            }
+            
+            # Add subject specific data
+            for _, row in group.iterrows():
+                sub_code = row['subject_code']
+                student_entry[sub_code] = {
+                    "internal": int(row['internal_marks']) if pd.notna(row['internal_marks']) else None,
+                    "external": int(row['external_marks']) if pd.notna(row['external_marks']) else None,
+                    "total": int(row['total_marks']) if pd.notna(row['total_marks']) else None,
+                    "result": row['result_status'],
+                    "credits": int(row['credits']) if pd.notna(row['credits']) else 0
+                }
+            
+            student_data.append(student_entry)
+            
+        # 3. Sort by USN ascending
+        student_data.sort(key=lambda x: x['usn'])
+        
+        return ResultMatrixResponse(
+            columns=columns,
+            data=student_data,
+            summary={
+                "total_students": len(student_data),
+                "passed": pass_students,
+                "failed": fail_students
+            }
+        )
+
+    # ---------------- COMPREHENSIVE HISTORY ---------------- #
+
+    def get_student_comprehensive_history(self, usn: str) -> Optional[StudentHistoryResponse]:
+        """
+        Get comprehensive history for a student including all semesters, subjects, marks, and GPA progression.
+        """
+        # 1. Fetch Student Info
+        student = self.db.query(Student).filter(Student.usn == usn).first()
+        if not student:
+            return None
+
+        # 2. Fetch Results Dataframe
+        df = self.get_results_dataframe(usn=usn)
+        if df.empty:
+            # Return empty structure if student exists but no results
+            return StudentHistoryResponse(
+                student=StudentResponse.from_orm(student),
+                history=[],
+                overall_cgpa=0.0,
+                total_credits_earned=0,
+                sgpa_trend=[],
+                marks_distribution=[]
+            )
+
+        # 3. Process Data
+        df['credits'] = pd.to_numeric(df['credits'], errors='coerce').fillna(0)
+        
+        # Calculate Grade Points if not present
+        def calculate_gp(row):
+            pct = self._marks_to_percentage(row['total_marks'])
+            return self._percentage_to_grade_points(pct, row['result_status'])
+
+        df['grade_points'] = df.apply(calculate_gp, axis=1)
+        df['credits_earned'] = df.apply(
+            lambda r: r['credits'] if str(r['result_status']).upper() in ['P', 'PASS'] else 0, axis=1
+        )
+        
+        history_semesters: List[StudentHistorySemester] = []
+        sgpa_trend = []
+        marks_distribution = []
+        
+        cumulative_credits = 0
+        cumulative_weighted_gp = 0
+        
+        # Sort by semester number
+        semesters = sorted(df['semester'].unique())
+        
+        for sem in semesters:
+            sem_data = df[df['semester'] == sem]
+            
+            # Sort by exam period desc to get latest attempts
+            sem_data = sem_data.sort_values(['exam_year', 'exam_month'], ascending=[False, False])
+            
+            # For SGPA calculation: Use latest valid attempt per subject
+            latest_subjects = sem_data.drop_duplicates(subset=['subject_code'], keep='first')
+            
+            total_sem_credits = latest_subjects['credits'].sum()
+            total_sem_weighted_gp = (latest_subjects['grade_points'] * latest_subjects['credits']).sum()
+            sem_credits_earned = latest_subjects['credits_earned'].sum()
+
+            sgpa = 0.0
+            if total_sem_credits > 0:
+                sgpa = total_sem_weighted_gp / total_sem_credits
+
+            # Update Cumulative Stats
+            # Note: This simple cumulative logic assumes strictly sequential semesters without complex retakes across semesters affecting historical CGPA
+            cumulative_credits += total_sem_credits
+            cumulative_weighted_gp += total_sem_weighted_gp
+            
+            cgpa = 0.0
+            if cumulative_credits > 0:
+                cgpa = cumulative_weighted_gp / cumulative_credits
+
+            # Construct Subject Objects
+            subjects_list: List[StudentHistorySubject] = []
+            
+            # We want to show ALL attempts in history? Or just latest?
+            # User requirement: "All semesters' results. All subjects taken."
+            # Usually users want to see the *latest* status for the semester view, but maybe failures too.
+            # Let's show the *latest* attempt for each subject in this semester block.
+            # If a student failed and retook, it might appear in a later semester or the same semester with a different exam period.
+            # The `latest_subjects` logic groups by subject code WITHIN the semester number.
+            # So if they failed sem 1 subject and retook it in sem 3 exams but for sem 1, it's still semester=1.
+            # So `latest_subjects` effectively gives the current standing of that semester.
+            
+            for _, row in latest_subjects.iterrows():
+                # Append to marks distribution flat list
+                marks_distribution.append({
+                    "subject_code": row['subject_code'],
+                    "subject_name": row['subject_name'],
+                    "credits": int(row['credits']),
+                    "total_marks": int(row['total_marks']) if pd.notna(row['total_marks']) else 0,
+                    "semester": int(sem),
+                    "result": row['result_status']
+                })
+                
+                subjects_list.append(StudentHistorySubject(
+                    subject_code=row['subject_code'],
+                    subject_name=row['subject_name'],
+                    credits=int(row['credits']),
+                    internal_marks=int(row['internal_marks']) if pd.notna(row['internal_marks']) else None,
+                    external_marks=int(row['external_marks']) if pd.notna(row['external_marks']) else None,
+                    total_marks=int(row['total_marks']) if pd.notna(row['total_marks']) else None,
+                    result_status=row['result_status'],
+                    exam_period=f"{row['exam_month']} {int(row['exam_year'])}" if pd.notna(row['exam_year']) else None
+                ))
+            
+            history_semesters.append(StudentHistorySemester(
+                semester=int(sem),
+                total_credits_registered=int(total_sem_credits),
+                total_credits_earned=int(sem_credits_earned),
+                sgpa=round(sgpa, 2),
+                cgpa=round(cgpa, 2),
+                subjects=subjects_list
+            ))
+            
+            sgpa_trend.append({
+                "semester": int(sem),
+                "sgpa": round(sgpa, 2),
+                "cgpa": round(cgpa, 2),
+                "credits_earned": int(sem_credits_earned)
+            })
+
+        overall_cgpa = sgpa_trend[-1]["cgpa"] if sgpa_trend else 0.0
+        total_earned = sum(s.total_credits_earned for s in history_semesters) # Or strictly cumulative logic
+
+        return StudentHistoryResponse(
+            student=StudentResponse.from_orm(student),
+            history=history_semesters,
+            overall_cgpa=round(overall_cgpa, 2),
+            total_credits_earned=total_earned,
+            sgpa_trend=sgpa_trend,
+            marks_distribution=marks_distribution
+        )

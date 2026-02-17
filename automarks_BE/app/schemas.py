@@ -2,7 +2,7 @@
 Pydantic schemas for request/response validation
 """
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import date, datetime
 from enum import Enum
 
@@ -229,3 +229,39 @@ class BatchUploadResponse(BaseModel):
     processed: int
     failed: int
     errors: List[str] = []
+
+
+class ResultMatrixResponse(BaseModel):
+    columns: List[Dict[str, str]]
+    data: List[Dict[str, Any]]
+    summary: Dict[str, int]
+
+
+# Student History Schemas
+class StudentHistorySubject(BaseModel):
+    subject_code: str
+    subject_name: str
+    credits: int
+    internal_marks: Optional[int]
+    external_marks: Optional[int]
+    total_marks: Optional[int]
+    result_status: str
+    exam_period: Optional[str] = None # e.g. "Dec 2023"
+
+class StudentHistorySemester(BaseModel):
+    semester: int
+    total_credits_registered: int
+    total_credits_earned: int
+    sgpa: Optional[float] = None # Calculated for this semester
+    cgpa: Optional[float] = None # Cumulative up to this semester
+    subjects: List[StudentHistorySubject]
+
+class StudentHistoryResponse(BaseModel):
+    student: StudentResponse
+    history: List[StudentHistorySemester]
+    overall_cgpa: Optional[float] = None
+    total_credits_earned: int
+    
+    # Graph-friendly flat lists
+    sgpa_trend: List[Dict[str, Any]] # [{"semester": 1, "sgpa": 8.5, "cgpa": 8.5}, ...]
+    marks_distribution: List[Dict[str, Any]] # Flat list of all subjects for scatter plots etc.
