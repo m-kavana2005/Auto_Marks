@@ -58,3 +58,5 @@ Thumbs.db
 # === Allow example envs ===
 !.env.example
 !.env.*.example
+
+commands.txt

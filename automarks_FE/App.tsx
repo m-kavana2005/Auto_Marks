@@ -6,7 +6,9 @@ import {
   Routes,
   Route,
   Link,
-  useLocation
+  useLocation,
+  Outlet,
+  Navigate
 } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -24,7 +26,8 @@ import {
   AlertCircle,
   Clock,
   Sun,
-  Moon
+  Moon,
+  LogOut
 } from 'lucide-react';
 import { endpoints, getApiBase, setApiBaseOverride } from './api/client';
 
@@ -35,6 +38,7 @@ import ResultsExplorer from './features/ResultsExplorer';
 import StudentProfile from './features/StudentProfile';
 import Analytics from './features/Analytics';
 import ExportPage from './features/ExportPage';
+import LandingPage from './pages/LandingPage';
 import { getBatchOptions } from './utils/batches';
 
 const isBlobEnvironment = window.location.protocol === 'blob:';
@@ -625,7 +629,9 @@ const ProfileDropdown = ({ isOpen, onClose, onOpenSettings }: { isOpen: boolean,
   );
 };
 
-const AppLayout = () => {
+// ==================== LAYOUT & ROUTING ====================
+
+const DashboardLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
   const [isNotifOpen, setNotifOpen] = useState(false);
@@ -651,7 +657,7 @@ const AppLayout = () => {
   const location = useLocation();
 
   const navItems = [
-    { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
+    { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { to: '/upload', icon: UploadCloud, label: 'Upload Portal' },
     { to: '/results', icon: FileSearch, label: 'Explorer' },
     { to: '/profile', icon: UserCircle, label: 'Student Profile' },
@@ -675,10 +681,10 @@ const AppLayout = () => {
       `}>
         <div className="flex flex-col h-full p-6">
           <div className="flex items-center justify-between mb-10 px-2">
-            <div className="flex items-center gap-3">
+            <Link to="/" className="flex items-center gap-3">
               <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-lg">V</div>
               <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">VTU <span className="text-indigo-600 dark:text-indigo-400">Insight</span></h1>
-            </div>
+            </Link>
             <button onClick={() => setSidebarOpen(false)} className="md:hidden p-2 text-slate-400">
               <X size={20} />
             </button>
@@ -758,14 +764,7 @@ const AppLayout = () => {
 
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10">
           <div className="max-w-7xl mx-auto">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/upload" element={<UploadPage />} />
-              <Route path="/results" element={<ResultsExplorer />} />
-              <Route path="/profile" element={<StudentProfile />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/export" element={<ExportPage />} />
-            </Routes>
+            <Outlet />
           </div>
         </main>
       </div>
@@ -777,7 +776,22 @@ export default function App() {
   const RouterComponent = isBlobEnvironment ? MemoryRouter : HashRouter;
   return (
     <RouterComponent>
-      <AppLayout />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Dashboard Layout Wraps these routes */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/results" element={<ResultsExplorer />} />
+          <Route path="/profile" element={<StudentProfile />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/export" element={<ExportPage />} />
+        </Route>
+
+        {/* Catch all - redirect to Landing or Dashboard */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </RouterComponent>
   );
 }
