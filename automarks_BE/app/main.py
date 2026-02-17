@@ -690,6 +690,15 @@ async def get_students(
     return students
 
 
+@app.get("/students/{usn}", response_model=StudentResponse)
+async def get_student_by_usn(usn: str, db: Session = Depends(get_db)):
+    """Get a single student by USN"""
+    student = db.query(Student).filter(Student.usn == usn).first()
+    if not student:
+        raise HTTPException(status_code=404, detail=f"Student with USN '{usn}' not found")
+    return student
+
+
 @app.post("/student", response_model=StudentResponse)
 async def create_student(student: StudentCreate, db: Session = Depends(get_db)):
     """Create a new student manually"""
