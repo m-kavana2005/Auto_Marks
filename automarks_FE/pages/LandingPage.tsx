@@ -37,7 +37,6 @@ const LandingPage = () => {
 
             {/* Navbar */}
             <Navbar variant="transparent">
-                <Button variant="ghost" className="hidden sm:flex" onClick={() => window.open('https://github.com/mohitkgupta13/Auto_Marks', '_blank')}>GitHub</Button>
                 <Button onClick={() => navigate('/dashboard')} rightIcon={ArrowRight} className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
                     Login
                 </Button>
