@@ -199,7 +199,7 @@ const UploadPage: React.FC = () => {
             onClick={() => { reset(); setActiveTab('single'); }}
             className={`flex-1 py-5 font-bold transition-all ${activeTab === 'single' ? 'bg-white text-indigo-600 border-b-2 border-indigo-600' : 'bg-slate-50 text-slate-400'}`}
           >
-            Single File
+            RV File
           </button>
         </div>
 

@@ -148,19 +148,6 @@ const Analytics: React.FC = () => {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-            <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Semester</span>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
-              <button
-                key={s}
-                onClick={() => setSemester(s)}
-                className={`w-10 h-10 rounded-xl font-bold transition-all ${semester === s ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-400 hover:bg-slate-50'}`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
             <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Batch</span>
             <select
               className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
@@ -185,6 +172,18 @@ const Analytics: React.FC = () => {
               {branches.map((b) => (
                 <option key={b} value={b}>{b}</option>
               ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+            <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Semester</span>
+            <select
+              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none min-w-[80px]"
+              value={semester || ''}
+              onChange={(e) => setSemester(e.target.value ? parseInt(e.target.value) : undefined)}
+            >
+              <option value="" disabled>Select</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Sem {s}</option>)}
             </select>
           </div>
         </div>
