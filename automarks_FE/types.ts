@@ -88,3 +88,20 @@ export interface StudentGpaProgression {
   usn: string;
   gpa: Array<{ semester: number; total_credits: number; sgpa: number; cgpa: number }>;
 }
+
+
+export interface ResultMatrix {
+  columns: Array<{ code: string; name: string }>;
+  data: Array<{
+    usn: string;
+    name: string;
+    total_marks: number;
+    result: string;
+    [key: string]: any;
+  }>;
+  summary: {
+    total_students: number;
+    passed: number;
+    failed: number;
+  };
+}

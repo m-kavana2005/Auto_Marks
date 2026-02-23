@@ -120,8 +120,12 @@ const Analytics: React.FC = () => {
         </div>
         <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Analytics Offline</h2>
         <p className="text-slate-500 max-w-lg mx-auto mb-10 font-medium leading-relaxed">
-          We encountered a connection error while trying to reach the analytics engine at <code className="bg-slate-100 px-1 rounded font-bold">{getApiBase()}</code>.
-          Please verify your backend service is active.
+          {error || (
+            <>
+              We encountered a connection error while trying to reach the analytics engine at <code className="bg-slate-100 px-1 rounded font-bold">{getApiBase()}</code>.
+              Please verify your backend service is active.
+            </>
+          )}
         </p>
         <div className="flex gap-4">
           <button
@@ -143,19 +147,6 @@ const Analytics: React.FC = () => {
           <p className="text-slate-500 font-medium">Comparative analytics and student performance metrics.</p>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
-            <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Semester</span>
-            {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
-              <button
-                key={s}
-                onClick={() => setSemester(s)}
-                className={`w-10 h-10 rounded-xl font-bold transition-all ${semester === s ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-400 hover:bg-slate-50'}`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-
           <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
             <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Batch</span>
             <select
@@ -181,6 +172,18 @@ const Analytics: React.FC = () => {
               {branches.map((b) => (
                 <option key={b} value={b}>{b}</option>
               ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+            <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Semester</span>
+            <select
+              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none min-w-[80px]"
+              value={semester || ''}
+              onChange={(e) => setSemester(e.target.value ? parseInt(e.target.value) : undefined)}
+            >
+              <option value="" disabled>Select</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Sem {s}</option>)}
             </select>
           </div>
         </div>

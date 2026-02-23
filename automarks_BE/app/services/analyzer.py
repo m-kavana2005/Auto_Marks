@@ -8,13 +8,119 @@ import numpy as np
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from app.models import Student, Result, Subject, Semester
-from app.schemas import SubjectStatistics, SemesterSummary
+from app.schemas import (
+    SubjectStatistics, SemesterSummary, ResultMatrixResponse,
+    StudentHistoryResponse, StudentHistorySemester, StudentHistorySubject, StudentResponse
+)
 import logging
 from openpyxl.styles import PatternFill, Font
 
 
 
 logger = logging.getLogger(__name__)
+
+# ============================================================
+# VTU Fixed Subject-Credit Mapping (CBCS 2021 scheme)
+# Credits are FIXED per subject code and must NEVER be changed
+# or inferred from uploaded PDF data.
+# ============================================================
+VTU_CREDITS: dict[str, int] = {
+    # ---- Semester I (Total = 20) ----
+    "BMATS101": 4,
+    "BPHYS102": 4,  "BCHES102": 4,
+    "BPOPS103": 3,  "BCEDK103": 3,
+    "BESCK104A": 3, "BESCK104B": 3, "BESCK104C": 3, "BESCK104D": 3,
+    "BESCK104E": 3,
+    "BETCK105A": 3, "BETCK105B": 3, "BETCK105C": 3, "BETCK105D": 3,
+    "BPLCK105A": 3, "BPLCK105B": 3,
+    "BENGK106": 1,  "BPWSK106": 1,
+    "BICOK107": 1,  "BKSKK107": 1,  "BKBKK107": 1,
+    "BIDTK158": 1,  "BSFHK158": 1,
+    # ---- Semester II (Total = 20) ----
+    "BMATS201": 4,
+    "BCHES202": 4,  "BPHYS202": 4,
+    "BCEDK203": 3,  "BPOPS203": 3,
+    "BESCK204A": 3, "BESCK204B": 3, "BESCK204C": 3, "BESCK204D": 3,
+    "BESCK204E": 3,
+    "BPLCK205A": 3, "BPLCK205B": 3,
+    "BETCK205A": 3, "BETCK205B": 3,
+    "BENGK206": 1,  "BPWSK206": 1,
+    "BICOK207": 1,  "BKSKK207": 1,  "BKBKK207": 1,
+    "BIDTK258": 1,  "BSFHK258": 1,
+    # ---- Semester III (Total = 21) ----
+    "BCS301": 4,
+    "BCS302": 4,
+    "BCS303": 4,
+    "BCS304": 3,
+    "BCSL305": 1,
+    "BCS306A": 3, "BCS306B": 3, "BCS306C": 3,
+    "BXX306A": 3, "BXX306B": 3, "BXX306C": 3,
+    "BSCK307": 1,
+    "BCS358A": 1, "BCS358B": 1, "BCS358C": 1,
+    "BXX358A": 1, "BXX358B": 1,
+    # ---- Semester IV (Total = 19) ----
+    "BCS401": 3,
+    "BAI402": 4,
+    "BCS403": 4,
+    "BCSL404": 1,
+    "BCS405A": 3, "BCS405B": 3, "BCS405C": 3,
+    "BXX405A": 3, "BXX405B": 3,
+    "BBOK407": 2,
+    "BUHK408": 1,
+    "BDS456A": 1, "BDS456B": 1,
+    "BXX456A": 1,
+    # ---- Semester V (Total = 22) ----
+    "BCS501": 3,
+    "BCS502": 4,
+    "BCS503": 4,
+    "BAIL504": 1,
+    "BCS515A": 3, "BCS515B": 3, "BCS515C": 3,
+    "BXX515A": 3, "BXX515B": 3, "BXX515C": 3,
+    "BAD586": 2,
+    "BRMK557": 3,
+    "BCS508": 2,
+    # ---- Semester VI (Total = 18) ----
+    "BAD601": 4,
+    "BCS602": 4,
+    "BCS613A": 3, "BCS613B": 3, "BCS613C": 3,
+    "BXX613A": 3, "BXX613B": 3, "BXX613C": 3,
+    "BCS654A": 3, "BCS654B": 3,
+    "BXX654A": 3, "BXX654B": 3,
+    "BAD685": 2,
+    "BCSL606": 1,
+    "BCS657A": 1, "BCS657B": 1,
+    "BXX657A": 1,
+    # ---- Semester VII (Total = 24) ----
+    "BAI701": 4,
+    "BAD702": 4,
+    "BAD703": 4,
+    "BAD714A": 3, "BAD714B": 3, "BAD714C": 3,
+    "BAD755A": 3, "BAD755B": 3, "BAD755C": 3,
+    "BAD786": 6,
+    # ---- Semester VIII (Total = 16) ----
+    "BAD811A": 3, "BAD811B": 3, "BAD811C": 3,
+    "BAD812A": 3, "BAD812B": 3, "BAD812C": 3,
+    "BAD883": 10,
+}
+
+# Generic suffix-stripped fallback credits per semester
+# Used when a subject code variant (e.g. BESCK104X) is not in VTU_CREDITS.
+_VTU_SEM_DEFAULTS: dict[int, dict[str, int]] = {
+    1:  {"BMATS": 4, "BPHYS": 4, "BCHES": 4, "BPOPS": 3, "BCEDK": 3,
+         "BESCK": 3, "BETCK": 3, "BPLCK": 3, "BENGK": 1, "BPWSK": 1,
+         "BICOK": 1, "BKSKK": 1, "BKBKK": 1, "BIDTK": 1, "BSFHK": 1},
+    2:  {"BMATS": 4, "BPHYS": 4, "BCHES": 4, "BPOPS": 3, "BCEDK": 3,
+         "BESCK": 3, "BETCK": 3, "BPLCK": 3, "BENGK": 1, "BPWSK": 1,
+         "BICOK": 1, "BKSKK": 1, "BKBKK": 1, "BIDTK": 1, "BSFHK": 1},
+    3:  {"BCS30": 4, "BCSL": 1, "BSCK": 1, "BXX30": 3, "BCS35": 1, "BXX35": 1},
+    4:  {"BCS40": 3, "BAI40": 4, "BCSL": 1, "BXX40": 3, "BBOK": 2, "BUHK": 1,
+         "BDS45": 1, "BXX45": 1},
+    5:  {"BCS50": 4, "BAIL": 1, "BXX51": 3, "BAD5": 2, "BRMK": 3},
+    6:  {"BAD60": 4, "BCS60": 4, "BXX61": 3, "BXX65": 3, "BAD68": 2,
+         "BCSL": 1, "BXX65": 1},
+    7:  {"BAI70": 4, "BAD70": 4, "BAD71": 3, "BAD75": 3, "BAD78": 6},
+    8:  {"BAD81": 3, "BAD81": 3, "BAD88": 10},
+}
 
 
 class ResultAnalyzer:
@@ -55,6 +161,48 @@ class ResultAnalyzer:
         if percent >= 45: return 5
         if percent >= 40: return 4
         return 0
+
+    @staticmethod
+    def _get_vtu_credits(subject_code: str, semester: Optional[int] = None) -> int:
+        """
+        Return the FIXED VTU credit value for a subject code.
+        Lookup order:
+          1. Exact match in VTU_CREDITS
+          2. Upper-cased exact match
+          3. Prefix match in _VTU_SEM_DEFAULTS for the given semester
+          4. Fallback: 3 credits (most common for theory papers)
+        Credits from the database are NEVER used.
+        """
+        code = (subject_code or "").strip().upper()
+        if code in VTU_CREDITS:
+            return VTU_CREDITS[code]
+        # Try prefix matching from semester-specific defaults
+        if semester and semester in _VTU_SEM_DEFAULTS:
+            for prefix, credits in _VTU_SEM_DEFAULTS[semester].items():
+                if code.startswith(prefix.upper()):
+                    return credits
+        # Universal fallback: scan all VTU_CREDITS for a prefix match
+        for key, credits in VTU_CREDITS.items():
+            if code.startswith(key[:-1]):
+                return credits
+        return 3  # Default fallback
+
+    @staticmethod
+    def _percentage_to_grade_letter(percent: Optional[float], result_status: Optional[str]) -> str:
+        if str(result_status or "").upper() not in {"", "P", "PASS"}:
+            return "F"
+        if percent is None or pd.isna(percent):
+            return "F"
+        
+        if percent >= 90: return "O"
+        if percent >= 80: return "S"
+        if percent >= 70: return "A"
+        if percent >= 60: return "B"
+        if percent >= 50: return "C"
+        if percent >= 45: return "D"
+        if percent >= 40: return "E"
+        return "F"
+
 
     # ---------------- DATAFRAME ---------------- #
 
@@ -139,15 +287,27 @@ class ResultAnalyzer:
         stats = []
         for code in df['subject_code'].unique():
             s = df[df['subject_code'] == code]
+
+            # Guard against all-NaN columns (NULL marks in DB) to avoid int(NaN) ValueError
+            total = pd.to_numeric(s['total_marks'], errors='coerce')
+            internal = pd.to_numeric(s['internal_marks'], errors='coerce')
+            external = pd.to_numeric(s['external_marks'], errors='coerce')
+
+            avg_total   = float(total.mean())   if not total.isnull().all()    else None
+            avg_int     = float(internal.mean()) if not internal.isnull().all() else None
+            avg_ext     = float(external.mean()) if not external.isnull().all() else None
+            max_marks   = int(total.max())       if not total.isnull().all()    else None
+            min_marks   = int(total.min())       if not total.isnull().all()    else None
+
             stats.append(SubjectStatistics(
                 subject_code=code,
                 subject_name=s['subject_name'].iloc[0],
                 total_students=len(s),
-                avg_internal=float(s['internal_marks'].mean()),
-                avg_external=float(s['external_marks'].mean()),
-                avg_total=float(s['total_marks'].mean()),
-                max_marks=int(s['total_marks'].max()),
-                min_marks=int(s['total_marks'].min()),
+                avg_internal=avg_int,
+                avg_external=avg_ext,
+                avg_total=avg_total,
+                max_marks=max_marks,
+                min_marks=min_marks,
                 pass_count=int((s['result_status'] == 'P').astype(int).sum()),
                 fail_count=int((s['result_status'] == 'F').astype(int).sum()),
                 pass_percentage=float((s['result_status'] == 'P').astype(int).mean() * 100)
@@ -201,65 +361,49 @@ class ResultAnalyzer:
         if df.empty:
             return []
 
-        # Ensure we have numeric credits and marks
-        df['credits'] = pd.to_numeric(df['credits'], errors='coerce').fillna(0)
-        
-        # Calculate Grade Points for each subject
-        # Formula: GP based on percentage
+        # Calculate Grade Points based on percentage
         def calculate_gp(row):
             pct = self._marks_to_percentage(row['total_marks'])
             return self._percentage_to_grade_points(pct, row['result_status'])
 
         df['grade_points'] = df.apply(calculate_gp, axis=1)
-        df['credits_earned'] = df.apply(
-            lambda r: r['credits'] if r['result_status'] == 'P' else 0, axis=1
+
+        # Apply FIXED VTU credits — DB credits are intentionally ignored
+        df['vtu_credits'] = df.apply(
+            lambda r: self._get_vtu_credits(r['subject_code'], r['semester']), axis=1
         )
-        df['weighted_gp'] = df['grade_points'] * df['credits']
+        df['credits_earned'] = df.apply(
+            lambda r: r['vtu_credits'] if str(r['result_status']).upper() in ('P', 'PASS') else 0, axis=1
+        )
 
         progression = []
         cumulative_credits = 0
         cumulative_weighted_gp = 0
 
-        # Group by semester number to calculate SGPA
-        # We process semesters in order 1..8
         semesters = sorted(df['semester'].unique())
-        
+
         for sem in semesters:
             sem_data = df[df['semester'] == sem]
-            
-            # For SGPA, we only consider the LATEST attempt for each subject in that semester
-            # (If student re-took subject, use latest)
-            # Group by subject_code and take last (assuming query order or reliable update)
-            # Better: sort by exam_year, exam_month desc first
+
+            # Latest attempt only per subject (sort desc by exam session)
             sem_data = sem_data.sort_values(['exam_year', 'exam_month'], ascending=[False, False])
-            latest_subjects = sem_data.drop_duplicates(subset=['subject_code'], keep='first')
+            latest = sem_data.drop_duplicates(subset=['subject_code'], keep='first')
 
-            total_sem_credits = latest_subjects['credits'].sum()
-            total_sem_weighted_gp = (latest_subjects['grade_points'] * latest_subjects['credits']).sum()
+            total_sem_credits = latest['vtu_credits'].sum()
+            total_sem_weighted_gp = (latest['grade_points'] * latest['vtu_credits']).sum()
 
-            sgpa = 0.0
-            if total_sem_credits > 0:
-                sgpa = total_sem_weighted_gp / total_sem_credits
+            sgpa = round(total_sem_weighted_gp / total_sem_credits, 2) if total_sem_credits > 0 else 0.0
 
-            # For CGPA, we accumulate ALL unique subjects passed/attempted so far?
-            # VTU CGPA considers best/latest attempt of all subjects up to this semester.
-            
-            # Add to cumulative (simplified logic: just add semester totals)
-            # In reality, CGPA should be re-calculated based on all unique subjects across all semesters
-            # For now, let's treat it as running cumulative of these semester stats
             cumulative_credits += total_sem_credits
             cumulative_weighted_gp += total_sem_weighted_gp
+            cgpa = round(cumulative_weighted_gp / cumulative_credits, 2) if cumulative_credits > 0 else 0.0
 
-            cgpa = 0.0
-            if cumulative_credits > 0:
-                cgpa = cumulative_weighted_gp / cumulative_credits
-            
             progression.append({
                 "semester": int(sem),
-                "sgpa": round(sgpa, 2),
-                "cgpa": round(cgpa, 2),
+                "sgpa": sgpa,
+                "cgpa": cgpa,
                 "credits_registered": int(total_sem_credits),
-                "credits_earned": int(latest_subjects['credits_earned'].sum())
+                "credits_earned": int(latest['credits_earned'].sum())
             })
 
         return progression
@@ -308,42 +452,41 @@ class ResultAnalyzer:
                 })
 
         else:
-            # Rank by total semester marks or SGPA (approx)
-            # Group by student
+            # Rank by total semester marks or SGPA using FIXED VTU credits
             student_stats = []
-            
+
             for (usn, name), group in df.groupby(['usn', 'student_name']):
                 total_marks = group['total_marks'].sum()
-                
-                # Approximate SGPA calculation
-                # Needs credits
-                group['credits'] = pd.to_numeric(group['credits'], errors='coerce').fillna(0)
-                
+
+                # Use FIXED VTU credits — ignore DB credits
+                sem_val = group['semester'].iloc[0] if not group.empty else None
+
                 def calc_gp(r):
                     pct = self._marks_to_percentage(r['total_marks'])
                     return self._percentage_to_grade_points(pct, r['result_status'])
-                
-                weighted_gp = (group.apply(calc_gp, axis=1) * group['credits']).sum()
-                total_credits = group['credits'].sum()
-                
-                sgpa = 0.0
-                if total_credits > 0:
-                    sgpa = weighted_gp / total_credits
-                
+
+                fixed_credits = group.apply(
+                    lambda r: self._get_vtu_credits(r['subject_code'], r['semester']), axis=1
+                )
+                weighted_gp = (group.apply(calc_gp, axis=1) * fixed_credits).sum()
+                total_credits = fixed_credits.sum()
+
+                sgpa = round(weighted_gp / total_credits, 2) if total_credits > 0 else 0.0
+
                 student_stats.append({
                     "usn": usn,
                     "student_name": name,
                     "total_marks": int(total_marks),
-                    "sgpa": round(sgpa, 2),
-                    "section": group['batch'].iloc[0] if 'batch' in group else None
+                    "sgpa": sgpa,
+                    "section": group['batch'].iloc[0] if 'batch' in group.columns else None
                 })
-            
+
             # Sort
             if rank_by == "sgpa":
                 student_stats.sort(key=lambda x: x['sgpa'], reverse=True)
             else:
                 student_stats.sort(key=lambda x: x['total_marks'], reverse=True)
-            
+
             # Take top N
             for i, s in enumerate(student_stats[:limit]):
                 s['rank'] = i + 1
@@ -435,26 +578,24 @@ class ResultAnalyzer:
         pass_count = (df['result_status'].str.upper() == 'P').sum()
         pass_rate = (pass_count / total_records * 100) if total_records > 0 else 0
         
-        # Average CGPA calculation
-        # This is an approximation based on available data
-        df['credits'] = pd.to_numeric(df['credits'], errors='coerce').fillna(0)
-        
-        # Use existing logic to calculate Grade Points
+        # Average CGPA calculation using FIXED VTU credits
         def calc_gp(row):
             pct = self._marks_to_percentage(row['total_marks'])
             return self._percentage_to_grade_points(pct, row['result_status'])
-            
+
         df['grade_points'] = df.apply(calc_gp, axis=1)
-        
-        # Calculate average GPA per student first
+        df['vtu_credits'] = df.apply(
+            lambda r: self._get_vtu_credits(r['subject_code'], r.get('semester')), axis=1
+        )
+
+        # Calculate average GPA per student using fixed credits
         student_gpas = []
-        # Group by USN to calculate each student's average GPA (SGPA-like)
         for usn, group in df.groupby('usn'):
-            total_credits = group['credits'].sum()
-            weighted_points = (group['grade_points'] * group['credits']).sum()
+            total_credits = group['vtu_credits'].sum()
+            weighted_points = (group['grade_points'] * group['vtu_credits']).sum()
             if total_credits > 0:
                 student_gpas.append(weighted_points / total_credits)
-        
+
         # Data-wide average CGPA
         average_cgpa = sum(student_gpas) / len(student_gpas) if student_gpas else 0
         
@@ -464,3 +605,308 @@ class ResultAnalyzer:
             "total_records": total_records,
             "average_cgpa": round(average_cgpa, 2)
         }
+
+    # ---------------- FAILURE ANALYSIS ---------------- #
+
+    def get_failure_analysis(
+        self,
+        semester: int,
+        batch: Optional[str] = None,
+        branch: Optional[str] = None,
+        exam_year: Optional[int] = None,
+        exam_month: Optional[str] = None
+    ) -> Dict:
+        df = self.get_results_dataframe(
+            semester=semester,
+            batch=batch,
+            branch=branch,
+            exam_year=exam_year,
+            exam_month=exam_month
+        )
+
+        if df.empty:
+            return {
+                "total_results": 0,
+                "total_failures": 0,
+                "failure_rate": 0.0,
+                "subject_wise_failures": {},
+                "students_with_failures": []
+            }
+
+        # 1. Subject-wise failures
+        subject_failures = {}
+        for code in df['subject_code'].unique():
+            s = df[df['subject_code'] == code]
+            fail_count = int((s['result_status'] == 'F').astype(int).sum())
+            if fail_count > 0:
+                subject_failures[code] = fail_count
+
+        # 2. Student-wise failures
+        students_failed = []
+        total_students = df['usn'].nunique()
+        failed_student_count = 0
+
+        for (usn, name), group in df.groupby(['usn', 'student_name']):
+            failed_subjects = group[group['result_status'] == 'F']
+            f_count = len(failed_subjects)
+            if f_count > 0:
+                failed_student_count += 1
+                students_failed.append({
+                    "usn": usn,
+                    "name": name,
+                    "failed_subjects_count": f_count,
+                    "failed_subjects": failed_subjects['subject_code'].tolist()
+                })
+
+        # Sort by failure count desc
+        students_failed.sort(key=lambda x: x['failed_subjects_count'], reverse=True)
+
+        return {
+            "total_results": total_students,
+            "total_failures": failed_student_count,
+            "failure_rate": round((failed_student_count / total_students * 100), 2) if total_students > 0 else 0.0,
+            "subject_wise_failures": subject_failures,
+            "students_with_failures": students_failed
+        }
+
+    # ---------------- GRADE DISTRIBUTION ---------------- #
+
+    def get_grade_distribution(
+        self,
+        semester: int,
+        subject_code: Optional[str] = None,
+        batch: Optional[str] = None,
+        branch: Optional[str] = None,
+        exam_year: Optional[int] = None,
+        exam_month: Optional[str] = None
+    ) -> Dict[str, int]:
+        df = self.get_results_dataframe(
+            semester=semester,
+            subject_code=subject_code,
+            batch=batch,
+            branch=branch,
+            exam_year=exam_year,
+            exam_month=exam_month
+        )
+
+        distribution = {"O": 0, "S": 0, "A": 0, "B": 0, "C": 0, "D": 0, "E": 0, "F": 0}
+        
+        if df.empty:
+            return distribution
+
+        def map_grade(row):
+            pct = self._marks_to_percentage(row['total_marks'])
+            return self._percentage_to_grade_letter(pct, row['result_status'])
+
+        grades = df.apply(map_grade, axis=1)
+        counts = grades.value_counts().to_dict()
+        
+        for g, count in counts.items():
+            if g in distribution:
+                distribution[g] = count
+            else:
+                 # Handle unexpected
+                 pass
+
+        return distribution
+
+    # ---------------- MATRIX VIEW ---------------- #
+
+    def get_result_matrix(
+        self,
+        semester: Optional[int] = None,
+        batch: Optional[str] = None,
+        branch: Optional[str] = None,
+        exam_year: Optional[int] = None,
+        exam_month: Optional[str] = None
+    ) -> ResultMatrixResponse:
+        
+        df = self.get_results_dataframe(
+            semester=semester,
+            batch=batch,
+            branch=branch,
+            exam_year=exam_year,
+            exam_month=exam_month
+        )
+
+        if df.empty:
+            return ResultMatrixResponse(
+                columns=[],
+                data=[],
+                summary={"total_students": 0, "passed": 0, "failed": 0}
+            )
+
+        # 1. Identify all unique subjects in this view (sorted by code)
+        subjects = df[['subject_code', 'subject_name']].drop_duplicates().sort_values('subject_code')
+        columns = [{"code": r.subject_code, "name": r.subject_name} for _, r in subjects.iterrows()]
+        
+        # 2. Group by Student (USN)
+        student_data = []
+        
+        # Pre-aggregation stats
+        pass_students = 0
+        fail_students = 0
+        
+        # Group by USN
+        grouped = df.groupby(['usn', 'student_name'])
+        
+        for (usn, name), group in grouped:
+            
+            # Student-level pass/fail logic:
+            # A student passes if ALL subjects in this view have result_status='P'
+            statuses = group['result_status'].fillna('F').str.upper()
+            is_pass = (statuses == 'P').all() and (len(statuses) > 0)
+            
+            if is_pass:
+                pass_students += 1
+            else:
+                fail_students += 1
+                
+            student_entry = {
+                "usn": usn,
+                "name": name,
+                "total_marks": int(group['total_marks'].sum()),
+                "result": "PASS" if is_pass else "FAIL"
+            }
+            
+            # Add subject specific data
+            for _, row in group.iterrows():
+                sub_code = row['subject_code']
+                student_entry[sub_code] = {
+                    "internal": int(row['internal_marks']) if pd.notna(row['internal_marks']) else None,
+                    "external": int(row['external_marks']) if pd.notna(row['external_marks']) else None,
+                    "total": int(row['total_marks']) if pd.notna(row['total_marks']) else None,
+                    "result": row['result_status'],
+                    "credits": int(row['credits']) if pd.notna(row['credits']) else 0
+                }
+            
+            student_data.append(student_entry)
+            
+        # 3. Sort by USN ascending
+        student_data.sort(key=lambda x: x['usn'])
+        
+        return ResultMatrixResponse(
+            columns=columns,
+            data=student_data,
+            summary={
+                "total_students": len(student_data),
+                "passed": pass_students,
+                "failed": fail_students
+            }
+        )
+
+    # ---------------- COMPREHENSIVE HISTORY ---------------- #
+
+    def get_student_comprehensive_history(self, usn: str) -> Optional[StudentHistoryResponse]:
+        """
+        Get comprehensive history for a student including all semesters, subjects, marks, and GPA progression.
+        """
+        # 1. Fetch Student Info
+        student = self.db.query(Student).filter(Student.usn == usn).first()
+        if not student:
+            return None
+
+        # 2. Fetch Results Dataframe
+        df = self.get_results_dataframe(usn=usn)
+        if df.empty:
+            # Return empty structure if student exists but no results
+            return StudentHistoryResponse(
+                student=StudentResponse.from_orm(student),
+                history=[],
+                overall_cgpa=0.0,
+                total_credits_earned=0,
+                sgpa_trend=[],
+                marks_distribution=[]
+            )
+
+        # 3. Process Data — use FIXED VTU credits (never database credits)
+        def calculate_gp(row):
+            pct = self._marks_to_percentage(row['total_marks'])
+            return self._percentage_to_grade_points(pct, row['result_status'])
+
+        df['grade_points'] = df.apply(calculate_gp, axis=1)
+        # Fixed VTU credits per subject code
+        df['vtu_credits'] = df.apply(
+            lambda r: self._get_vtu_credits(r['subject_code'], r['semester']), axis=1
+        )
+        df['credits_earned'] = df.apply(
+            lambda r: r['vtu_credits'] if str(r['result_status']).upper() in ('P', 'PASS') else 0, axis=1
+        )
+
+        history_semesters: List[StudentHistorySemester] = []
+        sgpa_trend = []
+        marks_distribution = []
+
+        cumulative_credits = 0
+        cumulative_weighted_gp = 0
+
+        semesters = sorted(df['semester'].unique())
+
+        for sem in semesters:
+            sem_data = df[df['semester'] == sem]
+
+            # Latest attempt per subject (sort by exam session descending)
+            sem_data = sem_data.sort_values(['exam_year', 'exam_month'], ascending=[False, False])
+            latest_subjects = sem_data.drop_duplicates(subset=['subject_code'], keep='first')
+
+            total_sem_credits = latest_subjects['vtu_credits'].sum()
+            total_sem_weighted_gp = (latest_subjects['grade_points'] * latest_subjects['vtu_credits']).sum()
+            sem_credits_earned = latest_subjects['credits_earned'].sum()
+
+            sgpa = round(total_sem_weighted_gp / total_sem_credits, 2) if total_sem_credits > 0 else 0.0
+
+            cumulative_credits += total_sem_credits
+            cumulative_weighted_gp += total_sem_weighted_gp
+            cgpa = round(cumulative_weighted_gp / cumulative_credits, 2) if cumulative_credits > 0 else 0.0
+
+            subjects_list: List[StudentHistorySubject] = []
+
+            for _, row in latest_subjects.iterrows():
+                fixed_cr = int(row['vtu_credits'])
+                marks_distribution.append({
+                    "subject_code": row['subject_code'],
+                    "subject_name": row['subject_name'],
+                    "credits": fixed_cr,
+                    "total_marks": int(row['total_marks']) if pd.notna(row['total_marks']) else 0,
+                    "semester": int(sem),
+                    "result": row['result_status']
+                })
+
+                subjects_list.append(StudentHistorySubject(
+                    subject_code=row['subject_code'],
+                    subject_name=row['subject_name'],
+                    credits=fixed_cr,
+                    internal_marks=int(row['internal_marks']) if pd.notna(row['internal_marks']) else None,
+                    external_marks=int(row['external_marks']) if pd.notna(row['external_marks']) else None,
+                    total_marks=int(row['total_marks']) if pd.notna(row['total_marks']) else None,
+                    result_status=row['result_status'],
+                    exam_period=f"{row['exam_month']} {int(row['exam_year'])}" if pd.notna(row['exam_year']) else None
+                ))
+
+            history_semesters.append(StudentHistorySemester(
+                semester=int(sem),
+                total_credits_registered=int(total_sem_credits),
+                total_credits_earned=int(sem_credits_earned),
+                sgpa=sgpa,
+                cgpa=cgpa,
+                subjects=subjects_list
+            ))
+
+            sgpa_trend.append({
+                "semester": int(sem),
+                "sgpa": sgpa,
+                "cgpa": cgpa,
+                "credits_earned": int(sem_credits_earned)
+            })
+
+        overall_cgpa = sgpa_trend[-1]["cgpa"] if sgpa_trend else 0.0
+        total_earned = sum(s.total_credits_earned for s in history_semesters) # Or strictly cumulative logic
+
+        return StudentHistoryResponse(
+            student=StudentResponse.from_orm(student),
+            history=history_semesters,
+            overall_cgpa=round(overall_cgpa, 2),
+            total_credits_earned=total_earned,
+            sgpa_trend=sgpa_trend,
+            marks_distribution=marks_distribution
+        )
