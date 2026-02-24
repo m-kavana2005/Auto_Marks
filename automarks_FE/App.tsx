@@ -669,11 +669,11 @@ const DashboardLayout = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 dark:bg-slate-950 relative overflow-x-hidden transition-colors duration-300">
+    <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 relative transition-colors duration-300">
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {/* Top Navbar — Full Width */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 pr-4 md:pr-6 py-3 flex items-center justify-between transition-colors duration-300">
+      <header className="flex-none z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 pr-4 md:pr-6 py-3 flex items-center justify-between transition-colors duration-300">
         <div className="flex items-center gap-4">
           <button
             onClick={() => setSidebarOpen(!isSidebarOpen)}
@@ -740,7 +740,7 @@ const DashboardLayout = () => {
 
         {/* Sidebar */}
         <aside className={`
-          fixed top-[57px] bottom-0 left-0 z-50 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-r border-slate-200 dark:border-slate-800 transform transition-all duration-300 ease-in-out md:relative md:top-0 md:translate-x-0 md:shrink-0 md:ml-6 md:mb-6 md:rounded-2xl md:border md:shadow-sm
+          fixed top-[57px] bottom-0 left-0 z-50 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-r border-slate-200 dark:border-slate-800 transform transition-all duration-300 ease-in-out md:relative md:top-0 md:translate-x-0 md:shrink-0 md:ml-6 md:mb-6 md:rounded-2xl md:border md:shadow-sm md:overflow-y-auto custom-scrollbar
           ${isSidebarCollapsed ? 'md:w-[72px]' : 'md:w-64'} w-64
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         `}>
@@ -771,22 +771,6 @@ const DashboardLayout = () => {
                 />
               ))}
             </nav>
-
-            {/* Collapse toggle — ChatGPT Style */}
-            <div className="mt-auto pt-4 hidden md:flex justify-end px-2">
-              <button
-                onClick={() => setSidebarCollapsed(!isSidebarCollapsed)}
-                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all mb-1"
-                title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                <div className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                    <line x1="9" y1="3" x2="9" y2="21" />
-                  </svg>
-                </div>
-              </button>
-            </div>
           </div>
         </aside>
 
