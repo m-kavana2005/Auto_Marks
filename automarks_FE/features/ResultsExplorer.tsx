@@ -26,8 +26,9 @@ const ResultsExplorer: React.FC = () => {
   const [filters, setFilters] = useState({
     batch: '' as string,
     branch: '' as string,
-    semester: '' as string | number, // can be empty
+    semester: '' as string | number,
     usn: '',
+    status: '' as '' | 'pass' | 'fail',  // '' = show all
   });
 
   const fetchData = async () => {
@@ -89,11 +90,17 @@ const ResultsExplorer: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  // Filtered Data (Client-side USN search)
-  const filteredData = matrix?.data.filter(d =>
-    d.usn.toLowerCase().includes(filters.usn.toLowerCase()) ||
-    d.name.toLowerCase().includes(filters.usn.toLowerCase())
-  ) || [];
+  // Filtered Data (client-side: USN/Name search + Pass/Fail status)
+  const filteredData = (matrix?.data || []).filter(d => {
+    const matchSearch =
+      d.usn.toLowerCase().includes(filters.usn.toLowerCase()) ||
+      d.name.toLowerCase().includes(filters.usn.toLowerCase());
+    const matchStatus =
+      !filters.status ||
+      (filters.status === 'pass' && d.result === 'PASS') ||
+      (filters.status === 'fail' && d.result === 'FAIL');
+    return matchSearch && matchStatus;
+  });
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-10">
@@ -132,24 +139,44 @@ const ResultsExplorer: React.FC = () => {
               <Users size={24} />
             </div>
           </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+          {/* Passed card — click to filter */}
+          <button
+            onClick={() => setFilters(f => ({ ...f, status: f.status === 'pass' ? '' : 'pass' }))}
+            className={`p-5 rounded-2xl border shadow-sm flex items-center justify-between transition-all text-left w-full ${filters.status === 'pass'
+              ? 'bg-emerald-600 border-emerald-600 text-white'
+              : 'bg-white border-slate-100 hover:border-emerald-300 hover:bg-emerald-50'
+              }`}
+          >
             <div>
-              <p className="text-sm font-bold text-emerald-600/60 uppercase tracking-wider">Passed</p>
-              <p className="text-3xl font-black text-emerald-600 mt-1">{matrix.summary.passed}</p>
+              <p className={`text-sm font-bold uppercase tracking-wider ${filters.status === 'pass' ? 'text-emerald-100' : 'text-emerald-600/60'
+                }`}>Passed All</p>
+              <p className={`text-3xl font-black mt-1 ${filters.status === 'pass' ? 'text-white' : 'text-emerald-600'
+                }`}>{matrix.summary.passed}</p>
             </div>
-            <div className="h-12 w-12 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600">
+            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${filters.status === 'pass' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600'
+              }`}>
               <CheckCircle size={24} />
             </div>
-          </div>
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+          </button>
+          {/* Failed card — click to filter */}
+          <button
+            onClick={() => setFilters(f => ({ ...f, status: f.status === 'fail' ? '' : 'fail' }))}
+            className={`p-5 rounded-2xl border shadow-sm flex items-center justify-between transition-all text-left w-full ${filters.status === 'fail'
+              ? 'bg-rose-600 border-rose-600 text-white'
+              : 'bg-white border-slate-100 hover:border-rose-300 hover:bg-rose-50'
+              }`}
+          >
             <div>
-              <p className="text-sm font-bold text-rose-600/60 uppercase tracking-wider">Failed</p>
-              <p className="text-3xl font-black text-rose-600 mt-1">{matrix.summary.failed}</p>
+              <p className={`text-sm font-bold uppercase tracking-wider ${filters.status === 'fail' ? 'text-rose-100' : 'text-rose-600/60'
+                }`}>Failed ≥1 Subject</p>
+              <p className={`text-3xl font-black mt-1 ${filters.status === 'fail' ? 'text-white' : 'text-rose-600'
+                }`}>{matrix.summary.failed}</p>
             </div>
-            <div className="h-12 w-12 bg-rose-50 rounded-full flex items-center justify-center text-rose-600">
+            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${filters.status === 'fail' ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-600'
+              }`}>
               <XCircle size={24} />
             </div>
-          </div>
+          </button>
         </div>
       )}
 
@@ -201,7 +228,29 @@ const ResultsExplorer: React.FC = () => {
             />
           </div>
         </div>
-      </div>
+        {/* Status toggle */}
+        <div>
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Status</label>
+          <div className="flex rounded-xl overflow-hidden border border-slate-200 bg-slate-50 text-sm font-bold">
+            {(['', 'pass', 'fail'] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setFilters(f => ({ ...f, status: s }))}
+                className={`px-4 py-2.5 transition-all ${filters.status === s
+                  ? s === 'pass'
+                    ? 'bg-emerald-600 text-white'
+                    : s === 'fail'
+                      ? 'bg-rose-600 text-white'
+                      : 'bg-indigo-600 text-white'
+                  : 'text-slate-500 hover:bg-slate-100'
+                  }`}
+              >
+                {s === '' ? 'All' : s === 'pass' ? '✓ Pass' : '✗ Fail'}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>{/* end filters bar */}
 
       {/* Main Content */}
       <div className="glass-card rounded-[2rem] overflow-hidden shadow-sm min-h-[400px] flex flex-col border border-slate-200/60">

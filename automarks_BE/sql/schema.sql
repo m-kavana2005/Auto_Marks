@@ -74,6 +74,8 @@ CREATE TABLE results (
     external_marks INT DEFAULT NULL,
     total_marks INT DEFAULT NULL,
     upload_batch_id VARCHAR(50) DEFAULT NULL,
+    -- Tracks how current marks were obtained: 'original' | 'rv' | 'final'
+    marks_source VARCHAR(10) DEFAULT 'original',
     result_status VARCHAR(4) DEFAULT NULL,
     announced_date DATE DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -159,6 +161,7 @@ SELECT
     r.internal_marks,
     r.external_marks,
     r.total_marks,
+    r.marks_source,
     r.result_status,
     r.announced_date,
     r.created_at as result_created_at

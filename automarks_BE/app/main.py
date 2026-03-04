@@ -187,6 +187,14 @@ async def startup_event():
                 conn.execute(text("ALTER TABLE results ADD COLUMN IF NOT EXISTS upload_batch_id VARCHAR(50) NULL"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS ix_results_upload_batch_id ON results (upload_batch_id)"))
 
+        # marks_source: tracks whether marks came from 'original', 'rv', or 'final' upload
+        if "marks_source" not in result_cols:
+            with engine.begin() as conn:
+                conn.execute(text(
+                    "ALTER TABLE results ADD COLUMN IF NOT EXISTS marks_source VARCHAR(10) DEFAULT 'original'"
+                ))
+            logger.info("Schema evolution: added marks_source column to results")
+
         # Credits metadata for CBCS SGPA/CGPA
         try:
             subject_cols = {c["name"] for c in insp.get_columns("subjects")}
@@ -772,6 +780,39 @@ def get_comprehensive_history(
         
     return history
 
+
+# ==================== SGPA ENDPOINTS ====================
+
+@app.get("/students/{usn}/sgpa")
+def get_student_semester_sgpa(
+    usn: str,
+    semester: int = Query(..., ge=1, le=8, description="Semester number (1–8)"),
+    db: Session = Depends(get_db),
+):
+    """
+    Calculate SGPA for a single selected semester for a student.
+
+    - Uses fixed VTU CBCS credits (never DB credits).
+    - Passed subjects are included in SGPA calculation.
+    - Failed / backlog subjects are returned separately and excluded from SGPA.
+    - The marks_source field ('original' | 'rv' | 'final') shows how the
+      student earned the pass (e.g. 'rv' means passed after Revaluation).
+
+    Formula: SGPA = Σ(grade_point × credits) / Σ(credits of passed subjects only)
+    """
+    # Resolve student
+    student = db.query(Student).filter(Student.usn == usn).first()
+    if not student:
+        raise HTTPException(status_code=404, detail=f"Student '{usn}' not found")
+
+    analyzer = ResultAnalyzer(db)
+    result = analyzer.get_semester_sgpa(usn, semester)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="No results found for this student/semester")
+
+    return result
+
 # ==================== METADATA DISCOVERY ENDPOINTS ====================
 
 @app.get("/batches/{batch}/semesters", response_model=List[int])
@@ -938,6 +979,9 @@ async def update_student_result(
         result.total_marks = result_update.total_marks
     if result_update.result_status is not None:
         result.result_status = result_update.result_status
+    # Tag the marks source so the SGPA calculator can show the correct badge
+    if result_update.marks_source is not None:
+        result.marks_source = result_update.marks_source
     
     result.upload_batch_id = "MANUAL_UPDATE"
     db.commit()
@@ -1239,6 +1283,30 @@ async def get_overall_statistics(
     analyzer = ResultAnalyzer(db)
     stats = analyzer.get_overall_statistics(batch=batch, branch=branch)
     return stats
+
+
+@app.get("/analytics/backlog-distribution")
+async def get_backlog_distribution(
+    semester: Optional[int] = Query(None, ge=1, le=8, description="Filter to one semester (1–8). Leave blank for all."),
+    batch: Optional[str] = None,
+    branch: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
+    """
+    Backlog Distribution Analytics.
+
+    Returns:
+    - distribution: how many students have exactly N failing subjects
+      [{backlogs: 1, count: 23}, {backlogs: 2, count: 11}, ...]
+    - students: per-student drilldown sorted by backlog_count descending
+      [{usn, name, backlog_count, failed_subjects: [{code, name}]}, ...]
+    """
+    analyzer = ResultAnalyzer(db)
+    return analyzer.get_backlog_distribution(
+        semester=semester,
+        batch=batch,
+        branch=branch,
+    )
 
 
 # ==================== EXPORT ENDPOINTS ====================

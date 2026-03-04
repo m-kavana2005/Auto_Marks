@@ -163,6 +163,8 @@ class ResultUpdate(BaseModel):
     external_marks: Optional[int] = Field(None, ge=0, le=200)
     total_marks: Optional[int] = Field(None, ge=0, le=300)
     result_status: Optional[str] = None
+    # Indicate how these marks were obtained: 'original' | 'rv' | 'final'
+    marks_source: Optional[str] = Field(None, pattern=r"^(original|rv|final)$")
 
 
 # Upload Log Schemas
@@ -265,3 +267,27 @@ class StudentHistoryResponse(BaseModel):
     # Graph-friendly flat lists
     sgpa_trend: List[Dict[str, Any]] # [{"semester": 1, "sgpa": 8.5, "cgpa": 8.5}, ...]
     marks_distribution: List[Dict[str, Any]] # Flat list of all subjects for scatter plots etc.
+
+
+# ─── SGPA Calculation Schemas ──────────────────────────────────────────────────
+
+class SGPASubjectDetail(BaseModel):
+    """One subject row in the SGPA breakdown for a semester."""
+    subject_code: str
+    subject_name: str
+    marks_used: Optional[int]   # total marks that were counted
+    marks_source: str           # "original" | "rv" | "final"
+    grade_letter: str           # O / S / A / B / C / D / E / F
+    grade_point: int            # 10 / 9 / 8 / 7 / 6 / 5 / 4 / 0
+    credits: int
+
+
+class SGPAResponse(BaseModel):
+    """Full SGPA response for one student + one semester."""
+    usn: str
+    student_name: str
+    semester: int
+    sgpa: float
+    total_credits_passed: int   # sum of credits of passed subjects only
+    passed_subjects: List[SGPASubjectDetail]
+    failed_subjects: List[SGPASubjectDetail]  # shown separately; NOT in SGPA

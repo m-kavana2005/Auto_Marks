@@ -530,29 +530,119 @@ class ResultAnalyzer:
         batch: Optional[str] = None,
         branch: Optional[str] = None,
         usn: Optional[str] = None,
+        subject_code: Optional[str] = None,
+        exam_year: Optional[int] = None,
+        exam_month: Optional[str] = None,
     ):
-        df = self.get_results_dataframe(semester, usn, batch, branch)
+        df = self.get_results_dataframe(
+            semester=semester,
+            usn=usn,
+            batch=batch,
+            branch=branch,
+            subject_code=subject_code,
+            exam_year=exam_year,
+            exam_month=exam_month,
+        )
         if df.empty:
             logger.warning("No data to export")
             return
 
         pivot = self._create_student_pivot(df)
+
+        # ── CSV cannot store colors, so insert a plain-text RESULT column ──
+        # Insert right after Subjects_Failed so it's immediately visible.
+        fail_col_idx = pivot.columns.get_loc("Subjects_Failed") + 1
+        pivot.insert(
+            fail_col_idx,
+            "Overall_Result",
+            pivot["Subjects_Failed"].apply(lambda f: "FAIL" if f > 0 else "PASS"),
+        )
+
         pivot.to_csv(output_path, index=False)
         logger.info(f"CSV exported to {output_path}")
 
+
     # ---------------- EXPORT EXCEL ---------------- #
 
-    def export_to_excel(self, output_path: str, semester: Optional[int] = None):
-        df = self.get_results_dataframe(semester=semester)
+    def export_to_excel(
+        self,
+        output_path: str,
+        semester: Optional[int] = None,
+        batch: Optional[str] = None,
+        branch: Optional[str] = None,
+        usn: Optional[str] = None,
+        subject_code: Optional[str] = None,
+        exam_year: Optional[int] = None,
+        exam_month: Optional[str] = None,
+    ):
+        from openpyxl.styles import PatternFill, Font, Alignment
+        from openpyxl import load_workbook
+
+        df = self.get_results_dataframe(
+            semester=semester,
+            usn=usn,
+            batch=batch,
+            branch=branch,
+            subject_code=subject_code,
+            exam_year=exam_year,
+            exam_month=exam_month,
+        )
         if df.empty:
             logger.warning("No data to export")
             return
 
+        pivot = self._create_student_pivot(df)
+
+        # Write to Excel first, then apply styling
         with pd.ExcelWriter(output_path, engine="openpyxl") as writer:
-            pivot = self._create_student_pivot(df)
             pivot.to_excel(writer, sheet_name="Student View", index=False)
 
-        logger.info(f"Excel exported to {output_path}")
+        # ── Apply row-level colour using openpyxl ──────────────────────────
+        RED_FILL   = PatternFill(start_color="FFCDD2", end_color="FFCDD2", fill_type="solid")  # light red
+        GREEN_FILL = PatternFill(start_color="C8E6C9", end_color="C8E6C9", fill_type="solid")  # light green
+        HEADER_FILL = PatternFill(start_color="1A237E", end_color="1A237E", fill_type="solid") # dark indigo
+        HEADER_FONT = Font(bold=True, color="FFFFFF", size=11)
+        FAIL_FONT = Font(bold=True, color="B71C1C")   # dark red text for failed rows
+
+        wb = load_workbook(output_path)
+        ws = wb["Student View"]
+
+        # Find the column index for "Subjects_Failed" (1-indexed in openpyxl)
+        col_names = [cell.value for cell in ws[1]]
+        try:
+            failed_col_idx = col_names.index("Subjects_Failed") + 1  # 1-based
+        except ValueError:
+            failed_col_idx = None
+
+        max_col = ws.max_column
+
+        # Style header row
+        for cell in ws[1]:
+            cell.fill = HEADER_FILL
+            cell.font = HEADER_FONT
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+
+        # Style data rows
+        for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
+            is_failed = False
+            if failed_col_idx:
+                fail_val = row[failed_col_idx - 1].value  # 0-indexed list
+                is_failed = isinstance(fail_val, (int, float)) and fail_val > 0
+
+            fill = RED_FILL if is_failed else GREEN_FILL
+            for cell in row:
+                cell.fill = fill
+                if is_failed:
+                    cell.font = FAIL_FONT
+
+        # Auto-fit column widths
+        for col in ws.columns:
+            max_len = max((len(str(c.value or "")) for c in col), default=10)
+            ws.column_dimensions[col[0].column_letter].width = min(max_len + 4, 40)
+
+        wb.save(output_path)
+        logger.info(f"Excel exported to {output_path} (with row highlighting)")
+
 
     # ---------------- OVERALL STATS ---------------- #
 
@@ -910,3 +1000,210 @@ class ResultAnalyzer:
             sgpa_trend=sgpa_trend,
             marks_distribution=marks_distribution
         )
+
+    # ---------------- SEMESTER SGPA (Selected Semester Only) ---------------- #
+
+    def get_semester_sgpa(self, usn: str, semester: int):
+        """
+        Calculate SGPA for a single selected semester only.
+
+        Priority for marks/pass-status per subject:
+          1. result_status == 'P'  →  student passed (use total_marks, note marks_source)
+          2. Otherwise            →  subject is failed / backlog (excluded from SGPA)
+
+        The marks_source column ('original' | 'rv' | 'final') indicates how the
+        student achieved the current result_status.  The RV upload already overwrites
+        total_marks and result_status AND sets marks_source = 'rv', so this method
+        simply reads what is in the DB.
+
+        SGPA = Σ(grade_point × credits) / Σ(credits of passed subjects only)
+        Failed / backlog subjects are returned in a separate list for display but are
+        NOT included in the denominator or numerator.
+
+        Returns an SGPAResponse (schema defined in schemas.py).
+        """
+        from app.schemas import SGPASubjectDetail, SGPAResponse
+
+        # ── 1. Fetch student ───────────────────────────────────────────────────
+        student = self.db.query(Student).filter(Student.usn == usn).first()
+        if not student:
+            return None
+
+        # ── 2. Fetch all result rows for this USN + semester ──────────────────
+        rows = (
+            self.db.query(
+                Subject.subject_code,
+                Subject.subject_name,
+                Result.total_marks,
+                Result.result_status,
+                Result.marks_source,
+                Semester.semester_number,
+                Semester.exam_year,
+                Semester.exam_month,
+            )
+            .join(Result.student)
+            .join(Result.semester)
+            .join(Result.subject)
+            .filter(Student.usn == usn)
+            .filter(Semester.semester_number == semester)
+            .all()
+        )
+
+        if not rows:
+            return SGPAResponse(
+                usn=usn,
+                student_name=student.student_name,
+                semester=semester,
+                sgpa=0.0,
+                total_credits_passed=0,
+                passed_subjects=[],
+                failed_subjects=[],
+            )
+
+        # ── 3. De-duplicate: keep the latest exam attempt per subject ─────────
+        # Build a dict keyed by subject_code, preferring the most recent session
+        latest: dict = {}
+        for row in rows:
+            code = row.subject_code
+            if code not in latest:
+                latest[code] = row
+            else:
+                # Compare exam sessions; keep the newer one
+                existing = latest[code]
+                newer = False
+                if (row.exam_year or 0) > (existing.exam_year or 0):
+                    newer = True
+                elif (row.exam_year or 0) == (existing.exam_year or 0):
+                    if (row.exam_month or "") > (existing.exam_month or ""):
+                        newer = True
+                if newer:
+                    latest[code] = row
+
+        # ── 4. Classify passed vs. failed and build detail records ────────────
+        passed_subjects: list[SGPASubjectDetail] = []
+        failed_subjects: list[SGPASubjectDetail] = []
+
+        for code, row in latest.items():
+            status = str(row.result_status or "").upper()
+            is_passed = status in ("P", "PASS")
+
+            marks = row.total_marks
+            source = row.marks_source or "original"
+
+            credits = self._get_vtu_credits(code, semester)
+            pct = self._marks_to_percentage(marks) if is_passed else None
+            gp = self._percentage_to_grade_points(pct, row.result_status) if is_passed else 0
+            gl = self._percentage_to_grade_letter(pct, row.result_status) if is_passed else "F"
+
+            detail = SGPASubjectDetail(
+                subject_code=code,
+                subject_name=row.subject_name,
+                marks_used=int(marks) if marks is not None else None,
+                marks_source=source,
+                grade_letter=gl,
+                grade_point=gp,
+                credits=credits,
+            )
+
+            if is_passed:
+                passed_subjects.append(detail)
+            else:
+                failed_subjects.append(detail)
+
+        # ── 5. Compute SGPA ──────────────────────────────────────────────────
+        total_credits = sum(s.credits for s in passed_subjects)
+        weighted_gp   = sum(s.grade_point * s.credits for s in passed_subjects)
+        sgpa = round(weighted_gp / total_credits, 2) if total_credits > 0 else 0.0
+
+        # Sort both lists by subject code for consistency
+        passed_subjects.sort(key=lambda s: s.subject_code)
+        failed_subjects.sort(key=lambda s: s.subject_code)
+
+        return SGPAResponse(
+            usn=usn,
+            student_name=student.student_name,
+            semester=semester,
+            sgpa=sgpa,
+            total_credits_passed=total_credits,
+            passed_subjects=passed_subjects,
+            failed_subjects=failed_subjects,
+        )
+
+    # ------------- BACKLOG DISTRIBUTION ANALYTICS ------------- #
+
+    def get_backlog_distribution(
+        self,
+        semester: Optional[int] = None,
+        batch: Optional[str] = None,
+        branch: Optional[str] = None,
+    ) -> Dict:
+        """
+        For a given semester (and optional batch/branch filters):
+
+        1. distribution — how many students have exactly N backlogs
+           [{"backlogs": 1, "count": 23}, {"backlogs": 2, "count": 11}, ...]
+
+        2. students — per-student drilldown, sorted by backlog_count desc
+           [{"usn": ..., "name": ..., "backlog_count": 2,
+             "failed_subjects": [{"code": ..., "name": ...}, ...]}, ...]
+        """
+        df = self.get_results_dataframe(
+            semester=semester,
+            batch=batch,
+            branch=branch,
+        )
+
+        if df.empty:
+            return {"distribution": [], "students": []}
+
+        # Keep only the latest attempt per (usn, subject_code)
+        df_sorted = df.sort_values(
+            ["exam_year", "exam_month"], ascending=[False, False]
+        )
+        latest = df_sorted.drop_duplicates(
+            subset=["usn", "subject_code"], keep="first"
+        )
+
+        # Mark each row as failed
+        latest = latest.copy()
+        latest["is_failed"] = latest["result_status"].apply(
+            lambda s: str(s).upper() not in ("P", "PASS")
+        )
+
+        # Per-student backlog info
+        student_records = []
+        for usn, grp in latest.groupby("usn"):
+            failed_rows = grp[grp["is_failed"]]
+            backlog_count = int(len(failed_rows))
+            if backlog_count == 0:
+                continue  # Only include students with ≥1 backlog
+
+            name = grp["student_name"].iloc[0]
+            failed_subjects = [
+                {"code": row["subject_code"], "name": row["subject_name"]}
+                for _, row in failed_rows.iterrows()
+            ]
+            student_records.append({
+                "usn": usn,
+                "name": name,
+                "backlog_count": backlog_count,
+                "failed_subjects": failed_subjects,
+            })
+
+        # Sort worst first
+        student_records.sort(key=lambda r: r["backlog_count"], reverse=True)
+
+        # Build distribution histogram
+        from collections import Counter
+        counts = Counter(r["backlog_count"] for r in student_records)
+        distribution = [
+            {"backlogs": k, "count": counts[k]}
+            for k in sorted(counts.keys())
+        ]
+
+        return {
+            "distribution": distribution,
+            "students": student_records,
+        }
+
+

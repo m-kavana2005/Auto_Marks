@@ -1,5 +1,5 @@
-
-import React, { useState } from 'react';
+﻿
+import React, { useState, useEffect } from 'react';
 import {
   FileSpreadsheet,
   FileText,
@@ -14,13 +14,28 @@ import { getBatchOptions } from '../utils/batches';
 const ExportPage: React.FC = () => {
   const [semester, setSemester] = useState<number | ''>('');
   const [batch, setBatch] = useState<string>('');
+  const [branch, setBranch] = useState<string>('');
+  const [branches, setBranches] = useState<string[]>([]);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Fetch branches whenever batch changes
+  useEffect(() => {
+    setBranch('');
+    if (batch) {
+      endpoints.getBranches(batch)
+        .then((res) => setBranches(res || []))
+        .catch(() => setBranches([]));
+    } else {
+      setBranches([]);
+    }
+  }, [batch]);
 
   const handleExport = (format: 'excel' | 'csv') => {
     setIsExporting(true);
     const url = endpoints.exportUrl(format, {
       semester: semester === '' ? undefined : semester,
       batch: batch || undefined,
+      branch: branch || undefined,
     });
 
     try {
@@ -47,21 +62,41 @@ const ExportPage: React.FC = () => {
         <p className="text-slate-500 font-medium">Extract processed results for offline reporting and integration.</p>
       </div>
 
-      <div className="glass-card p-6 sm:p-8 rounded-[2.5rem]">
-        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Batch</label>
-        <select
-          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-          value={batch}
-          onChange={(e) => setBatch(e.target.value)}
-          disabled={isExporting}
-        >
-          <option value="">All Batches</option>
-          {getBatchOptions().map((b) => (
-            <option key={b} value={b}>
-              {b}
-            </option>
-          ))}
-        </select>
+      {/* â”€â”€ Shared Filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <div className="glass-card p-6 sm:p-8 rounded-[2.5rem] space-y-6">
+        <div>
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Batch</label>
+          <select
+            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+            value={batch}
+            onChange={(e) => setBatch(e.target.value)}
+            disabled={isExporting}
+          >
+            <option value="">All Batches</option>
+            {getBatchOptions().map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Branch</label>
+          <select
+            className={`w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${!batch ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            value={branch}
+            onChange={(e) => setBranch(e.target.value)}
+            disabled={isExporting || !batch}
+          >
+            <option value="">All Branches</option>
+            {branches.map((b) => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+          {!batch && (
+            <p className="text-xs text-slate-400 mt-1.5 font-medium">Select a batch first to filter by branch.</p>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
@@ -72,7 +107,7 @@ const ExportPage: React.FC = () => {
           <div className="mb-8">
             <h3 className="text-2xl font-black text-slate-900">Excel Export</h3>
             <p className="text-slate-500 mt-2 font-medium leading-relaxed">
-              Formatted workbook with results and analytics.
+              Formatted workbook with color-coded pass/fail rows.
             </p>
           </div>
 
@@ -105,7 +140,7 @@ const ExportPage: React.FC = () => {
           <div className="mb-8">
             <h3 className="text-2xl font-black text-slate-900">CSV Export</h3>
             <p className="text-slate-500 mt-2 font-medium leading-relaxed">
-              Simple CSV format for spreadsheets and databases.
+              Simple CSV with Overall_Result column (PASS/FAIL).
             </p>
           </div>
 
@@ -136,3 +171,5 @@ const ExportPage: React.FC = () => {
 };
 
 export default ExportPage;
+
+

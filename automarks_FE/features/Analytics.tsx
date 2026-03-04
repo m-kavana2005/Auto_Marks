@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import {
   BarChart,
@@ -33,11 +33,25 @@ import {
   BarChart3,
   WifiOff,
   RefreshCcw,
-  AlertTriangle
+  AlertTriangle,
+  BookX
 } from 'lucide-react';
 import { endpoints, getApiBase } from '../api/client';
 import { SubjectStats, FailureAnalysis, TopPerformer } from '../types';
 import { getBatchOptions } from '../utils/batches';
+
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+interface BacklogStudent {
+  usn: string;
+  name: string;
+  backlog_count: number;
+  failed_subjects: { code: string; name: string }[];
+}
+
+interface BacklogData {
+  distribution: { backlogs: number; count: number }[];
+  students: BacklogStudent[];
+}
 
 const Analytics: React.FC = () => {
   const [semester, setSemester] = useState<number | undefined>(undefined);
@@ -52,6 +66,8 @@ const Analytics: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [gradeDistribution, setGradeDistribution] = useState<Record<string, number>>({});
+  const [backlogData, setBacklogData] = useState<BacklogData | null>(null);
+  const [backlogSearch, setBacklogSearch] = useState('');
 
   const [availableSemesters, setAvailableSemesters] = useState<number[]>([]);
 
@@ -82,16 +98,18 @@ const Analytics: React.FC = () => {
     try {
       const batchOpts = batch || branch ? { batch, branch } : undefined;
       // Parallel fetch to improve speed
-      const [stats, failures, tops, grades] = await Promise.all([
+      const [stats, failures, tops, grades, backlogs] = await Promise.all([
         endpoints.getSubjectStats(semester, batchOpts),
         endpoints.getFailureAnalysis(semester, batchOpts),
         endpoints.getTopPerformers(semester, undefined, 10, { ...(batchOpts || {}), rank_by: 'sgpa' }),
-        endpoints.getGradeDistribution(semester, batchOpts)
+        endpoints.getGradeDistribution(semester, batchOpts),
+        endpoints.getBacklogDistribution(semester, batch, branch),
       ]);
       setSubjectStats(stats);
       setFailureAnalysis(failures);
       setTopPerformers(tops);
       setGradeDistribution(grades);
+      setBacklogData(backlogs);
     } catch (err: any) {
       console.error("Analytics fetch failed:", err);
       setError(err.message || "Unable to load analytics data.");
@@ -111,6 +129,13 @@ const Analytics: React.FC = () => {
       .catch(() => setBranches([]));
     setBranch(undefined);
   }, [batch]);
+
+  // â”€â”€â”€ Backlog drilldown filter â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  const filteredBacklogStudents = (backlogData?.students || []).filter(s =>
+    s.usn.toLowerCase().includes(backlogSearch.toLowerCase()) ||
+    s.name.toLowerCase().includes(backlogSearch.toLowerCase()) ||
+    s.failed_subjects.some(f => f.code.toLowerCase().includes(backlogSearch.toLowerCase()))
+  );
 
   if (error) {
     return (
@@ -198,13 +223,13 @@ const Analytics: React.FC = () => {
               onChange={(e) => setChartType(e.target.value as 'bar' | 'horizontal' | 'pie' | 'line' | 'area' | 'radar' | 'radial')}
               className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="bar">📊 Bar Chart</option>
-              <option value="horizontal">📊 Horizontal Bar</option>
-              <option value="line">📈 Line Chart</option>
-              <option value="area">📉 Area Chart</option>
-              <option value="pie">🥧 Pie Chart</option>
-              <option value="radar">🎯 Radar Chart</option>
-              <option value="radial">⭕ Radial Chart</option>
+              <option value="bar">ðŸ“Š Bar Chart</option>
+              <option value="horizontal">ðŸ“Š Horizontal Bar</option>
+              <option value="line">ðŸ“ˆ Line Chart</option>
+              <option value="area">ðŸ“‰ Area Chart</option>
+              <option value="pie">ðŸ¥§ Pie Chart</option>
+              <option value="radar">ðŸŽ¯ Radar Chart</option>
+              <option value="radial">â­• Radial Chart</option>
             </select>
           </div>
           <div className="h-[300px] flex-1">
@@ -390,9 +415,9 @@ const Analytics: React.FC = () => {
               onChange={(e) => setTrendChartType(e.target.value as 'area' | 'line' | 'bar')}
               className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             >
-              <option value="area">📉 Area Chart</option>
-              <option value="line">📈 Line Chart</option>
-              <option value="bar">📊 Bar Chart</option>
+              <option value="area">ðŸ“‰ Area Chart</option>
+              <option value="line">ðŸ“ˆ Line Chart</option>
+              <option value="bar">ðŸ“Š Bar Chart</option>
             </select>
           </div>
           <div className="h-[300px] flex-1">
@@ -505,14 +530,14 @@ const Analytics: React.FC = () => {
                   <Bar dataKey="count" radius={[10, 10, 0, 0]} animationDuration={1800}>
                     {Object.entries(gradeDistribution).map(([grade], index) => {
                       const colors: Record<string, string> = {
-                        'O': '#10b981', // Emerald
-                        'S': '#3b82f6', // Blue
-                        'A': '#6366f1', // Indigo
-                        'B': '#8b5cf6', // Violet
-                        'C': '#a855f7', // Purple
-                        'D': '#f59e0b', // Amber
-                        'E': '#f43f5e', // Rose
-                        'F': '#64748b'  // Slate
+                        'O': '#10b981',
+                        'S': '#3b82f6',
+                        'A': '#6366f1',
+                        'B': '#8b5cf6',
+                        'C': '#a855f7',
+                        'D': '#f59e0b',
+                        'E': '#f43f5e',
+                        'F': '#64748b'
                       };
                       return <Cell key={`cell-${index}`} fill={colors[grade] || '#cbd5e1'} />;
                     })}
@@ -648,8 +673,182 @@ const Analytics: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+          BACKLOG DISTRIBUTION SECTION
+          â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl">
+            <BookX size={24} />
+          </div>
+          <div>
+            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Backlog Distribution</h3>
+            <p className="text-slate-500 text-sm font-medium">How many students failed in 1, 2, 3â€¦ subjects â€” and exactly which ones.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+          {/* â”€â”€ Histogram â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          <div className="glass-card rounded-[2.5rem] p-8 flex flex-col min-h-[320px]">
+            <h4 className="text-base font-black text-slate-800 mb-1">Students by Backlog Count</h4>
+            <p className="text-xs text-slate-400 font-medium mb-6">X = number of failed subjects, Y = number of students</p>
+            <div className="flex-1 h-[240px]">
+              {isLoading ? (
+                <div className="w-full h-full flex items-center justify-center bg-slate-50/50 rounded-2xl animate-pulse">
+                  <BarChart3 size={28} className="text-slate-200" />
+                </div>
+              ) : backlogData && backlogData.distribution.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={backlogData.distribution} barSize={48}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="backlogs"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 12, fontWeight: 800, fill: '#475569' }}
+                      label={{ value: 'Backlogs', position: 'insideBottom', offset: -4, fontSize: 11, fill: '#94a3b8', fontWeight: 700 }}
+                      height={44}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fontSize: 10, fontWeight: 700, fill: '#94a3b8' }}
+                      allowDecimals={false}
+                    />
+                    <Tooltip
+                      cursor={{ fill: '#fff1f2', radius: 8 }}
+                      contentStyle={{ border: 'none', borderRadius: '16px', boxShadow: '0 10px 24px rgba(0,0,0,0.10)', fontWeight: 'bold' }}
+                      formatter={(value: any) => [value, 'Students']}
+                      labelFormatter={(label) => `${label} failed subject${Number(label) > 1 ? 's' : ''}`}
+                    />
+                    <Bar dataKey="count" radius={[10, 10, 0, 0]} animationDuration={900}>
+                      {backlogData.distribution.map((entry, idx) => {
+                        const colors = ['#f59e0b', '#f97316', '#ef4444', '#dc2626', '#b91c1c', '#7f1d1d'];
+                        return <Cell key={idx} fill={colors[Math.min(idx, colors.length - 1)]} />;
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
+                  <BookX size={36} className="mb-2 opacity-20" />
+                  <p className="font-bold text-sm">No backlog data for this semester.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* â”€â”€ Summary tiles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          <div className="flex flex-col gap-4 justify-center">
+            {isLoading ? (
+              [1, 2, 3].map(i => (
+                <div key={i} className="h-20 bg-slate-100 rounded-2xl animate-pulse" />
+              ))
+            ) : backlogData && backlogData.distribution.length > 0 ? (
+              backlogData.distribution.map((d) => {
+                const pct = backlogData.students.length > 0
+                  ? ((d.count / backlogData.students.length) * 100).toFixed(1)
+                  : '0';
+                const bgMap = ['bg-amber-50 border-amber-100 text-amber-700',
+                  'bg-orange-50 border-orange-100 text-orange-700',
+                  'bg-red-50 border-red-100 text-red-700'];
+                const cls = bgMap[Math.min(d.backlogs - 1, bgMap.length - 1)];
+                return (
+                  <div key={d.backlogs} className={`flex items-center justify-between px-6 py-4 rounded-2xl border ${cls}`}>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-widest opacity-70">
+                        {d.backlogs} failed subject{d.backlogs > 1 ? 's' : ''}
+                      </p>
+                      <p className="text-2xl font-black mt-0.5">{d.count} students</p>
+                    </div>
+                    <p className="text-3xl font-black opacity-30">{pct}%</p>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-slate-400 italic text-sm text-center py-10">All students cleared this semester.</p>
+            )}
+          </div>
+        </div>
+
+        {/* â”€â”€ Per-student drilldown table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <div className="glass-card rounded-[2.5rem] overflow-hidden">
+          <div className="p-6 bg-white border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h4 className="text-lg font-black text-slate-900">Student Backlog Details</h4>
+              <p className="text-xs text-slate-400 font-medium mt-0.5">
+                {filteredBacklogStudents.length} student{filteredBacklogStudents.length !== 1 ? 's' : ''} with backlogs
+              </p>
+            </div>
+            <input
+              type="text"
+              placeholder="Search by USN, name, or subject codeâ€¦"
+              value={backlogSearch}
+              onChange={e => setBacklogSearch(e.target.value)}
+              className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-rose-400 w-full sm:w-72 placeholder:text-slate-400"
+            />
+          </div>
+          <div className="overflow-x-auto max-h-[480px] overflow-y-auto">
+            {isLoading ? (
+              <div className="p-10 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-rose-500"></div>
+              </div>
+            ) : filteredBacklogStudents.length > 0 ? (
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                  <tr>
+                    <th className="px-6 py-4 border-b border-slate-100">USN</th>
+                    <th className="px-6 py-4 border-b border-slate-100">Student Name</th>
+                    <th className="px-6 py-4 border-b border-slate-100 text-center">Backlogs</th>
+                    <th className="px-6 py-4 border-b border-slate-100">Failed Subjects</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50 bg-white">
+                  {filteredBacklogStudents.map((s) => (
+                    <tr key={s.usn} className="hover:bg-rose-50/30 transition-colors">
+                      <td className="px-6 py-4 text-xs font-bold text-indigo-600 whitespace-nowrap">{s.usn}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-800">{s.name}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-sm font-black ${s.backlog_count === 1 ? 'bg-amber-100 text-amber-700'
+                          : s.backlog_count === 2 ? 'bg-orange-100 text-orange-700'
+                            : 'bg-red-100 text-red-700'
+                          }`}>
+                          {s.backlog_count}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {s.failed_subjects.map((f) => (
+                            <span
+                              key={f.code}
+                              title={f.name}
+                              className="inline-block px-2 py-0.5 bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-black rounded-lg whitespace-nowrap cursor-default"
+                            >
+                              {f.code}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="py-20 flex flex-col items-center justify-center text-slate-400">
+                <BookX size={40} className="mb-3 opacity-20" />
+                <p className="font-bold">
+                  {backlogSearch ? 'No students match your search.' : 'No students with backlogs for this semester.'}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default Analytics;
+

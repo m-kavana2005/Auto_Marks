@@ -27,7 +27,8 @@ import {
   Clock,
   Sun,
   Moon,
-  LogOut
+  LogOut,
+  GraduationCap
 } from 'lucide-react';
 import { endpoints, getApiBase, setApiBaseOverride } from './api/client';
 
@@ -38,6 +39,7 @@ import ResultsExplorer from './features/ResultsExplorer';
 import StudentProfile from './features/StudentProfile';
 import Analytics from './features/Analytics';
 import ExportPage from './features/ExportPage';
+import SGPACalculator from './features/SGPACalculator';
 import AutoMarksLogo from './components/ui/AutoMarksLogo';
 import LandingPage from './pages/LandingPage';
 import { getBatchOptions } from './utils/batches';
@@ -664,6 +666,7 @@ const DashboardLayout = () => {
     { to: '/upload', icon: UploadCloud, label: 'Upload Portal' },
     { to: '/results', icon: FileSearch, label: 'Explorer' },
     { to: '/profile', icon: UserCircle, label: 'Student Profile' },
+    { to: '/sgpa', icon: GraduationCap, label: 'SGPA Calculator' },
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/export', icon: Download, label: 'Exports' },
   ];
@@ -798,6 +801,7 @@ export default function App() {
           <Route path="/upload" element={<UploadPage />} />
           <Route path="/results" element={<ResultsExplorer />} />
           <Route path="/profile" element={<StudentProfile />} />
+          <Route path="/sgpa" element={<SGPACalculator />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/export" element={<ExportPage />} />
         </Route>

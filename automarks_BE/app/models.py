@@ -92,6 +92,11 @@ class Result(Base):
     total_marks = Column(Integer)
     # UUID for the upload batch that last wrote this row (used for batch-level deletes/auditing)
     upload_batch_id = Column(String(50), index=True, nullable=True)
+    # Tracks how the current marks/status were obtained:
+    #   'original' — from the regular exam result PDF
+    #   'rv'       — overwritten by a Revaluation (RV) result
+    #   'final'    — overwritten by a Final result announcement
+    marks_source = Column(String(10), nullable=True, default="original")
     # Store single-letter/short codes (P/F/A/W/X/NE)
     result_status = Column(String(4), index=True)
     announced_date = Column(Date)

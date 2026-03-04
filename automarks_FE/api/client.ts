@@ -444,4 +444,55 @@ export const endpoints = {
       params: { confirm: 'DELETE_ALL', batch },
     });
   },
+
+  getStudentSgpa: async (
+    usn: string,
+    semester: number
+  ): Promise<{
+    usn: string;
+    student_name: string;
+    semester: number;
+    sgpa: number;
+    total_credits_passed: number;
+    passed_subjects: Array<{
+      subject_code: string;
+      subject_name: string;
+      marks_used: number | null;
+      marks_source: string;
+      grade_letter: string;
+      grade_point: number;
+      credits: number;
+    }>;
+    failed_subjects: Array<{
+      subject_code: string;
+      subject_name: string;
+      marks_used: number | null;
+      marks_source: string;
+      grade_letter: string;
+      grade_point: number;
+      credits: number;
+    }>;
+  }> => {
+    return apiFetch(`/students/${encodeURIComponent(usn)}/sgpa`, {
+      params: { semester },
+    });
+  },
+
+  getBacklogDistribution: async (
+    semester?: number,
+    batch?: string,
+    branch?: string,
+  ): Promise<{
+    distribution: Array<{ backlogs: number; count: number }>;
+    students: Array<{
+      usn: string;
+      name: string;
+      backlog_count: number;
+      failed_subjects: Array<{ code: string; name: string }>;
+    }>;
+  }> => {
+    return apiFetch('/analytics/backlog-distribution', {
+      params: { semester, batch, branch },
+    });
+  },
 };
