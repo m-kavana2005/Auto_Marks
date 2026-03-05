@@ -40,6 +40,7 @@ import StudentProfile from './features/StudentProfile';
 import Analytics from './features/Analytics';
 import ExportPage from './features/ExportPage';
 import SGPACalculator from './features/SGPACalculator';
+import NotificationsPage from './features/NotificationsPage';
 import AutoMarksLogo from './components/ui/AutoMarksLogo';
 import LandingPage from './pages/LandingPage';
 import { getBatchOptions } from './utils/batches';
@@ -52,8 +53,8 @@ const SidebarLink = ({ to, icon: Icon, label, active, onClick, collapsed }: any)
     onClick={onClick}
     title={collapsed ? label : undefined}
     className={`flex items-center ${collapsed ? 'justify-center' : ''} gap-3 ${collapsed ? 'px-3' : 'px-4'} py-3 rounded-xl transition-all duration-200 group ${active
-      ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400'
+      ? 'bg-indigo-600 text-white'
+      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
       }`}
   >
     <Icon size={20} className={`shrink-0 ${active ? 'text-white' : 'group-hover:scale-110 transition-transform'}`} />
@@ -639,7 +640,6 @@ const DashboardLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isSettingsOpen, setSettingsOpen] = useState(false);
-  const [isNotifOpen, setNotifOpen] = useState(false);
   const [isProfileOpen, setProfileOpen] = useState(false);
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined' && window.localStorage) {
@@ -669,116 +669,144 @@ const DashboardLayout = () => {
     { to: '/sgpa', icon: GraduationCap, label: 'SGPA Calculator' },
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/export', icon: Download, label: 'Exports' },
+    { to: '/notifications', icon: Bell, label: 'Notifications' },
   ];
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 relative transition-colors duration-300">
+    <div className="flex h-screen overflow-hidden bg-white dark:bg-slate-950 relative transition-colors duration-300">
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
 
-      {/* Top Navbar — Full Width */}
-      <header className="flex-none z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 pr-4 md:pr-6 py-3 flex items-center justify-between transition-colors duration-300">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => setSidebarOpen(!isSidebarOpen)}
-            className="md:hidden p-2 ml-4 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
-          >
-            <Menu size={24} />
-          </button>
-          <Link to="/" className="flex items-center gap-2.5 pl-4 md:pl-6">
-            <AutoMarksLogo size={32} />
-            <span className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Auto <span className="text-indigo-600 dark:text-indigo-400">Marks</span>
-            </span>
-          </Link>
-        </div>
+      {/* Mobile Sidebar Backdrop */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden animate-in fade-in" onClick={() => setSidebarOpen(false)} />
+      )}
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <button
-            onClick={toggleTheme}
-            className="p-2 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-slate-800 rounded-xl transition-all"
-            title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-          >
-            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-          </button>
-          <div className="relative">
-            <button
-              onClick={() => setNotifOpen(!isNotifOpen)}
-              className={`p-2 rounded-xl transition-all relative ${isNotifOpen ? 'bg-indigo-50 text-indigo-600' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
-            >
-              <Bell size={20} />
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"></span>
-            </button>
-            <NotificationDropdown isOpen={isNotifOpen} onClose={() => setNotifOpen(false)} />
-          </div>
-
-          <div className="h-8 w-px bg-slate-200 mx-1 hidden sm:block"></div>
-
-          <div className="relative">
-            <button
-              onClick={() => setProfileOpen(!isProfileOpen)}
-              className="flex items-center gap-3 p-1 pr-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-200"
-            >
-              <img
-                src="/student-avatar.svg"
-                alt="Avatar"
-                className="w-8 h-8 rounded-lg object-cover bg-indigo-100"
-              />
-              <div className="text-left hidden sm:block">
-                <p className="text-xs font-bold text-slate-900 dark:text-white leading-none">Registrar</p>
-                <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">Admin</p>
-              </div>
-              <ChevronRight size={14} className={`text-slate-400 transition-transform ${isProfileOpen ? 'rotate-90' : ''}`} />
-            </button>
-            <ProfileDropdown isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} onOpenSettings={() => setSettingsOpen(true)} />
-          </div>
-        </div>
-      </header>
-
-      {/* Body — Sidebar + Main Content */}
-      <div className="flex flex-1 overflow-hidden mt-6">
-        {/* Mobile Sidebar Backdrop */}
-        {isSidebarOpen && (
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 md:hidden animate-in fade-in" onClick={() => setSidebarOpen(false)} />
-        )}
-
-        {/* Sidebar */}
-        <aside className={`
-          fixed top-[57px] bottom-0 left-0 z-50 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 border-r border-slate-200 dark:border-slate-800 transform transition-all duration-300 ease-in-out md:relative md:top-0 md:translate-x-0 md:shrink-0 md:ml-6 md:mb-6 md:rounded-2xl md:border md:shadow-sm md:overflow-y-auto custom-scrollbar
-          ${isSidebarCollapsed ? 'md:w-[72px]' : 'md:w-64'} w-64
-          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}>
-          <div className="flex flex-col h-full p-4">
-            {/* Collapse toggle — ChatGPT Style (Top) */}
-            <div className="hidden md:flex justify-end px-2 mb-2">
+      {/* Sidebar */}
+      <aside className={`
+        fixed top-0 bottom-0 left-0 z-50 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-all duration-300 ease-in-out md:relative md:translate-x-0 md:shrink-0 flex flex-col
+        ${isSidebarCollapsed ? 'md:w-[72px]' : 'md:w-64'} w-64
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        {/* Sidebar Header (Logo & Collapse) */}
+        {/* Sidebar Header (Logo & Collapse) */}
+        <div className={`h-16 flex items-center px-4 shrink-0 border-b border-transparent ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+          {!isSidebarCollapsed ? (
+            <>
+              <Link to="/" className="flex items-center gap-2.5 overflow-hidden">
+                <AutoMarksLogo size={28} />
+                <span className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white whitespace-nowrap">
+                  Auto <span className="text-indigo-600 dark:text-indigo-400">Marks</span>
+                </span>
+              </Link>
               <button
-                onClick={() => setSidebarCollapsed(!isSidebarCollapsed)}
-                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all"
-                title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                onClick={() => setSidebarCollapsed(true)}
+                className="hidden md:flex p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-all shrink-0"
+                title="Collapse sidebar"
               >
-                <div className={`transition-transform duration-300 ${isSidebarCollapsed ? 'rotate-180' : ''}`}>
+                <div className="transition-transform duration-300">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                     <line x1="9" y1="3" x2="9" y2="21" />
                   </svg>
                 </div>
               </button>
+            </>
+          ) : (
+            <div className="w-full flex justify-center">
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="p-1 hover:opacity-80 transition-opacity"
+                title="Expand sidebar"
+              >
+                <AutoMarksLogo size={32} />
+              </button>
             </div>
-            <nav className="flex-1 space-y-1.5 mt-2">
-              {navItems.map((item) => (
-                <SidebarLink
-                  key={item.to}
-                  {...item}
-                  active={location.pathname === item.to}
-                  onClick={() => setSidebarOpen(false)}
-                  collapsed={isSidebarCollapsed}
-                />
-              ))}
-            </nav>
-          </div>
-        </aside>
+          )}
 
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 min-w-0">
+          {/* Mobile close button */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="md:hidden p-1.5 text-slate-400 hover:bg-slate-200 rounded-lg ml-auto"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Navigation Links */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1.5 custom-scrollbar">
+          {navItems.map((item) => (
+            <SidebarLink
+              key={item.to}
+              {...item}
+              active={location.pathname === item.to}
+              onClick={() => setSidebarOpen(false)}
+              collapsed={isSidebarCollapsed}
+            />
+          ))}
+        </nav>
+
+        {/* Bottom Actions (Theme, Notifs, Profile) */}
+        <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+
+          <div className={`flex flex-col ${isSidebarCollapsed ? 'items-center gap-1' : 'gap-1'}`}>
+            <button
+              onClick={toggleTheme}
+              className={`flex items-center p-2 text-slate-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-slate-800 rounded-xl transition-all ${!isSidebarCollapsed ? 'gap-3 w-full' : 'justify-center w-10 h-10'}`}
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {theme === 'light' ? <Moon size={20} className="shrink-0" /> : <Sun size={20} className="shrink-0" />}
+              {!isSidebarCollapsed && <span className="text-sm font-semibold">Theme</span>}
+            </button>
+          </div>
+
+          <div className="relative mt-1">
+            <button
+              onClick={() => setProfileOpen(!isProfileOpen)}
+              className={`flex items-center gap-3 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-300 dark:hover:border-slate-700 w-full ${isSidebarCollapsed ? 'p-1 justify-center' : 'p-2'}`}
+            >
+              <img
+                src="/student-avatar.svg"
+                alt="Avatar"
+                className="w-8 h-8 rounded-lg object-cover bg-indigo-100 shrink-0"
+              />
+              {!isSidebarCollapsed && (
+                <>
+                  <div className="text-left flex-1 overflow-hidden">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">Registrar</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Administrator</p>
+                  </div>
+                  <ChevronRight size={14} className={`text-slate-400 transition-transform ${isProfileOpen ? 'rotate-90' : ''}`} />
+                </>
+              )}
+            </button>
+            <div className={isSidebarCollapsed || window.innerWidth < 768 ? "absolute bottom-0 left-full ml-2" : "absolute bottom-full left-0 mb-2 w-full"}>
+              <ProfileDropdown isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} onOpenSettings={() => setSettingsOpen(true)} />
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 dark:bg-slate-950 md:rounded-tl-2xl border-t border-l border-slate-200 dark:border-slate-800 shadow-inner">
+        {/* Mobile Header (Only visible on small screens) */}
+        <header className="md:hidden flex-none z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between transition-colors duration-300">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors -ml-2"
+          >
+            <Menu size={24} />
+          </button>
+          <Link to="/" className="flex items-center gap-2.5">
+            <AutoMarksLogo size={28} />
+            <span className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">
+              Auto <span className="text-indigo-600 dark:text-indigo-400">Marks</span>
+            </span>
+          </Link>
+          <div className="w-10"></div> {/* Spacer for centering */}
+        </header>
+
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-10 z-10">
           <div className="max-w-7xl mx-auto">
             <Outlet />
           </div>
@@ -804,6 +832,7 @@ export default function App() {
           <Route path="/sgpa" element={<SGPACalculator />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/export" element={<ExportPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
         </Route>
 
         {/* Catch all - redirect to Landing or Dashboard */}

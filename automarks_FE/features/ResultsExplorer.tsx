@@ -114,13 +114,13 @@ const ResultsExplorer: React.FC = () => {
         <div className="flex gap-2">
           <button
             onClick={handleExport}
-            className="flex items-center px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+            className="flex items-center px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
           >
             <Download className="mr-2 h-4 w-4" /> Export Excel
           </button>
           <button
             onClick={fetchData}
-            className="flex items-center px-4 py-2 text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-colors shadow-sm"
+            className="flex items-center px-4 py-2 text-sm font-bold text-white bg-slate-900 rounded-xl hover:bg-slate-800 transition-colors"
           >
             <RefreshCcw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} /> Sync
           </button>
@@ -196,22 +196,24 @@ const ResultsExplorer: React.FC = () => {
         <div className="w-full md:w-40">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Branch</label>
           <select
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
             value={filters.branch}
             onChange={e => setFilters(f => ({ ...f, branch: e.target.value }))}
+            disabled={!filters.batch || branches.length === 0}
           >
-            <option value="">All Branches</option>
+            <option value="">{!filters.batch ? 'Select batch first' : 'All Branches'}</option>
             {branches.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
         </div>
         <div className="w-full md:w-32">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Semester</label>
           <select
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
             value={filters.semester}
             onChange={e => setFilters(f => ({ ...f, semester: e.target.value }))}
+            disabled={!filters.batch || semesters.length === 0}
           >
-            <option value="">All</option>
+            <option value="">{!filters.batch ? 'Select batch first' : 'All'}</option>
             {semesters.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
@@ -228,27 +230,18 @@ const ResultsExplorer: React.FC = () => {
             />
           </div>
         </div>
-        {/* Status toggle */}
-        <div>
+        {/* Status dropdown */}
+        <div className="w-full md:w-36">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Status</label>
-          <div className="flex rounded-xl overflow-hidden border border-slate-200 bg-slate-50 text-sm font-bold">
-            {(['', 'pass', 'fail'] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => setFilters(f => ({ ...f, status: s }))}
-                className={`px-4 py-2.5 transition-all ${filters.status === s
-                  ? s === 'pass'
-                    ? 'bg-emerald-600 text-white'
-                    : s === 'fail'
-                      ? 'bg-rose-600 text-white'
-                      : 'bg-indigo-600 text-white'
-                  : 'text-slate-500 hover:bg-slate-100'
-                  }`}
-              >
-                {s === '' ? 'All' : s === 'pass' ? '✓ Pass' : '✗ Fail'}
-              </button>
-            ))}
-          </div>
+          <select
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+            value={filters.status}
+            onChange={e => setFilters(f => ({ ...f, status: e.target.value as '' | 'pass' | 'fail' }))}
+          >
+            <option value="">All</option>
+            <option value="pass">✓ Pass</option>
+            <option value="fail">✗ Fail</option>
+          </select>
         </div>
       </div>{/* end filters bar */}
 

@@ -8,7 +8,8 @@ export function getBatchOptions(options?: {
   const futureStartYears = options?.futureStartYears ?? 2;
 
   const currentYear = new Date().getFullYear();
-  const start = currentYear - pastStartYears;
+  // Start from 2022 onwards, as requested
+  const start = 2022;
   const end = currentYear + futureStartYears;
 
   const batches: string[] = [];
