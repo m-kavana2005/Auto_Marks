@@ -108,13 +108,13 @@ const ResultsExplorer: React.FC = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Results Matrix</h2>
-          <p className="text-slate-500 font-medium">Comprehensive view of student performance across all subjects.</p>
+          <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Results Matrix</h2>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Comprehensive view of student performance across all subjects.</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleExport}
-            className="flex items-center px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            className="flex items-center px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
           >
             <Download className="mr-2 h-4 w-4" /> Export Excel
           </button>
@@ -130,12 +130,12 @@ const ResultsExplorer: React.FC = () => {
       {/* Stats Cards */}
       {matrix && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center justify-between">
             <div>
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Total Students</p>
-              <p className="text-3xl font-black text-slate-900 mt-1">{matrix.summary.total_students}</p>
+              <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Students</p>
+              <p className="text-3xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{matrix.summary.total_students}</p>
             </div>
-            <div className="h-12 w-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-600">
+            <div className="h-12 w-12 bg-indigo-50 dark:bg-indigo-900/50 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <Users size={24} />
             </div>
           </div>
@@ -143,8 +143,8 @@ const ResultsExplorer: React.FC = () => {
           <button
             onClick={() => setFilters(f => ({ ...f, status: f.status === 'pass' ? '' : 'pass' }))}
             className={`p-5 rounded-2xl border shadow-sm flex items-center justify-between transition-all text-left w-full ${filters.status === 'pass'
-              ? 'bg-emerald-600 border-emerald-600 text-white'
-              : 'bg-white border-slate-100 hover:border-emerald-300 hover:bg-emerald-50'
+              ? 'bg-emerald-600 border-emerald-600 text-white dark:bg-emerald-700 dark:border-emerald-700'
+              : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'
               }`}
           >
             <div>
@@ -162,8 +162,8 @@ const ResultsExplorer: React.FC = () => {
           <button
             onClick={() => setFilters(f => ({ ...f, status: f.status === 'fail' ? '' : 'fail' }))}
             className={`p-5 rounded-2xl border shadow-sm flex items-center justify-between transition-all text-left w-full ${filters.status === 'fail'
-              ? 'bg-rose-600 border-rose-600 text-white'
-              : 'bg-white border-slate-100 hover:border-rose-300 hover:bg-rose-50'
+              ? 'bg-rose-600 border-rose-600 text-white dark:bg-rose-700 dark:border-rose-700'
+              : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 hover:bg-rose-50 dark:hover:bg-rose-900/30'
               }`}
           >
             <div>
@@ -185,7 +185,7 @@ const ResultsExplorer: React.FC = () => {
         <div className="w-full md:w-48">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Batch</label>
           <select
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700"
             value={filters.batch}
             onChange={e => setFilters(f => ({ ...f, batch: e.target.value, branch: '', semester: '' }))}
           >
@@ -196,7 +196,7 @@ const ResultsExplorer: React.FC = () => {
         <div className="w-full md:w-40">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Branch</label>
           <select
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-slate-800 dark:border-slate-700"
             value={filters.branch}
             onChange={e => setFilters(f => ({ ...f, branch: e.target.value }))}
             disabled={!filters.batch || branches.length === 0}
@@ -208,7 +208,7 @@ const ResultsExplorer: React.FC = () => {
         <div className="w-full md:w-32">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Semester</label>
           <select
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-slate-800 dark:border-slate-700"
             value={filters.semester}
             onChange={e => setFilters(f => ({ ...f, semester: e.target.value }))}
             disabled={!filters.batch || semesters.length === 0}
@@ -224,7 +224,7 @@ const ResultsExplorer: React.FC = () => {
             <input
               type="text"
               placeholder="Search by Name or USN..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 placeholder:font-medium"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 placeholder:font-medium"
               value={filters.usn}
               onChange={e => setFilters(f => ({ ...f, usn: e.target.value }))}
             />
@@ -234,7 +234,7 @@ const ResultsExplorer: React.FC = () => {
         <div className="w-full md:w-36">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Status</label>
           <select
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700"
             value={filters.status}
             onChange={e => setFilters(f => ({ ...f, status: e.target.value as '' | 'pass' | 'fail' }))}
           >
@@ -252,8 +252,8 @@ const ResultsExplorer: React.FC = () => {
             <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mb-6">
               <WifiOff size={40} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">Data Unavailable</h3>
-            <p className="text-slate-500 max-w-md mx-auto mb-8 font-medium">{error}</p>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Data Unavailable</h3>
+            <p className="text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-8 font-medium">{error}</p>
             <button onClick={fetchData} className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all">
               Retry
             </button>
@@ -271,14 +271,14 @@ const ResultsExplorer: React.FC = () => {
         ) : (
           <div className="overflow-auto max-h-[70vh] relative">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-slate-50 sticky top-0 z-20 shadow-sm">
+              <thead className="bg-slate-50 dark:bg-slate-800/95 backdrop-blur-md sticky top-0 z-20 shadow-sm">
                 <tr>
-                  <th className="sticky left-0 z-30 bg-slate-50 px-4 py-4 text-[11px] font-black text-slate-500 uppercase tracking-widest border-b border-r border-slate-200 min-w-[140px]">USN</th>
-                  <th className="sticky left-[140px] z-30 bg-slate-50 px-4 py-4 text-[11px] font-black text-slate-500 uppercase tracking-widest border-b border-r border-slate-200 min-w-[180px]">Student Name</th>
-                  <th className="px-4 py-4 text-[11px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-200 text-center w-[100px]">Total</th>
-                  <th className="px-4 py-4 text-[11px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-200 text-center w-[100px]">Result</th>
+                  <th className="sticky left-0 z-30 bg-slate-50 dark:bg-slate-800 px-4 py-4 text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-r border-slate-200 dark:border-slate-700 min-w-[140px]">USN</th>
+                  <th className="sticky left-[140px] z-30 bg-slate-50 dark:bg-slate-800 px-4 py-4 text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-r border-slate-200 dark:border-slate-700 min-w-[180px]">Student Name</th>
+                  <th className="px-4 py-4 text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-slate-700 text-center w-[100px]">Total</th>
+                  <th className="px-4 py-4 text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-slate-700 text-center w-[100px]">Result</th>
                   {matrix.columns.map(col => (
-                    <th key={col.code} className="px-4 py-4 text-[11px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-200 min-w-[100px] text-center" title={col.name}>
+                    <th key={col.code} className="px-4 py-4 text-[11px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest border-b border-slate-200 dark:border-slate-700 min-w-[100px] text-center" title={col.name}>
                       <div className="flex flex-col">
                         <span>{col.code}</span>
                         {/* <span className="text-[9px] opacity-50 font-normal truncate max-w-[80px] mx-auto">{col.name}</span> */}
@@ -287,16 +287,16 @@ const ResultsExplorer: React.FC = () => {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                 {filteredData.map((row) => (
-                  <tr key={row.usn} className="hover:bg-slate-50 transition-colors group">
-                    <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 px-4 py-3 text-xs font-bold text-indigo-600 border-r border-slate-100 whitespace-nowrap">
+                  <tr key={row.usn} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                    <td className="sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
                       {row.usn}
                     </td>
-                    <td className="sticky left-[140px] z-10 bg-white group-hover:bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-700 border-r border-slate-100 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" title={row.name}>
+                    <td className="sticky left-[140px] z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 px-4 py-3 text-[13px] font-black text-indigo-700 dark:text-indigo-400 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" title={row.name}>
                       {row.name}
                     </td>
-                    <td className="px-4 py-3 text-xs font-black text-slate-800 text-center bg-slate-50/50">
+                    <td className="px-4 py-3 text-sm font-black text-emerald-600 dark:text-emerald-400 text-center bg-slate-50/50 dark:bg-slate-800/30">
                       {row.total_marks}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -310,11 +310,11 @@ const ResultsExplorer: React.FC = () => {
                     {matrix.columns.map(col => {
                       const subResult = row[col.code];
                       return (
-                        <td key={col.code} className={`px-4 py-3 text-center border-l border-slate-50 ${subResult?.result === 'F' ? 'bg-rose-50/30' : ''
+                        <td key={col.code} className={`px-4 py-3 text-center border-l border-slate-50 dark:border-slate-800/50 ${subResult?.result === 'F' ? 'bg-rose-50/30 dark:bg-rose-900/10' : ''
                           }`}>
                           {subResult ? (
                             <div className="flex flex-col items-center">
-                              <span className={`text-xs font-bold ${subResult.result === 'F' ? 'text-rose-600' : 'text-slate-600'
+                              <span className={`text-xs font-bold ${subResult.result === 'F' ? 'text-rose-600' : 'text-slate-600 dark:text-slate-300'
                                 }`}>
                                 {subResult.total}
                               </span>

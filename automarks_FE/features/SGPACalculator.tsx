@@ -250,7 +250,7 @@ export default function SGPACalculator() {
                     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                         <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
                             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Batch Results ({filteredStudents.length}/{result.students.length})</h2>
-                            {sgpaFilter > 0 && <span className="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400">Filter: SGPA ≥ {sgpaFilter.toFixed(1)}</span>}
+                            {sgpaFilter > 0 && <span className="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:text-indigo-300 dark:bg-indigo-500/20 dark:text-indigo-400">Filter: SGPA ≥ {sgpaFilter.toFixed(1)}</span>}
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm whitespace-nowrap">

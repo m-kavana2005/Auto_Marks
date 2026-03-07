@@ -37,7 +37,7 @@ const LandingPage = () => {
 
             {/* Navbar */}
             <Navbar variant="transparent">
-                <Button onClick={() => navigate('/dashboard')} rightIcon={ArrowRight} className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
+                <Button onClick={() => navigate('/dashboard')} rightIcon={ArrowRight} className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:text-white dark:hover:bg-slate-100">
                     Login
                 </Button>
             </Navbar>
@@ -65,19 +65,19 @@ const LandingPage = () => {
                             <div className="text-3xl font-black text-slate-900 dark:text-white mb-1 flex items-center justify-center lg:justify-start gap-1">
                                 <AnimatedCounter end={12500} />+
                             </div>
-                            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Students Processed</div>
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Students Processed</div>
                         </div>
                         <div className="text-center lg:text-left">
                             <div className="text-3xl font-black text-emerald-500 mb-1 flex items-center justify-center lg:justify-start gap-1">
                                 <ShieldCheck size={28} className="fill-emerald-100 dark:fill-emerald-900/30" />
                             </div>
-                            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">AI-Verified & Secure</div>
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">AI-Verified & Secure</div>
                         </div>
                         <div className="text-center lg:text-left col-span-2 sm:col-span-1">
                             <div className="text-3xl font-black text-indigo-500 mb-1 flex items-center justify-center lg:justify-start gap-1">
                                 90%
                             </div>
-                            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Faster Analysis</div>
+                            <div className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Faster Analysis</div>
                         </div>
                     </div>
                 </div>
@@ -106,7 +106,7 @@ const LandingPage = () => {
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-emerald-100 text-emerald-600 rounded-xl"><CheckCircle2 size={24} /></div>
                             <div>
-                                <p className="text-xs font-bold text-slate-500">Live Status</p>
+                                <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Live Status</p>
                                 <p className="text-sm font-black text-slate-900 dark:text-white">98.5% Pass</p>
                             </div>
                         </div>
@@ -136,7 +136,7 @@ const LandingPage = () => {
                             <span>Features</span>
                         </div>
                         <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-4">Everything you need</h2>
-                        <p className="text-slate-500 max-w-2xl mx-auto text-lg">
+                        <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg">
                             Built for registrars and students to bring transparency and speed to result management.
                         </p>
                     </div>
@@ -176,7 +176,7 @@ const LandingPage = () => {
                             <span>Workflow</span>
                         </div>
                         <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white mb-4">How it works</h2>
-                        <p className="text-slate-500 max-w-2xl mx-auto text-lg">
+                        <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg">
                             From PDF to Dashboard in three simple steps.
                         </p>
                     </div>
@@ -217,28 +217,28 @@ const LandingPage = () => {
                 <div className="max-w-7xl mx-auto px-6">
                     <div className="grid md:grid-cols-2 gap-8">
                         <div className="p-8 rounded-3xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 relative">
-                            <Quote className="absolute top-8 right-8 text-indigo-100 dark:text-indigo-900/20" size={64} />
+                            <Quote className="absolute top-8 right-8 text-indigo-100 dark:text-indigo-900 dark:text-indigo-100/20" size={64} />
                             <p className="text-lg font-medium text-slate-700 dark:text-slate-300 leading-relaxed italic relative z-10 mb-6">
                                 "This tool has completely transformed how we analyze semester results. What used to take days of manual entry now happens in seconds. Essential for any registrar."
                             </p>
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-indigo-200 rounded-full flex items-center justify-center text-indigo-700 font-bold">JD</div>
+                                <div className="w-12 h-12 bg-indigo-200 rounded-full flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold">JD</div>
                                 <div>
                                     <h4 className="font-bold text-slate-900 dark:text-white">John Doe</h4>
-                                    <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Chief Registrar, SIT</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Chief Registrar, SIT</p>
                                 </div>
                             </div>
                         </div>
                         <div className="p-8 rounded-3xl bg-slate-50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800 relative">
-                            <Quote className="absolute top-8 right-8 text-rose-100 dark:text-rose-900/20" size={64} />
+                            <Quote className="absolute top-8 right-8 text-rose-100 dark:text-rose-900 dark:text-rose-100/20" size={64} />
                             <p className="text-lg font-medium text-slate-700 dark:text-slate-300 leading-relaxed italic relative z-10 mb-6">
                                 "Finally, I can check my results without the university website crashing! The visualization of my performance over 4 years is a game changer."
                             </p>
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-rose-200 rounded-full flex items-center justify-center text-rose-700 font-bold">AS</div>
+                                <div className="w-12 h-12 bg-rose-200 rounded-full flex items-center justify-center text-rose-700 dark:text-rose-300 font-bold">AS</div>
                                 <div>
                                     <h4 className="font-bold text-slate-900 dark:text-white">Alice Smith</h4>
-                                    <p className="text-xs text-slate-500 uppercase tracking-wider font-bold">Student, CSE</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-bold">Student, CSE</p>
                                 </div>
                             </div>
                         </div>
@@ -251,12 +251,12 @@ const LandingPage = () => {
                 <div className="absolute inset-0 bg-slate-900 dark:bg-indigo-950 z-0" />
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-rose-600/20 z-0" />
                 <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
-                    <h2 className="text-4xl sm:text-5xl font-black text-white mb-8 tracking-tight">Ready to modernize your results?</h2>
+                    <h2 className="text-4xl sm:text-5xl font-black text-white mb-8 tracking-tight dark:text-white">Ready to modernize your results?</h2>
                     <p className="text-lg text-indigo-100 mb-10 max-w-2xl mx-auto">
                         Join 50+ institutions that trust Auto Marks for fast, accurate result processing.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button size="lg" onClick={() => navigate('/dashboard')} className="bg-white text-slate-900 hover:bg-slate-100 border-none shadow-2xl">
+                        <Button size="lg" onClick={() => navigate('/dashboard')} className="bg-white text-slate-900 dark:text-white hover:bg-slate-100 border-none shadow-2xl">
                             Start Free Trial
                         </Button>
                         <Button size="lg" variant="outline" className="border-slate-700 text-white hover:bg-white/10 hover:text-white">
@@ -273,7 +273,7 @@ const LandingPage = () => {
                         <AutoMarksLogo size={24} />
                         <span className="font-bold text-slate-400">Auto Marks</span>
                     </div>
-                    <p className="text-slate-500 text-sm font-medium">© 2026 Auto_Marks. Built for VTU.</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">© 2026 Auto_Marks. Built for VTU.</p>
                 </div>
             </footer>
         </div>

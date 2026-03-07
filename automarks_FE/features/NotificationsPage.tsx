@@ -26,10 +26,10 @@ const formatAgo = (iso?: string | null) => {
 
 const mapLevel = (level: string) => {
     const l = (level || '').toLowerCase();
-    if (l === 'success') return { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50', badge: 'bg-emerald-100 text-emerald-700', label: 'Success' };
-    if (l === 'warning') return { icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-50', badge: 'bg-amber-100 text-amber-700', label: 'Warning' };
-    if (l === 'error') return { icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50', badge: 'bg-rose-100 text-rose-700', label: 'Error' };
-    return { icon: BarChart3, color: 'text-indigo-500', bg: 'bg-indigo-50', badge: 'bg-indigo-100 text-indigo-700', label: 'Info' };
+    if (l === 'success') return { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50', badge: 'bg-emerald-100 text-emerald-700 dark:text-emerald-300', label: 'Success' };
+    if (l === 'warning') return { icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-50', badge: 'bg-amber-100 text-amber-700 dark:text-amber-300', label: 'Warning' };
+    if (l === 'error') return { icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50', badge: 'bg-rose-100 text-rose-700 dark:text-rose-300', label: 'Error' };
+    return { icon: BarChart3, color: 'text-indigo-500', bg: 'bg-indigo-50', badge: 'bg-indigo-100 text-indigo-700 dark:text-indigo-300', label: 'Info' };
 };
 
 const NotificationsPage: React.FC = () => {
@@ -119,7 +119,7 @@ const NotificationsPage: React.FC = () => {
                         <Bell size={36} />
                     </div>
                     <h3 className="text-xl font-bold text-slate-700 dark:text-slate-200 mb-2">All caught up!</h3>
-                    <p className="text-slate-400 dark:text-slate-500 font-medium">No notifications to show right now.</p>
+                    <p className="text-slate-400 dark:text-slate-500 dark:text-slate-400 font-medium">No notifications to show right now.</p>
                 </div>
             ) : (
                 <div className="flex flex-col gap-3">

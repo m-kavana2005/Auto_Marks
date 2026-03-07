@@ -183,8 +183,8 @@ const UploadPage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div>
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Upload Portal</h2>
-        <p className="text-slate-500 font-medium">Process university result PDFs to extract data and analytics.</p>
+        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Upload Portal</h2>
+        <p className="text-slate-500 dark:text-slate-400 font-medium">Process university result PDFs to extract data and analytics.</p>
       </div>
 
       <div className="glass-card rounded-[2rem] overflow-hidden">
@@ -209,7 +209,7 @@ const UploadPage: React.FC = () => {
               <div className="bg-white border border-slate-100 rounded-3xl p-6">
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Batch</label>
                 <select
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 appearance-none font-bold text-slate-700"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 appearance-none font-bold text-slate-700 dark:text-slate-200 dark:bg-slate-800 dark:border-slate-700"
                   value={selectedBatch}
                   onChange={(e) => setSelectedBatch(e.target.value)}
                   disabled={isUploading}
@@ -234,13 +234,13 @@ const UploadPage: React.FC = () => {
                   <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm group-hover:scale-110 transition-transform">
                     <UploadCloud className="text-indigo-600" size={40} />
                   </div>
-                  <p className="text-xl font-bold text-slate-900 mb-2">
+                  <p className="text-xl font-bold text-slate-900 dark:text-white mb-2">
                     {selectedFiles.length > 0
                       ? `${selectedFiles.length} file(s) selected`
                       : 'Drop your PDFs here or browse'
                     }
                   </p>
-                  <p className="text-slate-500 text-sm">Strictly VTU Official Result Sheets (PDF)</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm">Strictly VTU Official Result Sheets (PDF)</p>
                 </label>
               </div>
 
@@ -249,7 +249,7 @@ const UploadPage: React.FC = () => {
                   {selectedFiles.map((file, idx) => (
                     <div key={idx} className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl">
                       <FileText size={18} className="text-slate-400" />
-                      <span className="text-sm font-semibold text-slate-700 flex-1 truncate">{file.name}</span>
+                      <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex-1 truncate">{file.name}</span>
                       <span className="text-xs text-slate-400">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
                     </div>
                   ))}
@@ -257,7 +257,7 @@ const UploadPage: React.FC = () => {
               )}
 
               {error && (
-                <div className="p-4 bg-rose-50 text-rose-700 rounded-2xl flex items-center gap-3 border border-rose-100">
+                <div className="p-4 bg-rose-50 text-rose-700 dark:text-rose-300 rounded-2xl flex items-center gap-3 border border-rose-100">
                   <AlertTriangle size={20} />
                   <p className="text-sm font-bold">{error}</p>
                 </div>
@@ -277,10 +277,10 @@ const UploadPage: React.FC = () => {
             <div className="space-y-8 py-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-2xl font-black text-slate-900">
+                  <h4 className="text-2xl font-black text-slate-900 dark:text-white">
                     {status?.status === 'completed' ? 'Processing Complete' : 'Processing Files...'}
                   </h4>
-                  <p className="text-slate-500 font-medium">Batch ID: {batchId || 'Single Upload'}</p>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium">Batch ID: {batchId || 'Single Upload'}</p>
                   {uploadProgress.current_file && (
                     <p className="text-sm text-indigo-600 font-bold mt-1">
                       Processing: {uploadProgress.current_file} ({uploadProgress.current_file_index}/{uploadProgress.total})
@@ -302,7 +302,7 @@ const UploadPage: React.FC = () => {
               <div className="grid grid-cols-3 gap-6">
                 <div className="text-center p-4 bg-slate-50 rounded-2xl">
                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Total</p>
-                  <p className="text-2xl font-black text-slate-900">{uploadProgress.total || selectedFiles.length}</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white">{uploadProgress.total || selectedFiles.length}</p>
                 </div>
                 <div className="text-center p-4 bg-emerald-50 rounded-2xl">
                   <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider mb-1">Success</p>

@@ -58,8 +58,8 @@ const ExportPage: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
       <div>
-        <h2 className="text-3xl font-black text-slate-900 tracking-tight">Data Export Hub</h2>
-        <p className="text-slate-500 font-medium">Extract processed results for offline reporting and integration.</p>
+        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Data Export Hub</h2>
+        <p className="text-slate-500 dark:text-slate-400 font-medium">Extract processed results for offline reporting and integration.</p>
       </div>
 
       {/* â”€â”€ Shared Filters â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
@@ -67,7 +67,7 @@ const ExportPage: React.FC = () => {
         <div>
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Batch</label>
           <select
-            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:bg-slate-800 dark:border-slate-700"
             value={batch}
             onChange={(e) => setBatch(e.target.value)}
             disabled={isExporting}
@@ -82,8 +82,7 @@ const ExportPage: React.FC = () => {
         <div>
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Branch</label>
           <select
-            className={`w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${!batch ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+            className={`w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:bg-slate-800 dark:border-slate-700 dark:text-white ${!batch ? 'opacity-50 cursor-not-allowed' : ''}`}
             value={branch}
             onChange={(e) => setBranch(e.target.value)}
             disabled={isExporting || !batch}
@@ -105,8 +104,8 @@ const ExportPage: React.FC = () => {
             <FileSpreadsheet size={32} />
           </div>
           <div className="mb-8">
-            <h3 className="text-2xl font-black text-slate-900">Excel Export</h3>
-            <p className="text-slate-500 mt-2 font-medium leading-relaxed">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white">Excel Export</h3>
+            <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium leading-relaxed">
               Formatted workbook with color-coded pass/fail rows.
             </p>
           </div>
@@ -114,7 +113,7 @@ const ExportPage: React.FC = () => {
           <div className="p-6 bg-slate-50/50 rounded-2xl space-y-4 mb-8 border border-slate-100/50">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Select Semester</label>
             <select
-              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 transition-all dark:bg-slate-800 dark:border-slate-700"
               value={semester}
               onChange={(e) => setSemester(e.target.value === '' ? '' : parseInt(e.target.value))}
             >
@@ -134,12 +133,12 @@ const ExportPage: React.FC = () => {
         </div>
 
         <div className="glass-card p-8 sm:p-10 rounded-[2.5rem] flex flex-col">
-          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-900 mb-8 shadow-sm">
+          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-900 dark:text-white mb-8 shadow-sm">
             <FileText size={32} />
           </div>
           <div className="mb-8">
-            <h3 className="text-2xl font-black text-slate-900">CSV Export</h3>
-            <p className="text-slate-500 mt-2 font-medium leading-relaxed">
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white">CSV Export</h3>
+            <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium leading-relaxed">
               Simple CSV with Overall_Result column (PASS/FAIL).
             </p>
           </div>
@@ -147,7 +146,7 @@ const ExportPage: React.FC = () => {
           <div className="p-6 bg-slate-50/50 rounded-2xl space-y-4 mb-8 border border-slate-100/50">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Select Semester</label>
             <select
-              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-500 transition-all"
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-slate-500 transition-all dark:bg-slate-800 dark:border-slate-700"
               value={semester}
               onChange={(e) => setSemester(e.target.value === '' ? '' : parseInt(e.target.value))}
             >

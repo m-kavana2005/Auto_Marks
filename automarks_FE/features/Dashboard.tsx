@@ -22,13 +22,13 @@ const StatCard = ({ title, value, icon: Icon, color, trend }: any) => (
         <Icon size={24} />
       </div>
       {trend && (
-        <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-lg flex items-center gap-1 uppercase tracking-widest">
+        <span className="px-2.5 py-1 bg-emerald-100 text-emerald-700 dark:text-emerald-300 text-[10px] font-black rounded-lg flex items-center gap-1 uppercase tracking-widest">
           <TrendingUp size={12} /> {trend}
         </span>
       )}
     </div>
     <div>
-      <h3 className="text-slate-400 font-bold text-[10px] uppercase tracking-widest leading-none">{title}</h3>
+      <h3 className="text-slate-400 font-bold text-[10px] uppercase tracking-widest leading-none dark:text-white">{title}</h3>
       <p className="text-3xl font-black text-slate-900 dark:text-white mt-2 tracking-tighter">{value}</p>
     </div>
   </div>
@@ -189,7 +189,7 @@ const Dashboard: React.FC = () => {
                 <Zap size={32} />
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Result Data</h3>
-              <p className="text-slate-500 text-sm mt-1">Upload results to see analytics.</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Upload results to see analytics.</p>
             </div>
           ) : (
             // Group by batch and render
@@ -243,7 +243,7 @@ const Dashboard: React.FC = () => {
             <BarChart2 size={160} />
           </div>
           <div className="relative z-10">
-            <h3 className="text-2xl font-black mb-2 tracking-tight">Data Insights</h3>
+            <h3 className="text-2xl font-black mb-2 tracking-tight dark:text-white">Data Insights</h3>
             <p className="text-indigo-100 text-sm font-medium leading-relaxed mb-10 opacity-80">
               Explore detailed analytics and performance trends across all semesters.
             </p>
@@ -254,7 +254,7 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="glass-card rounded-[2.5rem] p-8">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6">Quick Actions</h3>
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 dark:text-white">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-4">
             <Link to="/profile" className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all group">
               <UserCircle size={24} />

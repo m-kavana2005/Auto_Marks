@@ -21,7 +21,7 @@ const UploadErrorPopup: React.FC<UploadErrorPopupProps> = ({ failedFiles, onClos
         <div className="bg-rose-600 p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <AlertCircle size={24} className="text-white" />
-            <h3 className="text-xl font-black text-white">Upload Errors ({failedFiles.length})</h3>
+            <h3 className="text-xl font-black text-white dark:text-white">Upload Errors ({failedFiles.length})</h3>
           </div>
           <button
             onClick={onClose}
@@ -34,7 +34,7 @@ const UploadErrorPopup: React.FC<UploadErrorPopupProps> = ({ failedFiles, onClos
 
         {/* Error List */}
         <div className="p-6 overflow-y-auto max-h-[60vh]">
-          <p className="text-slate-600 font-medium mb-4">
+          <p className="text-slate-600 dark:text-slate-300 font-medium mb-4">
             The following files failed to process. Please review and try again:
           </p>
           <div className="space-y-3">
@@ -46,8 +46,8 @@ const UploadErrorPopup: React.FC<UploadErrorPopupProps> = ({ failedFiles, onClos
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 bg-rose-500 rounded-full mt-2 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 truncate">{file.filename}</p>
-                    <p className="text-sm text-rose-700 mt-1">{file.error}</p>
+                    <p className="font-bold text-slate-900 dark:text-white truncate">{file.filename}</p>
+                    <p className="text-sm text-rose-700 dark:text-rose-300 mt-1">{file.error}</p>
                   </div>
                 </div>
               </div>

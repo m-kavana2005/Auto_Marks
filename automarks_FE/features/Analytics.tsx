@@ -143,8 +143,8 @@ const Analytics: React.FC = () => {
         <div className="w-24 h-24 bg-rose-50 rounded-[2.5rem] flex items-center justify-center text-rose-500 mb-8">
           <WifiOff size={48} />
         </div>
-        <h2 className="text-3xl font-black text-slate-900 mb-3 tracking-tight">Analytics Offline</h2>
-        <p className="text-slate-500 max-w-lg mx-auto mb-10 font-medium leading-relaxed">
+        <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">Analytics Offline</h2>
+        <p className="text-slate-500 dark:text-slate-400 max-w-lg mx-auto mb-10 font-medium leading-relaxed">
           {error || (
             <>
               We encountered a connection error while trying to reach the analytics engine at <code className="bg-slate-100 px-1 rounded font-bold">{getApiBase()}</code>.
@@ -168,14 +168,14 @@ const Analytics: React.FC = () => {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Intelligence Hub</h2>
-          <p className="text-slate-500 font-medium">Comparative analytics and student performance metrics.</p>
+          <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Intelligence Hub</h2>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Comparative analytics and student performance metrics.</p>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
             <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Batch</span>
             <select
-              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none dark:bg-slate-800 dark:border-slate-700"
               value={batch || ''}
               onChange={(e) => setBatch(e.target.value ? e.target.value : undefined)}
             >
@@ -189,7 +189,7 @@ const Analytics: React.FC = () => {
           <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
             <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Branch</span>
             <select
-              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none"
+              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none dark:bg-slate-800 dark:border-slate-700"
               value={branch || ''}
               onChange={(e) => setBranch(e.target.value ? e.target.value : undefined)}
             >
@@ -203,7 +203,7 @@ const Analytics: React.FC = () => {
           <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
             <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Semester</span>
             <select
-              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none min-w-[80px]"
+              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none min-w-[80px] dark:bg-slate-800 dark:border-slate-700"
               value={semester || ''}
               onChange={(e) => setSemester(e.target.value ? parseInt(e.target.value) : undefined)}
             >
@@ -217,19 +217,19 @@ const Analytics: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="glass-card rounded-[2.5rem] p-8 min-h-[400px] flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-slate-900">Pass Percentage by Subject</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Pass Percentage by Subject</h3>
             <select
               value={chartType}
               onChange={(e) => setChartType(e.target.value as 'bar' | 'horizontal' | 'pie' | 'line' | 'area' | 'radar' | 'radial')}
-              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             >
-              <option value="bar">ðŸ“Š Bar Chart</option>
-              <option value="horizontal">ðŸ“Š Horizontal Bar</option>
-              <option value="line">ðŸ“ˆ Line Chart</option>
-              <option value="area">ðŸ“‰ Area Chart</option>
-              <option value="pie">ðŸ¥§ Pie Chart</option>
-              <option value="radar">ðŸŽ¯ Radar Chart</option>
-              <option value="radial">â­• Radial Chart</option>
+              <option value="bar">Bar Chart</option>
+              <option value="horizontal">Horizontal Bar</option>
+              <option value="line">Line Chart</option>
+              <option value="area">Area Chart</option>
+              <option value="pie">Pie Chart</option>
+              <option value="radar">Radar Chart</option>
+              <option value="radial">Radial Chart</option>
             </select>
           </div>
           <div className="h-[300px] flex-1">
@@ -409,15 +409,15 @@ const Analytics: React.FC = () => {
 
         <div className="glass-card rounded-[2.5rem] p-8 min-h-[400px] flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-slate-900">Average Performance Trend</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Average Performance Trend</h3>
             <select
               value={trendChartType}
               onChange={(e) => setTrendChartType(e.target.value as 'area' | 'line' | 'bar')}
-              className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             >
-              <option value="area">ðŸ“‰ Area Chart</option>
-              <option value="line">ðŸ“ˆ Line Chart</option>
-              <option value="bar">ðŸ“Š Bar Chart</option>
+              <option value="area">Area Chart</option>
+              <option value="line">Line Chart</option>
+              <option value="bar">Bar Chart</option>
             </select>
           </div>
           <div className="h-[300px] flex-1">
@@ -500,7 +500,7 @@ const Analytics: React.FC = () => {
             <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
               <Award size={20} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900">Grade Distribution</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Grade Distribution</h3>
           </div>
           <div className="h-[300px] flex-1">
             {isLoading ? (
@@ -555,14 +555,14 @@ const Analytics: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 glass-card rounded-[2.5rem] overflow-hidden min-h-[400px]">
-          <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-white">
-            <h3 className="text-xl font-bold text-slate-900">Top Performers - Semester {semester}</h3>
+          <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Top Performers - Semester {semester}</h3>
             <Award size={24} className="text-amber-500" />
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-50 text-slate-400 text-[10px] font-black uppercase tracking-widest">
+                <tr className="bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 text-[10px] font-black uppercase tracking-widest">
                   <th className="px-8 py-4">Rank</th>
                   <th className="px-8 py-4">Student</th>
                   <th className="px-8 py-4">SGPA</th>
@@ -578,20 +578,20 @@ const Analytics: React.FC = () => {
                   ))
                 ) : topPerformers.length > 0 ? (
                   topPerformers.map((p, idx) => (
-                    <tr key={p.usn} className="hover:bg-slate-50 transition-colors">
+                    <tr key={p.usn} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-8 py-5">
-                        <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${idx === 0 ? 'bg-amber-100 text-amber-700' :
-                          idx === 1 ? 'bg-slate-200 text-slate-700' :
-                            idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-slate-50 text-slate-400'
+                        <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${idx === 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' :
+                          idx === 1 ? 'bg-slate-200 text-slate-700 dark:bg-slate-500/20 dark:text-slate-200' :
+                            idx === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300' : 'bg-slate-50 text-slate-400 dark:bg-slate-800/50 dark:text-slate-400'
                           }`}>
                           {idx + 1}
                         </span>
                       </td>
                       <td className="px-8 py-5">
-                        <p className="font-bold text-slate-900 leading-tight">{p.student_name}</p>
+                        <p className="font-bold text-slate-900 dark:text-white leading-tight">{p.student_name}</p>
                         <p className="text-xs text-slate-400 mt-1">{p.usn}</p>
                       </td>
-                      <td className="px-8 py-5 font-bold text-slate-700">
+                      <td className="px-8 py-5 font-bold text-slate-700 dark:text-slate-200">
                         {(p.sgpa ?? 0).toFixed(2)}
                         <span className="text-[10px] font-black text-slate-400 ml-2 uppercase tracking-widest">/ 10</span>
                       </td>
@@ -600,7 +600,7 @@ const Analytics: React.FC = () => {
                           <div className="w-full max-w-[60px] bg-slate-100 h-1.5 rounded-full">
                             <div className="bg-indigo-600 h-full rounded-full" style={{ width: `${p.percentage ?? 0}%` }}></div>
                           </div>
-                          <span className="text-xs font-black text-slate-900">{p.percentage ?? 0}%</span>
+                          <span className="text-xs font-black text-slate-900 dark:text-white">{p.percentage ?? 0}%</span>
                         </div>
                       </td>
                     </tr>
@@ -619,7 +619,7 @@ const Analytics: React.FC = () => {
 
         <div className="glass-card rounded-[2.5rem] p-8 flex flex-col min-h-[400px]">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-bold text-slate-900">Failure Analysis</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Failure Analysis</h3>
             <AlertOctagon size={24} className="text-rose-500" />
           </div>
 
@@ -634,23 +634,23 @@ const Analytics: React.FC = () => {
             </div>
           ) : failureAnalysis ? (
             <div className="space-y-8 flex-1">
-              <div className="bg-rose-50 p-6 rounded-[2rem] text-center border border-rose-100">
-                <p className="text-sm font-bold text-rose-600 uppercase tracking-widest mb-1">Semester Fail Rate</p>
-                <p className="text-5xl font-black text-rose-700">{(failureAnalysis.failure_rate ?? 0).toFixed(1)}%</p>
-                <p className="text-xs text-rose-400 mt-2">{failureAnalysis.total_failures ?? 0} students failed in one or more subjects</p>
+              <div className="bg-rose-50 dark:bg-rose-500/10 p-6 rounded-[2rem] text-center border border-rose-100 dark:border-rose-500/20">
+                <p className="text-sm font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-1">Semester Fail Rate</p>
+                <p className="text-5xl font-black text-rose-700 dark:text-rose-300">{(failureAnalysis.failure_rate ?? 0).toFixed(1)}%</p>
+                <p className="text-xs text-rose-400 dark:text-rose-500 mt-2">{failureAnalysis.total_failures ?? 0} students failed in one or more subjects</p>
               </div>
 
               <div>
-                <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-4">Critically Failed Subjects</h4>
+                <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest mb-4">Critically Failed Subjects</h4>
                 <div className="space-y-4">
                   {failureAnalysis.subject_wise_failures.length > 0 ? (
                     failureAnalysis.subject_wise_failures.slice(0, 5).map((f) => (
                       <div key={f.subject_code} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className="w-2 h-2 rounded-full bg-rose-400"></div>
-                          <span className="text-sm font-bold text-slate-700">{f.subject_code}</span>
+                          <span className="text-sm font-bold text-slate-700 dark:text-slate-200">{f.subject_code}</span>
                         </div>
-                        <span className="text-sm font-black text-slate-900">{f.count} students</span>
+                        <span className="text-sm font-black text-slate-900 dark:text-white">{f.count} students</span>
                       </div>
                     ))
                   ) : (
@@ -683,8 +683,8 @@ const Analytics: React.FC = () => {
             <BookX size={24} />
           </div>
           <div>
-            <h3 className="text-2xl font-black text-slate-900 tracking-tight">Backlog Distribution</h3>
-            <p className="text-slate-500 text-sm font-medium">How many students failed in 1, 2, 3â€¦ subjects â€” and exactly which ones.</p>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Backlog Distribution</h3>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">How many students failed in 1, 2, 3â€¦ subjects â€” and exactly which ones.</p>
           </div>
         </div>
 
@@ -692,7 +692,7 @@ const Analytics: React.FC = () => {
 
           {/* â”€â”€ Histogram â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="glass-card rounded-[2.5rem] p-8 flex flex-col min-h-[320px]">
-            <h4 className="text-base font-black text-slate-800 mb-1">Students by Backlog Count</h4>
+            <h4 className="text-base font-black text-slate-800 dark:text-slate-100 mb-1">Students by Backlog Count</h4>
             <p className="text-xs text-slate-400 font-medium mb-6">X = number of failed subjects, Y = number of students</p>
             <div className="flex-1 h-[240px]">
               {isLoading ? (
@@ -751,7 +751,7 @@ const Analytics: React.FC = () => {
                 const pct = backlogData.students.length > 0
                   ? ((d.count / backlogData.students.length) * 100).toFixed(1)
                   : '0';
-                const bgMap = ['bg-amber-50 border-amber-100 text-amber-700',
+                const bgMap = ['bg-amber-50 border-amber-100 text-amber-700 dark:text-amber-300',
                   'bg-orange-50 border-orange-100 text-orange-700',
                   'bg-red-50 border-red-100 text-red-700'];
                 const cls = bgMap[Math.min(d.backlogs - 1, bgMap.length - 1)];
@@ -763,7 +763,15 @@ const Analytics: React.FC = () => {
                       </p>
                       <p className="text-2xl font-black mt-0.5">{d.count} students</p>
                     </div>
-                    <p className="text-3xl font-black opacity-30">{pct}%</p>
+                    <div className="flex flex-col items-end">
+                      <span className={`px-3 py-1 rounded-lg text-sm font-black mb-1 ${d.backlogs === 1 ? 'bg-amber-200 text-amber-900 border border-amber-300' :
+                        d.backlogs === 2 ? 'bg-orange-200 text-orange-900 border border-orange-300' :
+                          'bg-red-200 text-red-900 border border-red-300'
+                        }`}>
+                        {pct}%
+                      </span>
+                      <p className="text-[10px] font-bold opacity-50 uppercase tracking-widest">of Batch</p>
+                    </div>
                   </div>
                 );
               })
@@ -775,9 +783,9 @@ const Analytics: React.FC = () => {
 
         {/* â”€â”€ Per-student drilldown table â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <div className="glass-card rounded-[2.5rem] overflow-hidden">
-          <div className="p-6 bg-white border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-6 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h4 className="text-lg font-black text-slate-900">Student Backlog Details</h4>
+              <h4 className="text-lg font-black text-slate-900 dark:text-white">Student Backlog Details</h4>
               <p className="text-xs text-slate-400 font-medium mt-0.5">
                 {filteredBacklogStudents.length} student{filteredBacklogStudents.length !== 1 ? 's' : ''} with backlogs
               </p>
@@ -787,7 +795,7 @@ const Analytics: React.FC = () => {
               placeholder="Search by USN, name, or subject codeâ€¦"
               value={backlogSearch}
               onChange={e => setBacklogSearch(e.target.value)}
-              className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-rose-400 w-full sm:w-72 placeholder:text-slate-400"
+              className="px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium text-slate-700 dark:text-white outline-none focus:ring-2 focus:ring-rose-400 w-full sm:w-72 placeholder:text-slate-400"
             />
           </div>
           <div className="overflow-x-auto max-h-[480px] overflow-y-auto">
@@ -797,23 +805,23 @@ const Analytics: React.FC = () => {
               </div>
             ) : filteredBacklogStudents.length > 0 ? (
               <table className="w-full text-left border-collapse">
-                <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-800 text-[10px] font-black text-slate-400 dark:text-slate-300 uppercase tracking-widest">
                   <tr>
-                    <th className="px-6 py-4 border-b border-slate-100">USN</th>
-                    <th className="px-6 py-4 border-b border-slate-100">Student Name</th>
-                    <th className="px-6 py-4 border-b border-slate-100 text-center">Backlogs</th>
-                    <th className="px-6 py-4 border-b border-slate-100">Failed Subjects</th>
+                    <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">USN</th>
+                    <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">Student Name</th>
+                    <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 text-center">Backlogs</th>
+                    <th className="px-6 py-4 border-b border-slate-100 dark:border-slate-700">Failed Subjects</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50 bg-white">
+                <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50 bg-white dark:bg-slate-900">
                   {filteredBacklogStudents.map((s) => (
-                    <tr key={s.usn} className="hover:bg-rose-50/30 transition-colors">
+                    <tr key={s.usn} className="hover:bg-rose-50/30 dark:hover:bg-rose-900/20 transition-colors">
                       <td className="px-6 py-4 text-xs font-bold text-indigo-600 whitespace-nowrap">{s.usn}</td>
-                      <td className="px-6 py-4 text-sm font-semibold text-slate-800">{s.name}</td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-800 dark:text-slate-100">{s.name}</td>
                       <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-sm font-black ${s.backlog_count === 1 ? 'bg-amber-100 text-amber-700'
-                          : s.backlog_count === 2 ? 'bg-orange-100 text-orange-700'
-                            : 'bg-red-100 text-red-700'
+                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-sm font-black ${s.backlog_count === 1 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 dark:border dark:border-amber-500/30'
+                          : s.backlog_count === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300 dark:border dark:border-orange-500/30'
+                            : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300 dark:border dark:border-red-500/30'
                           }`}>
                           {s.backlog_count}
                         </span>
@@ -824,7 +832,7 @@ const Analytics: React.FC = () => {
                             <span
                               key={f.code}
                               title={f.name}
-                              className="inline-block px-2 py-0.5 bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-black rounded-lg whitespace-nowrap cursor-default"
+                              className="inline-block px-2 py-0.5 bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-[11px] font-black rounded-lg whitespace-nowrap cursor-default"
                             >
                               {f.code}
                             </span>

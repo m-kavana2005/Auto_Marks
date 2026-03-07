@@ -54,7 +54,7 @@ const SidebarLink = ({ to, icon: Icon, label, active, onClick, collapsed }: any)
     title={collapsed ? label : undefined}
     className={`flex items-center ${collapsed ? 'justify-center' : ''} gap-3 ${collapsed ? 'px-3' : 'px-4'} py-3 rounded-xl transition-all duration-200 group ${active
       ? 'bg-indigo-600 text-white'
-      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
+      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:text-white dark:hover:text-slate-100'
       }`}
   >
     <Icon size={20} className={`shrink-0 ${active ? 'text-white' : 'group-hover:scale-110 transition-transform'}`} />
@@ -173,9 +173,9 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
       <div className="fixed inset-0 z-[60]" onClick={onClose} />
       <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] sm:w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 z-[70] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
         <div className="p-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-          <h4 className="font-bold text-slate-900">Notifications</h4>
+          <h4 className="font-bold text-slate-900 dark:text-white">Notifications</h4>
           {notifications.length > 0 && (
-            <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-full uppercase tracking-widest">
+            <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-[10px] font-black rounded-full uppercase tracking-widest">
               {notifications.length} New
             </span>
           )}
@@ -195,8 +195,8 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
                     <Icon size={20} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-bold text-slate-800 leading-tight">{n.title}</p>
-                    {n.detail ? <p className="text-[11px] text-slate-500 mt-1 font-medium leading-snug">{n.detail}</p> : null}
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{n.title}</p>
+                    {n.detail ? <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium leading-snug">{n.detail}</p> : null}
                     <p className="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1 font-medium">
                       <Clock size={12} /> {formatAgo(n.created_at)}
                     </p>
@@ -207,7 +207,7 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
                       e.stopPropagation();
                       handleDismissOne(n.id);
                     }}
-                    className="shrink-0 w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="shrink-0 w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors"
                     aria-label="Dismiss notification"
                     title="Dismiss"
                   >
@@ -221,7 +221,7 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
         <div className="p-3 bg-slate-50/50 border-t border-slate-50">
           <button
             onClick={handleClearAll}
-            className="w-full py-2.5 text-center text-[11px] font-black text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+            className="w-full py-2.5 text-center text-[11px] font-black text-slate-500 dark:text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest"
           >
             Clear all
           </button>
@@ -387,7 +387,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
         <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 bg-white">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600"><Settings size={24} /></div>
-            <h3 className="text-xl font-bold text-slate-900">Settings</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Settings</h3>
           </div>
           <button
             onClick={onClose}
@@ -409,18 +409,18 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               />
             </div>
             <div className="flex gap-3 pt-4">
-              <button onClick={onClose} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold">Cancel</button>
+              <button onClick={onClose} className="flex-1 py-3 bg-slate-100 text-slate-600 dark:text-slate-300 rounded-xl font-bold">Cancel</button>
               <button onClick={() => { setApiBaseOverride(url); window.location.reload(); }} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg">Apply</button>
             </div>
 
             <div className="pt-6 border-t border-slate-100">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Subject Credits (CBCS)</h4>
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest dark:text-white">Subject Credits (CBCS)</h4>
                 <div className="flex gap-2">
                   <button
                     onClick={loadSubjects}
                     disabled={subjectsLoading}
-                    className="px-3 py-2 bg-slate-100 text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                    className="px-3 py-2 bg-slate-100 text-slate-700 dark:text-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                   >
                     {subjectsLoading ? 'Loading…' : 'Load'}
                   </button>
@@ -433,17 +433,17 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                   </button>
                 </div>
               </div>
-              <p className="text-[11px] text-slate-500 mt-2 font-medium leading-relaxed">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-2 font-medium leading-relaxed">
                 Set credits once per subject (e.g., 4). Use 0 to exclude a subject from GPA.
               </p>
 
               {subjectsError && (
-                <div className="mt-3 p-3 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 text-xs font-bold">
+                <div className="mt-3 p-3 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
                   {subjectsError}
                 </div>
               )}
               {subjectsMessage && (
-                <div className="mt-3 p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-700 text-xs font-bold">
+                <div className="mt-3 p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-700 dark:text-emerald-300 text-xs font-bold">
                   {subjectsMessage}
                 </div>
               )}
@@ -461,14 +461,14 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                     <tbody className="divide-y divide-slate-50 bg-white">
                       {subjects.map((s, i) => (
                         <tr key={s.code}>
-                          <td className="px-4 py-3 text-xs font-black text-slate-800">{s.code}</td>
-                          <td className="px-4 py-3 text-xs font-medium text-slate-600">{s.name}</td>
+                          <td className="px-4 py-3 text-xs font-black text-slate-800 dark:text-slate-100">{s.code}</td>
+                          <td className="px-4 py-3 text-xs font-medium text-slate-600 dark:text-slate-300">{s.name}</td>
                           <td className="px-4 py-3">
                             <input
                               type="number"
                               min={0}
                               max={50}
-                              className="w-20 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 text-xs"
+                              className="w-20 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 dark:text-slate-200 text-xs"
                               value={s.credits ?? ''}
                               onChange={(e) => {
                                 const v = e.target.value;
@@ -492,14 +492,14 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
 
             <div className="pt-6 border-t border-slate-100">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Danger Zone</h4>
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest dark:text-white">Danger Zone</h4>
                 <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 px-2 py-1 rounded-lg">Irreversible</span>
               </div>
 
               <div className="mt-4 p-4 bg-orange-50 rounded-2xl border border-orange-100">
                 <label className="text-xs font-black text-orange-700 uppercase tracking-widest block mb-2">Active Batch Filter</label>
                 <select
-                  className="w-full px-4 py-3 bg-white border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-slate-700"
+                  className="w-full px-4 py-3 bg-white border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-slate-700 dark:text-slate-200 dark:bg-slate-800 dark:border-slate-700"
                   value={purgeBatch}
                   onChange={(e) => setPurgeBatch(e.target.value)}
                   disabled={purgeBusy !== null}
@@ -514,7 +514,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
 
               <div className="mt-4 space-y-4">
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <p className="text-sm font-bold text-slate-800">Purge Candidate (USN)</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Purge Candidate (USN)</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="text"
@@ -543,7 +543,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                 </div>
 
                 <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                  <p className="text-sm font-bold text-slate-800">Purge Semester</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Purge Semester</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="number"
@@ -572,8 +572,8 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                 </div>
 
                 <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100">
-                  <p className="text-sm font-bold text-rose-800">Delete ALL Records</p>
-                  <p className="text-[11px] font-medium text-rose-700 mt-1">This wipes students, subjects, semesters, results, and upload logs.</p>
+                  <p className="text-sm font-bold text-rose-800 dark:text-rose-200">Delete ALL Records</p>
+                  <p className="text-[11px] font-medium text-rose-700 dark:text-rose-300 mt-1">This wipes students, subjects, semesters, results, and upload logs.</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="text"
@@ -594,7 +594,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                 </div>
 
                 {purgeError && (
-                  <div className="p-3 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 text-xs font-bold">
+                  <div className="p-3 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
                     {purgeError}
                   </div>
                 )}
@@ -700,7 +700,7 @@ const DashboardLayout = () => {
               </Link>
               <button
                 onClick={() => setSidebarCollapsed(true)}
-                className="hidden md:flex p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-all shrink-0"
+                className="hidden md:flex p-1.5 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-all shrink-0"
                 title="Collapse sidebar"
               >
                 <div className="transition-transform duration-300">
@@ -751,7 +751,7 @@ const DashboardLayout = () => {
           <div className={`flex flex-col ${isSidebarCollapsed ? 'items-center gap-1' : 'gap-1'}`}>
             <button
               onClick={toggleTheme}
-              className={`flex items-center p-2 text-slate-500 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-slate-800 rounded-xl transition-all ${!isSidebarCollapsed ? 'gap-3 w-full' : 'justify-center w-10 h-10'}`}
+              className={`flex items-center p-2 text-slate-500 dark:text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-slate-800 rounded-xl transition-all ${!isSidebarCollapsed ? 'gap-3 w-full' : 'justify-center w-10 h-10'}`}
               title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
             >
               {theme === 'light' ? <Moon size={20} className="shrink-0" /> : <Sun size={20} className="shrink-0" />}
@@ -793,7 +793,7 @@ const DashboardLayout = () => {
         <header className="md:hidden flex-none z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between transition-colors duration-300">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors -ml-2"
+            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors -ml-2"
           >
             <Menu size={24} />
           </button>
