@@ -1129,6 +1129,101 @@ class ResultAnalyzer:
             failed_subjects=failed_subjects,
         )
 
+    # ---------------- BATCH SEMESTER SGPA ---------------- #
+
+    def get_batch_semester_sgpa(self, batch: str, semester: int, branch: Optional[str] = None):
+        from app.schemas import BatchSGPAStudent, BatchSGPAResponse
+
+        query = self.db.query(Student).filter(Student.batch == batch)
+        if branch:
+            query = query.filter(Student.branch == branch)
+        students = query.all()
+        
+        if not students:
+            return BatchSGPAResponse(batch=batch, semester=semester, average_sgpa=0.0, students=[])
+
+        usns = {s.usn: s.student_name for s in students}
+
+        rows_query = (
+            self.db.query(
+                Student.usn,
+                Subject.subject_code,
+                Result.total_marks,
+                Result.result_status,
+                Semester.exam_year,
+                Semester.exam_month,
+            )
+            .join(Result.student)
+            .join(Result.semester)
+            .join(Result.subject)
+            .filter(Student.batch == batch)
+            .filter(Semester.semester_number == semester)
+        )
+        if branch:
+            rows_query = rows_query.filter(Student.branch == branch)
+            
+        rows = rows_query.all()
+
+        latest = {}
+        for row in rows:
+            key = (row.usn, row.subject_code)
+            if key not in latest:
+                latest[key] = row
+            else:
+                existing = latest[key]
+                newer = False
+                if (row.exam_year or 0) > (existing.exam_year or 0):
+                    newer = True
+                elif (row.exam_year or 0) == (existing.exam_year or 0):
+                    if (row.exam_month or "") > (existing.exam_month or ""):
+                        newer = True
+                if newer:
+                    latest[key] = row
+
+        by_usn = {}
+        for (usn, code), row in latest.items():
+            if usn not in by_usn:
+                by_usn[usn] = []
+            by_usn[usn].append(row)
+
+        batch_students = []
+        for usn, name in usns.items():
+            rows_for_usn = by_usn.get(usn, [])
+            if not rows_for_usn:
+                continue
+
+            total_credits = 0
+            weighted_gp = 0
+            for row in rows_for_usn:
+                status = str(row.result_status or "").upper()
+                is_passed = status in ("P", "PASS")
+                if is_passed:
+                    credits = self._get_vtu_credits(row.subject_code, semester)
+                    pct = self._marks_to_percentage(row.total_marks)
+                    gp = self._percentage_to_grade_points(pct, row.result_status)
+                    total_credits += credits
+                    weighted_gp += (gp * credits)
+
+            sgpa = round(weighted_gp / total_credits, 2) if total_credits > 0 else 0.0
+
+            batch_students.append(BatchSGPAStudent(
+                usn=usn,
+                student_name=name,
+                semester=semester,
+                sgpa=sgpa
+            ))
+
+        avg_sgpa = round(sum(s.sgpa for s in batch_students) / len(batch_students), 2) if batch_students else 0.0
+
+        batch_students.sort(key=lambda x: x.usn)
+
+        return BatchSGPAResponse(
+            batch=batch,
+            semester=semester,
+            average_sgpa=avg_sgpa,
+            students=batch_students
+        )
+
     # ------------- BACKLOG DISTRIBUTION ANALYTICS ------------- #
 
     def get_backlog_distribution(

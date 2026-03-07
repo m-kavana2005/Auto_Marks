@@ -1,127 +1,26 @@
-import React, { useState, useRef } from 'react';
-import { Search, Calculator, CheckCircle2, XCircle, AlertTriangle, ChevronDown, Award } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calculator, AlertTriangle, ChevronDown, Award } from 'lucide-react';
 import { endpoints } from '../api/client';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-interface SGPASubject {
-    subject_code: string;
-    subject_name: string;
-    marks_used: number | null;
-    marks_source: string;   // "original" | "rv" | "final"
-    grade_letter: string;
-    grade_point: number;
-    credits: number;
-}
-
-interface SGPAResult {
+interface BatchSGPAStudent {
     usn: string;
     student_name: string;
     semester: number;
     sgpa: number;
-    total_credits_passed: number;
-    passed_subjects: SGPASubject[];
-    failed_subjects: SGPASubject[];
 }
 
-// ─── Grade colour helper ──────────────────────────────────────────────────────
-
-function gradeColor(letter: string) {
-    switch (letter) {
-        case 'O': return 'text-violet-700 bg-violet-50   border-violet-200';
-        case 'S': return 'text-blue-700   bg-blue-50     border-blue-200';
-        case 'A': return 'text-indigo-700 bg-indigo-50   border-indigo-200';
-        case 'B': return 'text-emerald-700 bg-emerald-50 border-emerald-200';
-        case 'C': return 'text-teal-700   bg-teal-50     border-teal-200';
-        case 'D': return 'text-amber-700  bg-amber-50    border-amber-200';
-        case 'E': return 'text-orange-700 bg-orange-50   border-orange-200';
-        default: return 'text-rose-700   bg-rose-50     border-rose-200';
-    }
+interface BatchSGPAResult {
+    batch: string;
+    semester: number;
+    average_sgpa: number;
+    students: BatchSGPAStudent[];
 }
-
-// ─── Source badge ─────────────────────────────────────────────────────────────
-
-const SourceBadge = ({ source }: { source: string }) => {
-    if (source === 'rv') {
-        return (
-            <span
-                title="Passed after Revaluation"
-                className="source-badge source-badge--rv"
-            >
-                RV ✓
-            </span>
-        );
-    }
-    if (source === 'final') {
-        return (
-            <span
-                title="Updated by Final Result"
-                className="source-badge source-badge--final"
-            >
-                Final ✓
-            </span>
-        );
-    }
-    return (
-        <span className="source-badge source-badge--original">Original</span>
-    );
-};
-
-// ─── Subject table ────────────────────────────────────────────────────────────
-
-const SubjectTable = ({ subjects, variant }: { subjects: SGPASubject[]; variant: 'passed' | 'failed' }) => {
-    const isPassed = variant === 'passed';
-    return (
-        <div className={`sgpa-table-wrapper ${isPassed ? '' : 'sgpa-table-wrapper--failed'}`}>
-            <table className="sgpa-table">
-                <thead>
-                    <tr>
-                        <th>Subject Code</th>
-                        <th>Subject Name</th>
-                        <th>Marks</th>
-                        <th>Source</th>
-                        <th>Grade</th>
-                        <th>GP</th>
-                        <th>Credits</th>
-                        {isPassed && <th>GP × Cr</th>}
-                    </tr>
-                </thead>
-                <tbody>
-                    {subjects.map((s) => (
-                        <tr key={s.subject_code} className={isPassed ? '' : 'sgpa-row--failed'}>
-                            <td className="font-bold text-slate-800 dark:text-slate-200">{s.subject_code}</td>
-                            <td className="text-slate-600 dark:text-slate-400 max-w-[200px] truncate" title={s.subject_name}>
-                                {s.subject_name}
-                            </td>
-                            <td className="text-center font-semibold">
-                                {s.marks_used !== null && s.marks_used !== undefined ? s.marks_used : '—'}
-                            </td>
-                            <td className="text-center">
-                                <SourceBadge source={s.marks_source} />
-                            </td>
-                            <td className="text-center">
-                                <span className={`grade-badge ${gradeColor(s.grade_letter)}`}>
-                                    {s.grade_letter}
-                                </span>
-                            </td>
-                            <td className="text-center font-bold">{isPassed ? s.grade_point : '—'}</td>
-                            <td className="text-center">{s.credits}</td>
-                            {isPassed && (
-                                <td className="text-center font-bold text-indigo-700 dark:text-indigo-400">
-                                    {s.grade_point * s.credits}
-                                </td>
-                            )}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
-};
 
 // ─── SGPA Display ─────────────────────────────────────────────────────────────
 
-const SGPADisplay = ({ sgpa, totalCredits }: { sgpa: number; totalCredits: number }) => {
+const AverageSGPADisplay = ({ sgpa, totalStudents }: { sgpa: number; totalStudents: number }) => {
     const color =
         sgpa >= 9 ? 'from-violet-600 to-indigo-600' :
             sgpa >= 8 ? 'from-indigo-600 to-blue-600' :
@@ -130,17 +29,17 @@ const SGPADisplay = ({ sgpa, totalCredits }: { sgpa: number; totalCredits: numbe
                         'from-amber-500  to-orange-500';
 
     return (
-        <div className="sgpa-result-card">
-            <div className={`sgpa-score-circle bg-gradient-to-br ${color}`}>
-                <span className="sgpa-score-value">{sgpa.toFixed(2)}</span>
-                <span className="sgpa-score-label">SGPA</span>
+        <div className="sgpa-result-card relative overflow-hidden bg-white/50 dark:bg-slate-800/50 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-700 p-6 flex items-center shadow-sm">
+            <div className={`sgpa-score-circle w-20 h-20 rounded-full flex flex-col items-center justify-center text-white shadow-lg bg-gradient-to-br ${color} shrink-0`}>
+                <span className="sgpa-score-value text-2xl font-black tracking-tight">{sgpa.toFixed(2)}</span>
+                <span className="sgpa-score-label text-[10px] font-medium uppercase tracking-wider opacity-90">Avg SGPA</span>
             </div>
-            <div className="sgpa-credits-info">
-                <p className="text-sm font-bold text-slate-600 dark:text-slate-400">
-                    Credits (passed): <span className="text-indigo-700 dark:text-indigo-400">{totalCredits}</span>
+            <div className="sgpa-credits-info ml-6">
+                <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-1">
+                    Batch Performance
                 </p>
-                <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-                    Formula: Σ(GP × Credits) ÷ Σ(Credits of passed subjects)
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Calculated from <span className="font-bold text-indigo-600 dark:text-indigo-400">{totalStudents}</span> students in this batch.
                 </p>
             </div>
         </div>
@@ -150,117 +49,136 @@ const SGPADisplay = ({ sgpa, totalCredits }: { sgpa: number; totalCredits: numbe
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function SGPACalculator() {
-    const [usn, setUsn] = useState('');
+    const [batches, setBatches] = useState<string[]>([]);
+    const [selectedBatch, setSelectedBatch] = useState<string>('');
+    const [branches, setBranches] = useState<string[]>([]);
+    const [selectedBranch, setSelectedBranch] = useState<string>('');
     const [semester, setSemester] = useState(1);
+    const [sgpaFilter, setSgpaFilter] = useState<number>(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [result, setResult] = useState<SGPAResult | null>(null);
+    const [result, setResult] = useState<BatchSGPAResult | null>(null);
 
-    // Autocomplete search state
-    const [searchQuery, setSearchQuery] = useState('');
-    const [suggestions, setSuggestions] = useState<Array<{ usn: string; student_name: string }>>([]);
-    const [showSuggestions, setShowSuggestions] = useState(false);
-    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-    const handleSearchChange = (q: string) => {
-        setSearchQuery(q);
-        setUsn('');
-        setResult(null);
-        if (searchTimeout.current) clearTimeout(searchTimeout.current);
-        if (q.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
-        searchTimeout.current = setTimeout(async () => {
+    // Fetch batches on mount
+    useEffect(() => {
+        async function fetchBatches() {
             try {
-                const res = await endpoints.searchStudents(q, 8);
-                setSuggestions(res);
-                setShowSuggestions(true);
-            } catch {
-                setSuggestions([]);
+                const b = await endpoints.getBatches();
+                setBatches(b);
+                if (b.length > 0) setSelectedBatch(b[b.length - 1]); // default to newest batch
+            } catch (err) {
+                console.error("Failed to fetch batches", err);
             }
-        }, 300);
-    };
+        }
+        fetchBatches();
+    }, []);
 
-    const selectStudent = (s: { usn: string; student_name: string }) => {
-        setUsn(s.usn);
-        setSearchQuery(`${s.student_name} (${s.usn})`);
-        setSuggestions([]);
-        setShowSuggestions(false);
-        setResult(null);
-        setError(null);
-    };
+    // Fetch branches when batch changes
+    useEffect(() => {
+        if (!selectedBatch) {
+            setBranches([]);
+            setSelectedBranch('');
+            return;
+        }
+        async function fetchBranches() {
+            try {
+                const b = await endpoints.getBatchBranches(selectedBatch);
+                setBranches(b);
+                setSelectedBranch('');
+            } catch (err) {
+                console.error("Failed to fetch branches", err);
+            }
+        }
+        fetchBranches();
+    }, [selectedBatch]);
 
     const handleCalculate = async () => {
-        const resolvedUsn = usn.trim() || searchQuery.trim();
-        if (!resolvedUsn) { setError('Please select or enter a student USN'); return; }
+        if (!selectedBatch) {
+            setError('Please select a batch');
+            return;
+        }
         setLoading(true);
         setError(null);
         setResult(null);
         try {
-            const data = await endpoints.getStudentSgpa(resolvedUsn, semester);
+            const data = await endpoints.getBatchSgpa(selectedBatch, semester, selectedBranch || undefined);
             setResult(data);
         } catch (e: any) {
-            setError(e?.message || 'Failed to fetch SGPA data');
+            setError(e?.message || 'Failed to fetch batch SGPA data');
         } finally {
             setLoading(false);
         }
     };
 
+    // Filter and sort students
+    const filteredStudents = result?.students
+        .filter(s => s.sgpa >= sgpaFilter)
+        .sort((a, b) => a.usn.localeCompare(b.usn)) || [];
+
+    const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setSgpaFilter(Number(e.target.value));
+    };
+
     return (
-        <div className="sgpa-page">
+        <div className="sgpa-page max-w-5xl mx-auto p-4 md:p-8 space-y-6">
             {/* Header */}
-            <div className="sgpa-header">
-                <div className="sgpa-header-icon">
+            <div className="sgpa-header flex items-center gap-4 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="sgpa-header-icon shrink-0 w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                     <Calculator size={28} />
                 </div>
                 <div>
-                    <h1 className="sgpa-title">SGPA Calculator</h1>
-                    <p className="sgpa-subtitle">
-                        Select a student and semester to compute VTU CBCS SGPA.
-                        Passed subjects only are included. Failed / backlog subjects are shown separately.
+                    <h1 className="sgpa-title text-2xl font-black text-slate-900 dark:text-white mb-1">Batch SGPA Calculator</h1>
+                    <p className="sgpa-subtitle text-sm text-slate-500 dark:text-slate-400">
+                        Calculate and analyze Semester Grade Point Average (SGPA) for an entire batch.
                     </p>
                 </div>
             </div>
 
             {/* Controls */}
-            <div className="sgpa-controls">
-                {/* Student Search */}
-                <div className="sgpa-search-wrapper">
-                    <label className="sgpa-label">Student (USN or Name)</label>
+            <div className="sgpa-controls bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                {/* Batch Selector */}
+                <div className="sgpa-batch-wrapper">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Batch</label>
                     <div className="relative">
-                        <Search size={16} className="sgpa-search-icon" />
-                        <input
-                            id="sgpa-student-input"
-                            type="text"
-                            className="sgpa-input pl-10"
-                            placeholder="Search by name or USN…"
-                            value={searchQuery}
-                            onChange={(e) => handleSearchChange(e.target.value)}
-                            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                            autoComplete="off"
-                        />
-                        {showSuggestions && suggestions.length > 0 && (
-                            <ul className="sgpa-suggestions">
-                                {suggestions.map((s) => (
-                                    <li
-                                        key={s.usn}
-                                        className="sgpa-suggestion-item"
-                                        onMouseDown={() => selectStudent(s)}
-                                    >
-                                        <span className="font-bold text-slate-800 dark:text-slate-100">{s.student_name}</span>
-                                        <span className="ml-2 text-xs text-slate-500 dark:text-slate-400 font-mono">{s.usn}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
+                        <select
+                            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            value={selectedBatch}
+                            onChange={(e) => { setSelectedBatch(e.target.value); setResult(null); }}
+                        >
+                            <option value="" disabled>Select a batch</option>
+                            {batches.map((b) => (
+                                <option key={b} value={b}>{b}</option>
+                            ))}
+                        </select>
+                        <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    </div>
+                </div>
+
+                {/* Branch Selector */}
+                <div className="sgpa-branch-wrapper">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Branch</label>
+                    <div className="relative">
+                        <select
+                            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            value={selectedBranch}
+                            onChange={(e) => { setSelectedBranch(e.target.value); setResult(null); }}
+                            disabled={!selectedBatch || branches.length === 0}
+                        >
+                            <option value="">All Branches</option>
+                            {branches.map((b) => (
+                                <option key={b} value={b}>{b}</option>
+                            ))}
+                        </select>
+                        <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     </div>
                 </div>
 
                 {/* Semester Selector */}
                 <div className="sgpa-semester-wrapper">
-                    <label className="sgpa-label">Semester</label>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">Semester</label>
                     <div className="relative">
                         <select
-                            id="sgpa-semester-select"
-                            className="sgpa-input pr-10 appearance-none"
+                            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             value={semester}
                             onChange={(e) => { setSemester(Number(e.target.value)); setResult(null); }}
                         >
@@ -272,25 +190,43 @@ export default function SGPACalculator() {
                     </div>
                 </div>
 
+                {/* Filter Selector */}
+                <div className="sgpa-filter-wrapper">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">SGPA Filter</label>
+                    <div className="relative">
+                        <select
+                            className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            value={sgpaFilter}
+                            onChange={handleFilterChange}
+                        >
+                            <option value={0}>All Students</option>
+                            <option value={9.0}>SGPA ≥ 9.0</option>
+                            <option value={8.5}>SGPA ≥ 8.5</option>
+                            <option value={8.0}>SGPA ≥ 8.0</option>
+                            <option value={7.5}>SGPA ≥ 7.5</option>
+                            <option value={7.0}>SGPA ≥ 7.0</option>
+                        </select>
+                        <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    </div>
+                </div>
+
                 {/* Calculate Button */}
                 <div className="sgpa-btn-wrapper">
-                    <label className="sgpa-label">&nbsp;</label>
                     <button
-                        id="sgpa-calculate-btn"
                         onClick={handleCalculate}
-                        disabled={loading}
-                        className="sgpa-calculate-btn"
+                        disabled={loading || !selectedBatch}
+                        className="w-full h-[42px] bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm px-4 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {loading ? (
-                            <span className="flex items-center gap-2">
+                            <>
                                 <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                 </svg>
                                 Calculating…
-                            </span>
+                            </>
                         ) : (
-                            <span className="flex items-center gap-2"><Award size={16} /> Calculate SGPA</span>
+                            <><Award size={16} /> Calculate</>
                         )}
                     </button>
                 </div>
@@ -298,49 +234,55 @@ export default function SGPACalculator() {
 
             {/* Error */}
             {error && (
-                <div className="sgpa-error">
-                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                <div className="sgpa-error text-rose-600 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400 p-4 rounded-xl border border-rose-200 dark:border-rose-500/20 text-sm font-medium flex items-start gap-3">
+                    <AlertTriangle size={18} className="shrink-0 mt-0.5" />
                     <span>{error}</span>
                 </div>
             )}
 
             {/* Results */}
             {result && (
-                <div className="sgpa-results">
-                    {/* Student info bar */}
-                    <div className="sgpa-student-bar">
-                        <div>
-                            <p className="text-lg font-extrabold text-slate-900 dark:text-white">{result.student_name}</p>
-                            <p className="text-xs font-mono text-slate-500 dark:text-slate-400">{result.usn} &bull; Semester {result.semester}</p>
-                        </div>
-                        <SGPADisplay sgpa={result.sgpa} totalCredits={result.total_credits_passed} />
-                    </div>
+                <div className="sgpa-results space-y-6">
+                    {/* Summary */}
+                    <AverageSGPADisplay sgpa={result.average_sgpa} totalStudents={result.students.length} />
 
-                    {/* Passed subjects */}
-                    <div className="sgpa-section">
-                        <div className="sgpa-section-header sgpa-section-header--pass">
-                            <CheckCircle2 size={18} />
-                            <span>Passed Subjects ({result.passed_subjects.length})</span>
-                            <span className="ml-auto text-xs font-normal opacity-75">Included in SGPA</span>
+                    {/* Table */}
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                        <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
+                            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Batch Results ({filteredStudents.length}/{result.students.length})</h2>
+                            {sgpaFilter > 0 && <span className="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-400">Filter: SGPA ≥ {sgpaFilter.toFixed(1)}</span>}
                         </div>
-                        {result.passed_subjects.length === 0 ? (
-                            <p className="sgpa-empty">No passed subjects found for this semester.</p>
-                        ) : (
-                            <SubjectTable subjects={result.passed_subjects} variant="passed" />
-                        )}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm whitespace-nowrap">
+                                <thead>
+                                    <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-700">
+                                        <th className="px-6 py-3 font-semibold text-slate-700 dark:text-slate-300">USN</th>
+                                        <th className="px-6 py-3 font-semibold text-slate-700 dark:text-slate-300">Student Name</th>
+                                        <th className="px-6 py-3 font-semibold text-slate-700 dark:text-slate-300 text-center">Semester</th>
+                                        <th className="px-6 py-3 font-semibold text-slate-700 dark:text-slate-300 text-right">SGPA</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredStudents.length > 0 ? (
+                                        filteredStudents.map((s, i) => (
+                                            <tr key={s.usn} className={`border-b last:border-0 border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors ${i % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/50 dark:bg-slate-800/50'}`}>
+                                                <td className="px-6 py-4 font-mono font-medium text-slate-900 dark:text-white text-xs">{s.usn}</td>
+                                                <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-300 max-w-[200px] truncate" title={s.student_name}>{s.student_name}</td>
+                                                <td className="px-6 py-4 text-center text-slate-500 dark:text-slate-400">{s.semester}</td>
+                                                <td className="px-6 py-4 text-right font-bold text-indigo-600 dark:text-indigo-400">{s.sgpa.toFixed(2)}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={4} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                                                No students found matching the selected filter.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-
-                    {/* Failed subjects */}
-                    {result.failed_subjects.length > 0 && (
-                        <div className="sgpa-section">
-                            <div className="sgpa-section-header sgpa-section-header--fail">
-                                <XCircle size={18} />
-                                <span>Failed / Backlog Subjects ({result.failed_subjects.length})</span>
-                                <span className="ml-auto text-xs font-normal opacity-75">Excluded from SGPA</span>
-                            </div>
-                            <SubjectTable subjects={result.failed_subjects} variant="failed" />
-                        </div>
-                    )}
                 </div>
             )}
         </div>

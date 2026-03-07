@@ -178,6 +178,9 @@ export const endpoints = {
   getBatchSemesters: async (batch: string): Promise<number[]> => {
     return apiFetch(`/batches/${batch}/semesters`);
   },
+  getBatchBranches: async (batch: string): Promise<string[]> => {
+    return apiFetch(`/batches/${batch}/branches`);
+  },
   getBatchSemesterSubjects: async (batch: string, semester: number): Promise<Array<{ id: number; subject_code: string; subject_name: string }>> => {
     return apiFetch(`/batch/${batch}/semester/${semester}/subjects`);
   },
@@ -475,6 +478,26 @@ export const endpoints = {
   }> => {
     return apiFetch(`/students/${encodeURIComponent(usn)}/sgpa`, {
       params: { semester },
+    });
+  },
+
+  getBatchSgpa: async (
+    batch: string,
+    semester: number,
+    branch?: string
+  ): Promise<{
+    batch: string;
+    semester: number;
+    average_sgpa: number;
+    students: Array<{
+      usn: string;
+      student_name: string;
+      semester: number;
+      sgpa: number;
+    }>;
+  }> => {
+    return apiFetch(`/batches/${encodeURIComponent(batch)}/semester/${semester}/sgpa`, {
+      params: { branch },
     });
   },
 

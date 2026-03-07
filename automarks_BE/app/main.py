@@ -813,6 +813,22 @@ def get_student_semester_sgpa(
 
     return result
 
+
+@app.get("/batches/{batch}/semester/{semester}/sgpa")
+def get_batch_semester_sgpa_endpoint(
+    batch: str,
+    semester: int,
+    branch: Optional[str] = Query(None, description="Optional branch filter"),
+    db: Session = Depends(get_db),
+):
+    """
+    Calculate SGPA for an entire batch for a single selected semester.
+    """
+    analyzer = ResultAnalyzer(db)
+    result = analyzer.get_batch_semester_sgpa(batch, semester, branch)
+
+    return result
+
 # ==================== METADATA DISCOVERY ENDPOINTS ====================
 
 @app.get("/batches/{batch}/semesters", response_model=List[int])
@@ -828,6 +844,20 @@ def get_batch_semesters(batch: str, db: Session = Depends(get_db)):
         .all()
     )
     return [s[0] for s in semesters]
+
+
+@app.get("/batches/{batch}/branches", response_model=List[str])
+def get_batch_branches(batch: str, db: Session = Depends(get_db)):
+    """Fetch all branches recorded for a specific batch."""
+    branches = (
+        db.query(Student.branch)
+        .filter(Student.batch == batch)
+        .filter(Student.branch.isnot(None))
+        .distinct()
+        .order_by(Student.branch)
+        .all()
+    )
+    return [b[0] for b in branches]
 
 
 @app.get("/batch/{batch}/semester/{sem}/subjects", response_model=List[SubjectResponse])

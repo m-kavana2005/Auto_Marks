@@ -291,3 +291,19 @@ class SGPAResponse(BaseModel):
     total_credits_passed: int   # sum of credits of passed subjects only
     passed_subjects: List[SGPASubjectDetail]
     failed_subjects: List[SGPASubjectDetail]  # shown separately; NOT in SGPA
+
+
+class BatchSGPAStudent(BaseModel):
+    """SGPA summary for a single student in a batch."""
+    usn: str
+    student_name: str
+    semester: int
+    sgpa: float
+
+
+class BatchSGPAResponse(BaseModel):
+    """SGPA response for an entire batch for a given semester."""
+    batch: str
+    semester: int
+    average_sgpa: float
+    students: List[BatchSGPAStudent]
