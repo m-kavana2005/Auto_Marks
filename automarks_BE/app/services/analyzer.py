@@ -1113,7 +1113,12 @@ class ResultAnalyzer:
         # ── 5. Compute SGPA ──────────────────────────────────────────────────
         total_credits = sum(s.credits for s in passed_subjects)
         weighted_gp   = sum(s.grade_point * s.credits for s in passed_subjects)
-        sgpa = round(weighted_gp / total_credits, 2) if total_credits > 0 else 0.0
+        
+        # If the student failed any subject, the SGPA should be 0
+        if failed_subjects:
+            sgpa = 0.0
+        else:
+            sgpa = round(weighted_gp / total_credits, 2) if total_credits > 0 else 0.0
 
         # Sort both lists by subject code for consistency
         passed_subjects.sort(key=lambda s: s.subject_code)
@@ -1204,7 +1209,13 @@ class ResultAnalyzer:
                     total_credits += credits
                     weighted_gp += (gp * credits)
 
-            sgpa = round(weighted_gp / total_credits, 2) if total_credits > 0 else 0.0
+            # Check if there are any failed subjects
+            has_failed_subjects = any(str(r.result_status or "").upper() not in ("P", "PASS") for r in rows_for_usn)
+            
+            if has_failed_subjects:
+                sgpa = 0.0
+            else:
+                sgpa = round(weighted_gp / total_credits, 2) if total_credits > 0 else 0.0
 
             batch_students.append(BatchSGPAStudent(
                 usn=usn,
