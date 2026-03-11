@@ -187,7 +187,7 @@ class VTUResultExtractor:
         # IMPORTANT: Some PDFs glue code+name without a space (e.g., "BPHYS102PHYSICS...").
         # In that case, we must NOT consume the first letter of the subject name as a code suffix.
         # Only treat a trailing letter as part of the subject code if it's followed by whitespace/end.
-        subject_start_re = re.compile(r"^([A-Z]{3,6}\d{3}(?:[A-Z](?=\s|$))?)\s*(.*)$")
+        subject_start_re = re.compile(r"^([0-9]*[A-Z]{2,6}\d{2,3}(?:[A-Z](?=\s|$))?)\s*(.*)$")
 
         def clean_subject_name(name: str) -> str:
             n = re.sub(r"\s+", " ", (name or "").strip())

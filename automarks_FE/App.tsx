@@ -28,7 +28,8 @@ import {
   Sun,
   Moon,
   LogOut,
-  GraduationCap
+  GraduationCap,
+  LibraryBig
 } from 'lucide-react';
 import { endpoints, getApiBase, setApiBaseOverride } from './api/client';
 
@@ -41,6 +42,7 @@ import Analytics from './features/Analytics';
 import ExportPage from './features/ExportPage';
 import SGPACalculator from './features/SGPACalculator';
 import NotificationsPage from './features/NotificationsPage';
+import SubjectAnalysis from './features/SubjectAnalysis';
 import AutoMarksLogo from './components/ui/AutoMarksLogo';
 import LandingPage from './pages/LandingPage';
 import { getBatchOptions } from './utils/batches';
@@ -668,6 +670,7 @@ const DashboardLayout = () => {
     { to: '/profile', icon: UserCircle, label: 'Student Profile' },
     { to: '/sgpa', icon: GraduationCap, label: 'SGPA Calculator' },
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
+    { to: '/subject-analysis', icon: LibraryBig, label: 'Subject Analysis' },
     { to: '/export', icon: Download, label: 'Exports' },
     { to: '/notifications', icon: Bell, label: 'Notifications' },
   ];
@@ -831,6 +834,7 @@ export default function App() {
           <Route path="/profile" element={<StudentProfile />} />
           <Route path="/sgpa" element={<SGPACalculator />} />
           <Route path="/analytics" element={<Analytics />} />
+          <Route path="/subject-analysis" element={<SubjectAnalysis />} />
           <Route path="/export" element={<ExportPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
         </Route>

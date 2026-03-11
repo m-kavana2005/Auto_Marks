@@ -97,6 +97,8 @@ class Result(Base):
     #   'rv'       — overwritten by a Revaluation (RV) result
     #   'final'    — overwritten by a Final result announcement
     marks_source = Column(String(10), nullable=True, default="original")
+    # Preserve exact subject name from the PDF specifically for this result
+    subject_name = Column(String(500), nullable=True)
     # Store single-letter/short codes (P/F/A/W/X/NE)
     result_status = Column(String(4), index=True)
     announced_date = Column(Date)

@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.models import Student, Result, Subject, Semester
 from app.schemas import (
     SubjectStatistics, SemesterSummary, ResultMatrixResponse,
@@ -18,6 +19,20 @@ from openpyxl.styles import PatternFill, Font
 
 
 logger = logging.getLogger(__name__)
+
+# ============================================================
+# SUBJECTS_2025: Reference mapping for 2025 Scheme Subjects
+# ============================================================
+SUBJECTS_2025 = {
+    "1BMATS101": "Calculus and Linear Algebra",
+    "1BCHES102": "Applied Chemistry",
+    "1BAIA103": "Introduction to Artificial Intelligence",
+    "1BENG106": "Communication Skills",
+    "1BICO107": "Indian Constitution",
+    "1BIDTL158": "Innovation and Design Thinking Lab",
+    "1BPLC105B": "Python Programming",
+    "1BESC104D": "Introduction to Mechanical Engineering"
+}
 
 # ============================================================
 # VTU Fixed Subject-Credit Mapping (CBCS 2021 scheme)
@@ -227,7 +242,7 @@ class ResultAnalyzer:
             Semester.exam_year,
             Subject.id,
             Subject.subject_code,
-            Subject.subject_name,
+            func.coalesce(Result.subject_name, Subject.subject_name).label('subject_name'),
             Subject.credits,
             Result.internal_marks,
             Result.external_marks,
@@ -313,6 +328,61 @@ class ResultAnalyzer:
                 pass_percentage=float((s['result_status'] == 'P').astype(int).mean() * 100)
             ))
         return stats
+
+    # ---------------- SUBJECT-WISE ANALYSIS ---------------- #
+
+    def get_subject_wise_analysis(
+        self,
+        semester: Optional[int] = None,
+        batch: Optional[str] = None,
+        branch: Optional[str] = None,
+        exam_year: Optional[int] = None,
+        exam_month: Optional[str] = None,
+    ) -> list:
+        """
+        Returns subject-wise performance analysis for the given filters.
+        Subject names are taken directly from the result data (PDF-extracted)
+        so that both 2022 and 2025 scheme subjects are handled correctly.
+        """
+        from app.schemas import SubjectWiseAnalysis
+
+        df = self.get_results_dataframe(
+            semester=semester,
+            batch=batch,
+            branch=branch,
+            exam_year=exam_year,
+            exam_month=exam_month,
+        )
+
+        if df.empty:
+            return []
+
+        result = []
+        # Group by subject_code; pick the most-common subject_name within the group
+        for code, group in df.groupby('subject_code'):
+            total = pd.to_numeric(group['total_marks'], errors='coerce')
+            appeared = len(group)
+            passed = int((group['result_status'] == 'P').astype(int).sum())
+            failed = int((group['result_status'] == 'F').astype(int).sum())
+
+            result.append(SubjectWiseAnalysis(
+                subject_code=str(code),
+                # Use the most-frequently occurring subject_name (mirrors exact PDF text)
+                subject_name=group['subject_name'].mode().iloc[0] if not group['subject_name'].empty else str(code),
+                students_appeared=appeared,
+                students_passed=passed,
+                students_failed=failed,
+                pass_percentage=round((passed / appeared) * 100, 2) if appeared > 0 else 0.0,
+                fail_percentage=round((failed / appeared) * 100, 2) if appeared > 0 else 0.0,
+                average_marks=round(float(total.mean()), 2) if not total.isnull().all() else None,
+                highest_marks=int(total.max()) if not total.isnull().all() else None,
+                lowest_marks=int(total.min()) if not total.isnull().all() else None,
+            ))
+
+        # Sort by subject_code ascending
+        result.sort(key=lambda x: x.subject_code)
+        return result
+
 
     # ---------------- STUDENT SUMMARY ---------------- #
 
@@ -1033,7 +1103,7 @@ class ResultAnalyzer:
         rows = (
             self.db.query(
                 Subject.subject_code,
-                Subject.subject_name,
+                func.coalesce(Result.subject_name, Subject.subject_name).label('subject_name'),
                 Result.total_marks,
                 Result.result_status,
                 Result.marks_source,

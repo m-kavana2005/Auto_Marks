@@ -685,7 +685,72 @@ def get_result_matrix(
     )
 
 
-# ==================== STUDENT ENDPOINTS ====================
+@app.get("/analytics/subject-wise")
+def get_subject_wise_analysis(
+    semester: Optional[int] = Query(None),
+    batch: Optional[str] = Query(None),
+    branch: Optional[str] = Query(None),
+    exam_year: Optional[int] = Query(None, ge=2000, le=2100),
+    exam_month: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
+    """
+    Subject-wise performance analysis.
+    Returns aggregated stats (appeared, passed, failed, pass %, fail %,
+    avg/highest/lowest marks) for each subject.
+    Subject names are taken directly from the extracted PDF data so that
+    both 2022 and 2025 scheme subjects are handled correctly.
+    """
+    normalized_batch = _validate_batch(batch)
+    analyzer = ResultAnalyzer(db)
+    return analyzer.get_subject_wise_analysis(
+        semester=semester,
+        batch=normalized_batch,
+        branch=branch,
+        exam_year=exam_year,
+        exam_month=exam_month,
+    )
+
+
+@app.get("/analytics/subject-wise/failed-students")
+def get_subject_failed_students(
+    subject_code: str = Query(...),
+    semester: Optional[int] = Query(None),
+    batch: Optional[str] = Query(None),
+    branch: Optional[str] = Query(None),
+    exam_year: Optional[int] = Query(None, ge=2000, le=2100),
+    exam_month: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns the list of students who failed in a given subject code,
+    filtered by semester, batch, branch, exam_year, exam_month.
+    """
+    normalized_batch = _validate_batch(batch)
+    analyzer = ResultAnalyzer(db)
+    df = analyzer.get_results_dataframe(
+        semester=semester,
+        batch=normalized_batch,
+        branch=branch,
+        subject_code=subject_code,
+        exam_year=exam_year,
+        exam_month=exam_month,
+    )
+    if df.empty:
+        return []
+    failed = df[df["result_status"] == "F"].copy()
+    failed = failed.sort_values("usn")
+    result = []
+    for _, row in failed.iterrows():
+        result.append({
+            "usn": str(row["usn"]),
+            "student_name": str(row["student_name"]),
+            "total_marks": int(row["total_marks"]) if row["total_marks"] is not None and str(row["total_marks"]) not in ("", "nan") else None,
+            "internal_marks": float(row["internal_marks"]) if row["internal_marks"] is not None and str(row["internal_marks"]) not in ("", "nan") else None,
+            "external_marks": float(row["external_marks"]) if row["external_marks"] is not None and str(row["external_marks"]) not in ("", "nan") else None,
+        })
+    return result
+
 
 @app.get("/students", response_model=List[StudentResponse])
 async def get_students(
@@ -2118,6 +2183,7 @@ def save_extracted_data(
                 db.add(result)
 
             # Update result data
+            result.subject_name = raw_name
             result.internal_marks = subject_data.internal_marks
             result.external_marks = subject_data.external_marks
             result.total_marks = subject_data.total_marks

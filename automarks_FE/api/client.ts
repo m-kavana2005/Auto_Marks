@@ -518,4 +518,42 @@ export const endpoints = {
       params: { semester, batch, branch },
     });
   },
+
+  getSubjectWiseAnalysis: async (opts?: {
+    semester?: number;
+    batch?: string;
+    branch?: string;
+    exam_year?: number;
+    exam_month?: string;
+  }): Promise<Array<{
+    subject_code: string;
+    subject_name: string;
+    students_appeared: number;
+    students_passed: number;
+    students_failed: number;
+    pass_percentage: number;
+    fail_percentage: number;
+    average_marks: number | null;
+    highest_marks: number | null;
+    lowest_marks: number | null;
+  }>> => {
+    return apiFetch('/analytics/subject-wise', { params: opts });
+  },
+
+  getSubjectFailedStudents: async (opts: {
+    subject_code: string;
+    semester?: number;
+    batch?: string;
+    branch?: string;
+    exam_year?: number;
+    exam_month?: string;
+  }): Promise<Array<{
+    usn: string;
+    student_name: string;
+    total_marks: number | null;
+    internal_marks: number | null;
+    external_marks: number | null;
+  }>> => {
+    return apiFetch('/analytics/subject-wise/failed-students', { params: opts as any });
+  },
 };

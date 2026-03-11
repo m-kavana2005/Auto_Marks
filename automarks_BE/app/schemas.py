@@ -307,3 +307,20 @@ class BatchSGPAResponse(BaseModel):
     semester: int
     average_sgpa: float
     students: List[BatchSGPAStudent]
+
+
+# ─── Subject-wise Analysis Schema ─────────────────────────────────────────────
+
+class SubjectWiseAnalysis(BaseModel):
+    """Aggregated performance stats for a single subject."""
+    subject_code: str
+    subject_name: str
+    students_appeared: int
+    students_passed: int
+    students_failed: int
+    pass_percentage: float
+    fail_percentage: float
+    average_marks: Optional[float] = None
+    highest_marks: Optional[int] = None
+    lowest_marks: Optional[int] = None
+

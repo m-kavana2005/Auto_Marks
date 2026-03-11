@@ -76,6 +76,7 @@ CREATE TABLE results (
     upload_batch_id VARCHAR(50) DEFAULT NULL,
     -- Tracks how current marks were obtained: 'original' | 'rv' | 'final'
     marks_source VARCHAR(10) DEFAULT 'original',
+    subject_name VARCHAR(500) DEFAULT NULL,
     result_status VARCHAR(4) DEFAULT NULL,
     announced_date DATE DEFAULT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -157,7 +158,7 @@ SELECT
     sem.exam_month,
     sem.exam_year,
     sub.subject_code,
-    sub.subject_name,
+    COALESCE(r.subject_name, sub.subject_name) as subject_name,
     r.internal_marks,
     r.external_marks,
     r.total_marks,
