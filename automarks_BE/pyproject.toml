@@ -39,6 +39,5 @@ packages = []
 
 [tool.uv]
 # dev-dependencies = []
-
 [project.scripts]
 run-api = "app.main:main"
