@@ -114,7 +114,7 @@ const ResultsExplorer: React.FC = () => {
         <div className="flex gap-2">
           <button
             onClick={handleExport}
-            className="flex items-center px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+            className="flex items-center px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:bg-slate-800 transition-colors"
           >
             <Download className="mr-2 h-4 w-4" /> Export Excel
           </button>
@@ -144,16 +144,16 @@ const ResultsExplorer: React.FC = () => {
             onClick={() => setFilters(f => ({ ...f, status: f.status === 'pass' ? '' : 'pass' }))}
             className={`p-5 rounded-2xl border shadow-sm flex items-center justify-between transition-all text-left w-full ${filters.status === 'pass'
               ? 'bg-emerald-600 border-emerald-600 text-white dark:bg-emerald-700 dark:border-emerald-700'
-              : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-900/30'
+              : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-emerald-50 dark:bg-emerald-500/10 dark:hover:bg-emerald-900/30'
               }`}
           >
             <div>
-              <p className={`text-sm font-bold uppercase tracking-wider ${filters.status === 'pass' ? 'text-emerald-100' : 'text-emerald-600/60'
+              <p className={`text-sm font-bold uppercase tracking-wider ${filters.status === 'pass' ? 'text-emerald-100' : 'text-emerald-600 dark:text-emerald-400/60'
                 }`}>Passed All</p>
-              <p className={`text-3xl font-black mt-1 ${filters.status === 'pass' ? 'text-white' : 'text-emerald-600'
+              <p className={`text-3xl font-black mt-1 ${filters.status === 'pass' ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'
                 }`}>{matrix.summary.passed}</p>
             </div>
-            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${filters.status === 'pass' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-600'
+            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${filters.status === 'pass' ? 'bg-emerald-50 dark:bg-emerald-500/100 text-white' : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
               }`}>
               <CheckCircle size={24} />
             </div>
@@ -163,16 +163,16 @@ const ResultsExplorer: React.FC = () => {
             onClick={() => setFilters(f => ({ ...f, status: f.status === 'fail' ? '' : 'fail' }))}
             className={`p-5 rounded-2xl border shadow-sm flex items-center justify-between transition-all text-left w-full ${filters.status === 'fail'
               ? 'bg-rose-600 border-rose-600 text-white dark:bg-rose-700 dark:border-rose-700'
-              : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 hover:bg-rose-50 dark:hover:bg-rose-900/30'
+              : 'bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800 hover:border-rose-300 dark:hover:border-rose-700 hover:bg-rose-50 dark:bg-rose-500/10 dark:hover:bg-rose-900/30'
               }`}
           >
             <div>
-              <p className={`text-sm font-bold uppercase tracking-wider ${filters.status === 'fail' ? 'text-rose-100' : 'text-rose-600/60'
+              <p className={`text-sm font-bold uppercase tracking-wider ${filters.status === 'fail' ? 'text-rose-100' : 'text-rose-600 dark:text-rose-400/60'
                 }`}>Failed ≥1 Subject</p>
-              <p className={`text-3xl font-black mt-1 ${filters.status === 'fail' ? 'text-white' : 'text-rose-600'
+              <p className={`text-3xl font-black mt-1 ${filters.status === 'fail' ? 'text-white' : 'text-rose-600 dark:text-rose-400'
                 }`}>{matrix.summary.failed}</p>
             </div>
-            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${filters.status === 'fail' ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-600'
+            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${filters.status === 'fail' ? 'bg-rose-50 dark:bg-rose-500/100 text-white' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'
               }`}>
               <XCircle size={24} />
             </div>
@@ -181,11 +181,11 @@ const ResultsExplorer: React.FC = () => {
       )}
 
       {/* Filters Bar */}
-      <div className="glass-card p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-end gap-3">
+      <div className="glass-card p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-wrap items-end gap-3">
         <div className="w-full md:w-48">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Batch</label>
           <select
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700"
             value={filters.batch}
             onChange={e => setFilters(f => ({ ...f, batch: e.target.value, branch: '', semester: '' }))}
           >
@@ -196,7 +196,7 @@ const ResultsExplorer: React.FC = () => {
         <div className="w-full md:w-40">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Branch</label>
           <select
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-slate-800 dark:border-slate-700"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-slate-800 dark:border-slate-700"
             value={filters.branch}
             onChange={e => setFilters(f => ({ ...f, branch: e.target.value }))}
             disabled={!filters.batch || branches.length === 0}
@@ -208,7 +208,7 @@ const ResultsExplorer: React.FC = () => {
         <div className="w-full md:w-32">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Semester</label>
           <select
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-slate-800 dark:border-slate-700"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-slate-800 dark:border-slate-700"
             value={filters.semester}
             onChange={e => setFilters(f => ({ ...f, semester: e.target.value }))}
             disabled={!filters.batch || semesters.length === 0}
@@ -224,7 +224,7 @@ const ResultsExplorer: React.FC = () => {
             <input
               type="text"
               placeholder="Search by Name or USN..."
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 placeholder:font-medium"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 placeholder:font-medium"
               value={filters.usn}
               onChange={e => setFilters(f => ({ ...f, usn: e.target.value }))}
             />
@@ -234,7 +234,7 @@ const ResultsExplorer: React.FC = () => {
         <div className="w-full md:w-36">
           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block px-1">Status</label>
           <select
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700"
+            className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700"
             value={filters.status}
             onChange={e => setFilters(f => ({ ...f, status: e.target.value as '' | 'pass' | 'fail' }))}
           >
@@ -246,10 +246,10 @@ const ResultsExplorer: React.FC = () => {
       </div>{/* end filters bar */}
 
       {/* Main Content */}
-      <div className="glass-card rounded-[2rem] overflow-hidden shadow-sm min-h-[400px] flex flex-col border border-slate-200/60">
+      <div className="glass-card rounded-[2rem] overflow-hidden shadow-sm min-h-[400px] flex flex-col border border-slate-200 dark:border-slate-700/60">
         {error ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
-            <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mb-6">
+            <div className="w-20 h-20 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center text-rose-500 mb-6">
               <WifiOff size={40} />
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Data Unavailable</h3>
@@ -289,20 +289,20 @@ const ResultsExplorer: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                 {filteredData.map((row) => (
-                  <tr key={row.usn} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                    <td className="sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
+                  <tr key={row.usn} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-800/50 transition-colors group">
+                    <td className="sticky left-0 z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:bg-slate-800 dark:group-hover:bg-slate-800 px-4 py-3 text-xs font-bold text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap">
                       {row.usn}
                     </td>
-                    <td className="sticky left-[140px] z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:group-hover:bg-slate-800 px-4 py-3 text-[13px] font-black text-indigo-700 dark:text-indigo-400 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" title={row.name}>
+                    <td className="sticky left-[140px] z-10 bg-white dark:bg-slate-900 group-hover:bg-slate-50 dark:bg-slate-800 dark:group-hover:bg-slate-800 px-4 py-3 text-[13px] font-black text-indigo-700 dark:text-indigo-400 border-r border-slate-100 dark:border-slate-800 whitespace-nowrap overflow-hidden text-ellipsis max-w-[200px]" title={row.name}>
                       {row.name}
                     </td>
-                    <td className="px-4 py-3 text-sm font-black text-emerald-600 dark:text-emerald-400 text-center bg-slate-50/50 dark:bg-slate-800/30">
+                    <td className="px-4 py-3 text-sm font-black text-emerald-600 dark:text-emerald-400 text-center bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/30">
                       {row.total_marks}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide border ${row.result === 'PASS'
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                        : 'bg-rose-50 text-rose-600 border-rose-100'
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-100'
+                        : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-100'
                         }`}>
                         {row.result}
                       </span>
@@ -310,11 +310,11 @@ const ResultsExplorer: React.FC = () => {
                     {matrix.columns.map(col => {
                       const subResult = row[col.code];
                       return (
-                        <td key={col.code} className={`px-4 py-3 text-center border-l border-slate-50 dark:border-slate-800/50 ${subResult?.result === 'F' ? 'bg-rose-50/30 dark:bg-rose-900/10' : ''
+                        <td key={col.code} className={`px-4 py-3 text-center border-l border-slate-50 dark:border-slate-800/50 ${subResult?.result === 'F' ? 'bg-rose-50 dark:bg-rose-500/10/30 dark:bg-rose-900/10' : ''
                           }`}>
                           {subResult ? (
                             <div className="flex flex-col items-center">
-                              <span className={`text-xs font-bold ${subResult.result === 'F' ? 'text-rose-600' : 'text-slate-600 dark:text-slate-300'
+                              <span className={`text-xs font-bold ${subResult.result === 'F' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600 dark:text-slate-300'
                                 }`}>
                                 {subResult.total}
                               </span>

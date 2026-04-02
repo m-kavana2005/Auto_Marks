@@ -28,17 +28,22 @@ const LandingPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-inter overflow-hidden relative selection:bg-indigo-500 selection:text-white">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-inter overflow-hidden relative selection:bg-indigo-100 selection:text-indigo-900 dark:selection:bg-indigo-900/50 dark:selection:text-indigo-100">
             {/* Background Gradients */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-                <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-3xl opacity-50 animate-pulse" style={{ animationDuration: '4s' }} />
-                <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-rose-500/10 dark:bg-rose-500/20 rounded-full blur-3xl opacity-50 animate-pulse" style={{ animationDuration: '6s' }} />
+                <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-indigo-50 dark:bg-indigo-900/200/10 dark:bg-indigo-50 dark:bg-indigo-900/200/20 rounded-full blur-3xl opacity-50 animate-pulse" style={{ animationDuration: '4s' }} />
+                <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-rose-50 dark:bg-rose-500/100/10 dark:bg-rose-50 dark:bg-rose-500/100/20 rounded-full blur-3xl opacity-50 animate-pulse" style={{ animationDuration: '6s' }} />
             </div>
 
             {/* Navbar */}
             <Navbar variant="transparent">
+<<<<<<< HEAD
                 <Button onClick={() => navigate('/dashboard')} rightIcon={ArrowRight} className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
                     Open Dashboard
+=======
+                <Button onClick={() => navigate('/dashboard')} rightIcon={ArrowRight} className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:bg-slate-900 dark:text-slate-900 dark:text-white dark:hover:bg-slate-100 dark:bg-slate-800">
+                    Login
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                 </Button>
             </Navbar>
 
@@ -84,7 +89,7 @@ const LandingPage = () => {
 
                 {/* Hero Image/Graphic */}
                 <div className="lg:w-1/2 mt-16 lg:mt-0 relative perspective-1000 animate-in zoom-in-50 fade-in duration-1000 delay-200">
-                    <div className="relative rounded-3xl bg-slate-900/5 dark:bg-white/5 border border-slate-200 dark:border-slate-800 p-4 shadow-2xl backdrop-blur-sm lg:rotate-y-[-10deg] lg:rotate-x-[5deg] hover:rotate-0 transition-transform duration-500">
+                    <div className="relative rounded-3xl bg-slate-900/5 dark:bg-white dark:bg-slate-900/5 border border-slate-200 dark:border-slate-800 p-4 shadow-2xl backdrop-blur-sm lg:rotate-y-[-10deg] lg:rotate-x-[5deg] hover:rotate-0 transition-transform duration-500">
                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-rose-500/10 rounded-3xl z-0" />
                         <div className="relative z-10 bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800 shadow-inner">
                             {/* Mock UI Header */}
@@ -104,7 +109,7 @@ const LandingPage = () => {
                     {/* Floating badges */}
                     <div className="absolute -top-6 -right-6 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 animate-bounce" style={{ animationDuration: '3s' }}>
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-emerald-100 text-emerald-600 rounded-xl"><CheckCircle2 size={24} /></div>
+                            <div className="p-2 bg-emerald-100 text-emerald-600 dark:text-emerald-400 rounded-xl"><CheckCircle2 size={24} /></div>
                             <div>
                                 <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Live Status</p>
                                 <p className="text-sm font-black text-slate-900 dark:text-white">98.5% Pass</p>
@@ -115,7 +120,7 @@ const LandingPage = () => {
             </main>
 
             {/* Trusted By Strip */}
-            <div className="py-12 border-y border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-sm relative z-10">
+            <div className="py-12 border-y border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-900/50 backdrop-blur-sm relative z-10">
                 <div className="max-w-7xl mx-auto px-6">
                     <p className="text-center text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">Trusted by 50+ Top Institutions</p>
                     <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
@@ -171,7 +176,7 @@ const LandingPage = () => {
                 <div className="absolute inset-0 bg-grid-slate-200/50 dark:bg-grid-slate-800/50 [mask-image:linear-gradient(0deg,white,transparent)] pointer-events-none" />
                 <div className="max-w-7xl mx-auto px-6 relative">
                     <div className="text-center mb-16">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-[10px] font-black uppercase tracking-widest mb-4">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-4">
                             <Cpu size={12} />
                             <span>Workflow</span>
                         </div>
@@ -187,7 +192,7 @@ const LandingPage = () => {
 
                         <div className="grid md:grid-cols-3 gap-12 relative z-10">
                             <div className="text-center group">
-                                <div className="w-20 h-20 mx-auto bg-white dark:bg-slate-900 border-4 border-indigo-100 dark:border-indigo-900/50 rounded-full flex items-center justify-center text-indigo-600 shadow-xl mb-6 group-hover:scale-110 transition-transform duration-300">
+                                <div className="w-20 h-20 mx-auto bg-white dark:bg-slate-900 border-4 border-indigo-100 dark:border-indigo-900/50 rounded-full flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-xl mb-6 group-hover:scale-110 transition-transform duration-300">
                                     <Download size={32} />
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">1. Upload PDF</h3>
@@ -201,7 +206,7 @@ const LandingPage = () => {
                                 <p className="text-slate-500 dark:text-slate-400 text-sm">Our intelligent parser reads every row, identifying USNs, marks, and subjects.</p>
                             </div>
                             <div className="text-center group">
-                                <div className="w-20 h-20 mx-auto bg-white dark:bg-slate-900 border-4 border-emerald-100 dark:border-emerald-900/50 rounded-full flex items-center justify-center text-emerald-600 shadow-xl mb-6 group-hover:scale-110 transition-transform duration-300 delay-200">
+                                <div className="w-20 h-20 mx-auto bg-white dark:bg-slate-900 border-4 border-emerald-100 dark:border-emerald-900/50 rounded-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-xl mb-6 group-hover:scale-110 transition-transform duration-300 delay-200">
                                     <LayoutDashboard size={32} />
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">3. Get Insights</h3>
@@ -256,10 +261,14 @@ const LandingPage = () => {
                         Join 50+ institutions that trust Auto Marks for fast, accurate result processing.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
+<<<<<<< HEAD
                         <Button size="lg" onClick={() => navigate('/dashboard')} className="bg-white text-slate-900 hover:bg-slate-100 border-none shadow-2xl">
+=======
+                        <Button size="lg" variant="secondary" onClick={() => navigate('/dashboard')} className="bg-white dark:bg-slate-800 !text-slate-900 dark:!text-white hover:bg-slate-100 dark:hover:bg-slate-700 border-none shadow-2xl">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                             Start Free Trial
                         </Button>
-                        <Button size="lg" variant="outline" className="border-slate-700 text-white hover:bg-white/10 hover:text-white">
+                        <Button size="lg" variant="secondary" className="bg-white dark:bg-slate-800 !text-slate-900 dark:!text-white hover:bg-slate-100 dark:hover:bg-slate-700 border-none shadow-2xl">
                             Contact Sales
                         </Button>
                     </div>
@@ -305,7 +314,7 @@ const MockAnalyticsDashboard = () => {
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Semester Performance</p>
                     <div className="flex gap-2">
                         <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                            <div className="w-2 h-2 rounded-full bg-indigo-50 dark:bg-indigo-900/200" />
                             <span className="text-[9px] text-slate-400">Pass</span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -327,7 +336,7 @@ const MockAnalyticsDashboard = () => {
                     ].map((d, i) => (
                         <div key={i} className="flex-1 flex flex-col gap-0.5 h-full justify-end">
                             <div
-                                className="w-full bg-indigo-500 rounded-t-sm transition-all duration-1000 ease-out"
+                                className="w-full bg-indigo-50 dark:bg-indigo-900/200 rounded-t-sm transition-all duration-1000 ease-out"
                                 style={{ height: `${d.pass}%`, opacity: 0.85 }}
                             />
                             <div
@@ -357,7 +366,7 @@ const MockAnalyticsDashboard = () => {
                             <p className="text-xs font-bold text-slate-700 dark:text-slate-200">{s.name}</p>
                             <p className="text-[9px] text-slate-400">{s.usn}</p>
                         </div>
-                        <span className="text-xs font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full">{s.sgpa}</span>
+                        <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full">{s.sgpa}</span>
                     </div>
                 ))}
             </div>
@@ -367,10 +376,10 @@ const MockAnalyticsDashboard = () => {
 
 const FeatureCard = ({ icon: Icon, title, desc, color, badge }: any) => {
     const colors: Record<string, string> = {
-        indigo: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400',
+        indigo: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 dark:bg-indigo-900/20 dark:text-indigo-400',
         purple: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400',
-        rose: 'bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400',
-        emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
+        rose: 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 dark:bg-rose-900/20 dark:text-rose-400',
+        emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 dark:bg-emerald-900/20 dark:text-emerald-400',
     };
 
     return (

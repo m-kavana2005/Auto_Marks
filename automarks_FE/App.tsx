@@ -62,7 +62,7 @@ const SidebarLink = ({ to, icon: Icon, label, active, onClick, collapsed }: any)
     title={collapsed ? label : undefined}
     className={`flex items-center ${collapsed ? 'justify-center' : ''} gap-3 ${collapsed ? 'px-3' : 'px-4'} py-3 rounded-xl transition-all duration-200 group ${active
       ? 'bg-indigo-600 text-white'
-      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 hover:text-slate-900 dark:text-white dark:hover:text-slate-100'
+      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-800 hover:text-slate-900 dark:text-white dark:hover:text-slate-100'
       }`}
   >
     <Icon size={20} className={`shrink-0 ${active ? 'text-white' : 'group-hover:scale-110 transition-transform'}`} />
@@ -94,10 +94,10 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
 
   const mapLevel = (level: string) => {
     const l = (level || '').toLowerCase();
-    if (l === 'success') return { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50' };
-    if (l === 'warning') return { icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-50' };
-    if (l === 'error') return { icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50' };
-    return { icon: BarChart3, color: 'text-indigo-500', bg: 'bg-indigo-50' };
+    if (l === 'success') return { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' };
+    if (l === 'warning') return { icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10' };
+    if (l === 'error') return { icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-500/10' };
+    return { icon: BarChart3, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20' };
   };
 
   useEffect(() => {
@@ -117,30 +117,55 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
         if (!cancelled) setLoading(false);
       });
 
-    const wsUrl = getApiBase().replace('http', 'ws') + '/ws/notifications';
-    const ws = new WebSocket(wsUrl);
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg?.type === 'notification' && msg?.data?.id) {
-          setNotifications((prev) => {
-            const next = [msg.data as UiNotification, ...prev.filter((n) => n.id !== msg.data.id)];
-            return next.slice(0, 50);
-          });
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: ReturnType<typeof setTimeout>;
+
+    const connectWs = () => {
+      if (cancelled) return;
+      const wsUrl = getApiBase().replace('http', 'ws') + '/ws/notifications';
+      ws = new WebSocket(wsUrl);
+      
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg?.type === 'notification' && msg?.data?.id) {
+            setNotifications((prev) => {
+              const next = [msg.data as UiNotification, ...prev.filter((n) => n.id !== msg.data.id)];
+              return next.slice(0, 50);
+            });
+          }
+          if (msg?.type === 'notification_cleared' && msg?.id) {
+            setNotifications((prev) => prev.filter((n) => n.id !== Number(msg.id)));
+          }
+        } catch {
+          // ignore bad frames
         }
-        if (msg?.type === 'notification_cleared' && msg?.id) {
-          setNotifications((prev) => prev.filter((n) => n.id !== Number(msg.id)));
+      };
+
+      ws.onclose = () => {
+        if (!cancelled) {
+          reconnectTimeout = setTimeout(connectWs, 3000);
         }
-      } catch {
-        // ignore bad frames
-      }
+      };
+
+      wsRef.current = ws;
     };
-    wsRef.current = ws;
+
+    connectWs();
 
     return () => {
       cancelled = true;
+      clearTimeout(reconnectTimeout);
       try {
-        ws.close();
+        if (ws) {
+          if (ws.readyState === WebSocket.CONNECTING) {
+            ws.onopen = () => ws?.close();
+          } else if (ws.readyState === WebSocket.OPEN) {
+            ws.close();
+          } else {
+            ws.close();
+          }
+        }
       } catch {
         // ignore
       }
@@ -180,7 +205,11 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
     <>
       <div className="fixed inset-0 z-[60]" onClick={onClose} />
       <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] sm:w-80 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[70] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+<<<<<<< HEAD
         <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
+=======
+        <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
           <h4 className="font-bold text-slate-900 dark:text-white">Notifications</h4>
           {notifications.length > 0 && (
             <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[10px] font-black rounded-full uppercase tracking-widest">
@@ -198,7 +227,11 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
               const m = mapLevel(n.level);
               const Icon = m.icon;
               return (
+<<<<<<< HEAD
                 <div key={n.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex gap-4 border-b border-slate-50 dark:border-slate-800 last:border-0 cursor-pointer">
+=======
+                <div key={n.id} className="p-4 hover:bg-slate-50 dark:bg-slate-800 transition-colors flex gap-4 border-b border-slate-50 dark:border-slate-800 last:border-0 cursor-pointer">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   <div className={`shrink-0 w-11 h-11 rounded-2xl ${m.bg} flex items-center justify-center ${m.color}`}>
                     <Icon size={20} />
                   </div>
@@ -215,7 +248,11 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
                       e.stopPropagation();
                       handleDismissOne(n.id);
                     }}
+<<<<<<< HEAD
                     className="shrink-0 w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+=======
+                    className="shrink-0 w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-800 transition-colors"
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                     aria-label="Dismiss notification"
                     title="Dismiss"
                   >
@@ -226,10 +263,14 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
             })
           )}
         </div>
+<<<<<<< HEAD
         <div className="p-3 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-50 dark:border-slate-800">
+=======
+        <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-50 dark:border-slate-800">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
           <button
             onClick={handleClearAll}
-            className="w-full py-2.5 text-center text-[11px] font-black text-slate-500 dark:text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest"
+            className="w-full py-2.5 text-center text-[11px] font-black text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:text-indigo-400 transition-colors uppercase tracking-widest"
           >
             Clear all
           </button>
@@ -394,12 +435,20 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
       <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col max-h-[85vh]">
         <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex items-center gap-3">
+<<<<<<< HEAD
             <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl text-indigo-600"><Settings size={24} /></div>
+=======
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl text-indigo-600 dark:text-indigo-400"><Settings size={24} /></div>
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">Settings</h3>
           </div>
           <button
             onClick={onClose}
+<<<<<<< HEAD
             className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition-all"
+=======
+            className="p-2 text-slate-400 hover:text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:bg-rose-500/10 rounded-xl transition-all"
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
             title="Close"
           >
             <X size={24} />
@@ -411,7 +460,11 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Endpoint URL</label>
               <input
                 type="text"
+<<<<<<< HEAD
                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-900 dark:text-white"
+=======
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
               />
@@ -446,12 +499,20 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               </p>
 
               {subjectsError && (
+<<<<<<< HEAD
                 <div className="mt-3 p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
+=======
+                <div className="mt-3 p-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-100 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   {subjectsError}
                 </div>
               )}
               {subjectsMessage && (
+<<<<<<< HEAD
                 <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+=======
+                <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 rounded-2xl text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   {subjectsMessage}
                 </div>
               )}
@@ -466,7 +527,11 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                         <th className="px-4 py-3 w-24">Credits</th>
                       </tr>
                     </thead>
+<<<<<<< HEAD
                     <tbody className="divide-y divide-slate-50 dark:divide-slate-800 bg-white dark:bg-slate-900">
+=======
+                    <tbody className="divide-y divide-slate-50 bg-white dark:bg-slate-900">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       {subjects.map((s, i) => (
                         <tr key={s.code}>
                           <td className="px-4 py-3 text-xs font-black text-slate-800 dark:text-slate-100">{s.code}</td>
@@ -500,6 +565,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
 
             <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
+<<<<<<< HEAD
                 <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest dark:text-slate-300">Danger Zone</h4>
                 <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg">Irreversible</span>
               </div>
@@ -508,6 +574,16 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                 <label className="text-xs font-black text-orange-700 dark:text-orange-300 uppercase tracking-widest block mb-2">Active Batch Filter</label>
                 <select
                   className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-orange-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-slate-700 dark:text-slate-200"
+=======
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest dark:text-white">Danger Zone</h4>
+                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 px-2 py-1 rounded-lg">Irreversible</span>
+              </div>
+
+              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-500/10 rounded-2xl border border-orange-100">
+                <label className="text-xs font-black text-orange-700 uppercase tracking-widest block mb-2">Active Batch Filter</label>
+                <select
+                  className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-slate-700 dark:text-slate-200 dark:bg-slate-800 dark:border-slate-700"
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   value={purgeBatch}
                   onChange={(e) => setPurgeBatch(e.target.value)}
                   disabled={purgeBusy !== null}
@@ -521,13 +597,21 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               </div>
 
               <div className="mt-4 space-y-4">
+<<<<<<< HEAD
                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+=======
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Purge Candidate (USN)</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="text"
                       placeholder="USN (e.g., 1SV24AI037)"
+<<<<<<< HEAD
                       className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
+=======
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       value={purgeUsn}
                       onChange={(e) => setPurgeUsn(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -535,7 +619,11 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                     <input
                       type="text"
                       placeholder="Type DELETE to confirm"
+<<<<<<< HEAD
                       className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
+=======
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       value={confirmCandidate}
                       onChange={(e) => setConfirmCandidate(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -550,13 +638,21 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                   </div>
                 </div>
 
+<<<<<<< HEAD
                 <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
+=======
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Purge Semester</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="number"
                       placeholder="Semester number (e.g., 1)"
+<<<<<<< HEAD
                       className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
+=======
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       value={purgeSem}
                       onChange={(e) => setPurgeSem(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -564,7 +660,11 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                     <input
                       type="text"
                       placeholder="Type DELETE to confirm"
+<<<<<<< HEAD
                       className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
+=======
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       value={confirmSemester}
                       onChange={(e) => setConfirmSemester(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -579,14 +679,22 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                   </div>
                 </div>
 
+<<<<<<< HEAD
                 <div className="p-4 bg-rose-50 dark:bg-rose-900/20 rounded-2xl border border-rose-100 dark:border-rose-800">
+=======
+                <div className="p-4 bg-rose-50 dark:bg-rose-500/10 rounded-2xl border border-rose-100">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   <p className="text-sm font-bold text-rose-800 dark:text-rose-200">Delete ALL Records</p>
                   <p className="text-[11px] font-medium text-rose-700 dark:text-rose-300 mt-1">This wipes students, subjects, semesters, results, and upload logs.</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="text"
                       placeholder="Type DELETE_ALL to confirm"
+<<<<<<< HEAD
                       className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
+=======
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       value={confirmAll}
                       onChange={(e) => setConfirmAll(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -602,7 +710,11 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                 </div>
 
                 {purgeError && (
+<<<<<<< HEAD
                   <div className="p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
+=======
+                  <div className="p-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-100 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                     {purgeError}
                   </div>
                 )}
@@ -621,7 +733,32 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
   );
 };
 
+<<<<<<< HEAD
 // Removed ProfileDropdown
+=======
+const ProfileDropdown = ({ isOpen, onClose, onOpenSettings }: { isOpen: boolean, onClose: () => void, onOpenSettings: () => void }) => {
+  if (!isOpen) return null;
+  return (
+    <>
+      <div className="fixed inset-0 z-[60]" onClick={onClose} />
+      <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[70] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+        <div className="p-5 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50">
+          <h4 className="font-bold text-slate-900 dark:text-white">Registrar</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400">Administrator</p>
+        </div>
+        <div className="p-2 space-y-1">
+          <button onClick={() => { onClose(); onOpenSettings(); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-800 hover:text-indigo-600 dark:text-indigo-400 transition-all text-sm font-bold">
+            <Settings size={18} />
+            Settings
+          </button>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// ==================== LAYOUT & ROUTING ====================
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
 
 const DashboardLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
@@ -671,7 +808,7 @@ const DashboardLayout = () => {
               </Link>
               <button
                 onClick={() => setSidebarCollapsed(true)}
-                className="hidden md:flex p-1.5 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-all shrink-0"
+                className="hidden md:flex p-1.5 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-300 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-800 rounded-lg transition-all shrink-0"
                 title="Collapse sidebar"
               >
                 <div className="transition-transform duration-300">
@@ -697,7 +834,7 @@ const DashboardLayout = () => {
           {/* Mobile close button */}
           <button
             onClick={() => setSidebarOpen(false)}
-            className="md:hidden p-1.5 text-slate-400 hover:bg-slate-200 rounded-lg ml-auto"
+            className="md:hidden p-1.5 text-slate-400 hover:bg-slate-200 dark:bg-slate-700 rounded-lg ml-auto"
           >
             <X size={20} />
           </button>
@@ -716,15 +853,58 @@ const DashboardLayout = () => {
           ))}
         </nav>
 
+<<<<<<< HEAD
+=======
+        {/* Bottom Actions (Theme, Notifs, Profile) */}
+        <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
+
+          <div className={`flex flex-col ${isSidebarCollapsed ? 'items-center gap-1' : 'gap-1'}`}>
+            <button
+              onClick={toggleTheme}
+              className={`flex items-center p-2 text-slate-500 dark:text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:bg-amber-500/10 dark:hover:bg-slate-800 rounded-xl transition-all ${!isSidebarCollapsed ? 'gap-3 w-full' : 'justify-center w-10 h-10'}`}
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {theme === 'light' ? <Moon size={20} className="shrink-0" /> : <Sun size={20} className="shrink-0" />}
+              {!isSidebarCollapsed && <span className="text-sm font-semibold">Theme</span>}
+            </button>
+          </div>
+
+          <div className="relative mt-1">
+            <button
+              onClick={() => setProfileOpen(!isProfileOpen)}
+              className={`flex items-center gap-3 rounded-xl hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-300 dark:border-slate-600 dark:hover:border-slate-700 w-full ${isSidebarCollapsed ? 'p-1 justify-center' : 'p-2'}`}
+            >
+              <img
+                src="/student-avatar.svg"
+                alt="Avatar"
+                className="w-8 h-8 rounded-lg object-cover bg-indigo-100 shrink-0"
+              />
+              {!isSidebarCollapsed && (
+                <>
+                  <div className="text-left flex-1 overflow-hidden">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">Registrar</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Administrator</p>
+                  </div>
+                  <ChevronRight size={14} className={`text-slate-400 transition-transform ${isProfileOpen ? 'rotate-90' : ''}`} />
+                </>
+              )}
+            </button>
+            <div className={isSidebarCollapsed || window.innerWidth < 768 ? "absolute bottom-0 left-full ml-2" : "absolute bottom-full left-0 mb-2 w-full"}>
+              <ProfileDropdown isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} onOpenSettings={() => setSettingsOpen(true)} />
+            </div>
+          </div>
+
+        </div>
+>>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 dark:bg-slate-950 md:rounded-tl-2xl border-t border-l border-slate-200 dark:border-slate-800 shadow-inner">
         {/* Mobile Header (Only visible on small screens) */}
-        <header className="md:hidden flex-none z-30 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between transition-colors duration-300">
+        <header className="md:hidden flex-none z-30 bg-white dark:bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 py-3 flex items-center justify-between transition-colors duration-300">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors -ml-2"
+            className="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-800 rounded-xl transition-colors -ml-2"
           >
             <Menu size={24} />
           </button>

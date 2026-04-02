@@ -52,64 +52,87 @@ const UploadPage: React.FC = () => {
 
   // WebSocket connection for real-time updates
   useEffect(() => {
-    const wsUrl = getApiBase().replace('http', 'ws') + '/ws/upload-progress';
-    const ws = new WebSocket(wsUrl);
+    let ws: WebSocket;
+    let reconnectTimeout: ReturnType<typeof setTimeout>;
+    let isMounted = true;
 
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-    };
+    const connect = () => {
+      const wsUrl = getApiBase().replace('http', 'ws') + '/ws/upload-progress';
+      ws = new WebSocket(wsUrl);
 
-    ws.onmessage = (event) => {
-      const data: WebSocketMessage = JSON.parse(event.data);
+      ws.onopen = () => {
+        console.log('WebSocket connected');
+      };
 
-      // Update progress only for current batch
-      if (!batchId || data.batch_id === batchId) {
-        setUploadProgress({
-          percentage: data.percentage || 0,
-          current_file: data.current_file || '',
-          current_file_index: data.current_file_index || 0,
-          processed: data.processed || 0,
-          failed: data.failed || 0,
-          total: data.total || 0
-        });
+      ws.onmessage = (event) => {
+        const data: WebSocketMessage = JSON.parse(event.data);
 
-        setStatus({
-          batch_id: data.batch_id,
-          status: data.status,
-          processed: data.processed,
-          failed: data.failed,
-          total_files: data.total,
-          percentage: data.percentage,
-          errors: []
-        });
+        // Update progress only for current batch
+        if (!batchId || data.batch_id === batchId) {
+          setUploadProgress({
+            percentage: data.percentage || 0,
+            current_file: data.current_file || '',
+            current_file_index: data.current_file_index || 0,
+            processed: data.processed || 0,
+            failed: data.failed || 0,
+            total: data.total || 0
+          });
 
-        // Handle failed files for popup
-        if (data.failed_files && data.failed_files.length > 0) {
-          setFailedFiles(data.failed_files);
+          setStatus({
+            batch_id: data.batch_id,
+            status: data.status,
+            processed: data.processed,
+            failed: data.failed,
+            total_files: data.total,
+            percentage: data.percentage,
+            errors: []
+          });
+
+          // Handle failed files for popup
+          if (data.failed_files && data.failed_files.length > 0) {
+            setFailedFiles(data.failed_files);
+            if (data.status === 'completed' || data.status === 'failed') {
+              setShowErrorPopup(true);
+            }
+          }
+
+          // Upload completed
           if (data.status === 'completed' || data.status === 'failed') {
-            setShowErrorPopup(true);
+            setIsUploading(false);
           }
         }
+      };
 
-        // Upload completed
-        if (data.status === 'completed' || data.status === 'failed') {
-          setIsUploading(false);
+      ws.onerror = (error) => {
+        if (!isMounted) return;
+        console.error('WebSocket error:', error);
+      };
+
+      ws.onclose = () => {
+        console.log('WebSocket disconnected');
+        if (isMounted) {
+          // Attempt to reconnect every 3 seconds
+          reconnectTimeout = setTimeout(connect, 3000);
         }
-      }
+      };
+
+      wsRef.current = ws;
     };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-    };
-
-    wsRef.current = ws;
+    connect();
 
     return () => {
-      ws.close();
+      isMounted = false;
+      clearTimeout(reconnectTimeout);
+      if (ws) {
+        if (ws.readyState === WebSocket.CONNECTING) {
+          ws.onopen = () => ws.close();
+        } else if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        } else {
+          ws.close();
+        }
+      }
     };
   }, [batchId]);
 
@@ -188,16 +211,16 @@ const UploadPage: React.FC = () => {
       </div>
 
       <div className="glass-card rounded-[2rem] overflow-hidden">
-        <div className="flex border-b border-slate-100">
+        <div className="flex border-b border-slate-100 dark:border-slate-800">
           <button
             onClick={() => { reset(); setActiveTab('batch'); }}
-            className={`flex-1 py-5 font-bold transition-all ${activeTab === 'batch' ? 'bg-white text-indigo-600 border-b-2 border-indigo-600' : 'bg-slate-50 text-slate-400'}`}
+            className={`flex-1 py-5 font-bold transition-all ${activeTab === 'batch' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-400'}`}
           >
             Batch Upload
           </button>
           <button
             onClick={() => { reset(); setActiveTab('single'); }}
-            className={`flex-1 py-5 font-bold transition-all ${activeTab === 'single' ? 'bg-white text-indigo-600 border-b-2 border-indigo-600' : 'bg-slate-50 text-slate-400'}`}
+            className={`flex-1 py-5 font-bold transition-all ${activeTab === 'single' ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600' : 'bg-slate-50 dark:bg-slate-800 text-slate-400'}`}
           >
             RV File
           </button>
@@ -206,10 +229,10 @@ const UploadPage: React.FC = () => {
         <div className="p-10">
           {!status && !batchId && (
             <div className="space-y-6">
-              <div className="bg-white border border-slate-100 rounded-3xl p-6">
+              <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6">
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Batch</label>
                 <select
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 appearance-none font-bold text-slate-700 dark:text-slate-200 dark:bg-slate-800 dark:border-slate-700"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500 appearance-none font-bold text-slate-700 dark:text-slate-200 dark:bg-slate-800 dark:border-slate-700"
                   value={selectedBatch}
                   onChange={(e) => setSelectedBatch(e.target.value)}
                   disabled={isUploading}
@@ -221,7 +244,7 @@ const UploadPage: React.FC = () => {
                 </select>
               </div>
 
-              <div className="border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center hover:border-indigo-300 transition-colors bg-slate-50 group">
+              <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-3xl p-12 text-center hover:border-indigo-300 transition-colors bg-slate-50 dark:bg-slate-800 group">
                 <input
                   type="file"
                   id="file-upload"
@@ -231,8 +254,8 @@ const UploadPage: React.FC = () => {
                   onChange={handleFileChange}
                 />
                 <label htmlFor="file-upload" className="cursor-pointer">
-                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm group-hover:scale-110 transition-transform">
-                    <UploadCloud className="text-indigo-600" size={40} />
+                  <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                    <UploadCloud className="text-indigo-600 dark:text-indigo-400" size={40} />
                   </div>
                   <p className="text-xl font-bold text-slate-900 dark:text-white mb-2">
                     {selectedFiles.length > 0
@@ -247,7 +270,7 @@ const UploadPage: React.FC = () => {
               {selectedFiles.length > 0 && (
                 <div className="max-h-48 overflow-y-auto space-y-2 p-2">
                   {selectedFiles.map((file, idx) => (
-                    <div key={idx} className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl">
+                    <div key={idx} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl">
                       <FileText size={18} className="text-slate-400" />
                       <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 flex-1 truncate">{file.name}</span>
                       <span className="text-xs text-slate-400">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
@@ -257,7 +280,7 @@ const UploadPage: React.FC = () => {
               )}
 
               {error && (
-                <div className="p-4 bg-rose-50 text-rose-700 dark:text-rose-300 rounded-2xl flex items-center gap-3 border border-rose-100">
+                <div className="p-4 bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 rounded-2xl flex items-center gap-3 border border-rose-100">
                   <AlertTriangle size={20} />
                   <p className="text-sm font-bold">{error}</p>
                 </div>
@@ -282,17 +305,17 @@ const UploadPage: React.FC = () => {
                   </h4>
                   <p className="text-slate-500 dark:text-slate-400 font-medium">Batch ID: {batchId || 'Single Upload'}</p>
                   {uploadProgress.current_file && (
-                    <p className="text-sm text-indigo-600 font-bold mt-1">
+                    <p className="text-sm text-indigo-600 dark:text-indigo-400 font-bold mt-1">
                       Processing: {uploadProgress.current_file} ({uploadProgress.current_file_index}/{uploadProgress.total})
                     </p>
                   )}
                 </div>
                 {status?.status !== 'completed' && status?.status !== 'failed' && (
-                  <Loader2 size={32} className="text-indigo-600 animate-spin" />
+                  <Loader2 size={32} className="text-indigo-600 dark:text-indigo-400 animate-spin" />
                 )}
               </div>
 
-              <div className="bg-slate-100 h-4 rounded-full overflow-hidden">
+              <div className="bg-slate-100 dark:bg-slate-800 h-4 rounded-full overflow-hidden">
                 <div
                   className="bg-indigo-600 h-full transition-all duration-500 ease-out"
                   style={{ width: `${uploadProgress.percentage}%` }}
@@ -300,17 +323,17 @@ const UploadPage: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-3 gap-6">
-                <div className="text-center p-4 bg-slate-50 rounded-2xl">
+                <div className="text-center p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl">
                   <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-1">Total</p>
                   <p className="text-2xl font-black text-slate-900 dark:text-white">{uploadProgress.total || selectedFiles.length}</p>
                 </div>
-                <div className="text-center p-4 bg-emerald-50 rounded-2xl">
+                <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl">
                   <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider mb-1">Success</p>
-                  <p className="text-2xl font-black text-emerald-600">{uploadProgress.processed || 0}</p>
+                  <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{uploadProgress.processed || 0}</p>
                 </div>
-                <div className="text-center p-4 bg-rose-50 rounded-2xl">
+                <div className="text-center p-4 bg-rose-50 dark:bg-rose-500/10 rounded-2xl">
                   <p className="text-rose-400 text-[10px] font-bold uppercase tracking-wider mb-1">Failures</p>
-                  <p className="text-2xl font-black text-rose-600">{uploadProgress.failed || 0}</p>
+                  <p className="text-2xl font-black text-rose-600 dark:text-rose-400">{uploadProgress.failed || 0}</p>
                 </div>
               </div>
 
