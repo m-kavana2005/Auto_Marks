@@ -87,11 +87,21 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+    ],
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+
+# Initialize database on startup
 
 # ==================== WEBSOCKET & LOGGING SETUP ====================
 
@@ -664,9 +674,6 @@ async def get_upload_status(batch_id: str, db: Session = Depends(get_db)):
 
 @app.get("/analytics/matrix", response_model=ResultMatrixResponse)
 def get_result_matrix(
-    semester: Optional[int] = Query(None),
-    batch: Optional[str] = Query(None),
-    branch: Optional[str] = Query(None),
     exam_year: Optional[int] = Query(None),
     exam_month: Optional[str] = Query(None),
     db: Session = Depends(get_db)
@@ -714,13 +721,9 @@ def get_subject_wise_analysis(
 
 @app.get("/analytics/subject-wise/failed-students")
 def get_subject_failed_students(
-    subject_code: str = Query(...),
-    semester: Optional[int] = Query(None),
-    batch: Optional[str] = Query(None),
-    branch: Optional[str] = Query(None),
     exam_year: Optional[int] = Query(None, ge=2000, le=2100),
     exam_month: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db)
 ):
     """
     Returns the list of students who failed in a given subject code,

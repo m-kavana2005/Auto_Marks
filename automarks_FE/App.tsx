@@ -7,6 +7,7 @@ import {
   Route,
   Link,
   useLocation,
+  useNavigate,
   Outlet,
   Navigate
 } from 'react-router-dom';
@@ -29,7 +30,8 @@ import {
   Moon,
   LogOut,
   GraduationCap,
-  LibraryBig
+  LibraryBig,
+  ShieldCheck
 } from 'lucide-react';
 import { endpoints, getApiBase, setApiBaseOverride } from './api/client';
 
@@ -43,8 +45,12 @@ import ExportPage from './features/ExportPage';
 import SGPACalculator from './features/SGPACalculator';
 import NotificationsPage from './features/NotificationsPage';
 import SubjectAnalysis from './features/SubjectAnalysis';
+import SettingsPage from './features/SettingsPage';
 import AutoMarksLogo from './components/ui/AutoMarksLogo';
 import LandingPage from './pages/LandingPage';
+
+import AdminDashboard from './features/admin/AdminDashboard';
+
 import { getBatchOptions } from './utils/batches';
 
 const isBlobEnvironment = window.location.protocol === 'blob:';
@@ -173,11 +179,11 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
   return (
     <>
       <div className="fixed inset-0 z-[60]" onClick={onClose} />
-      <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] sm:w-80 bg-white rounded-3xl shadow-2xl border border-slate-100 z-[70] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-        <div className="p-5 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
+      <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] sm:w-80 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[70] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+        <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
           <h4 className="font-bold text-slate-900 dark:text-white">Notifications</h4>
           {notifications.length > 0 && (
-            <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 dark:text-indigo-300 text-[10px] font-black rounded-full uppercase tracking-widest">
+            <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[10px] font-black rounded-full uppercase tracking-widest">
               {notifications.length} New
             </span>
           )}
@@ -192,7 +198,7 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
               const m = mapLevel(n.level);
               const Icon = m.icon;
               return (
-                <div key={n.id} className="p-4 hover:bg-slate-50 transition-colors flex gap-4 border-b border-slate-50 last:border-0 cursor-pointer">
+                <div key={n.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex gap-4 border-b border-slate-50 dark:border-slate-800 last:border-0 cursor-pointer">
                   <div className={`shrink-0 w-11 h-11 rounded-2xl ${m.bg} flex items-center justify-center ${m.color}`}>
                     <Icon size={20} />
                   </div>
@@ -209,7 +215,7 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
                       e.stopPropagation();
                       handleDismissOne(n.id);
                     }}
-                    className="shrink-0 w-9 h-9 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors"
+                    className="shrink-0 w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                     aria-label="Dismiss notification"
                     title="Dismiss"
                   >
@@ -220,7 +226,7 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
             })
           )}
         </div>
-        <div className="p-3 bg-slate-50/50 border-t border-slate-50">
+        <div className="p-3 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-50 dark:border-slate-800">
           <button
             onClick={handleClearAll}
             className="w-full py-2.5 text-center text-[11px] font-black text-slate-500 dark:text-slate-400 hover:text-indigo-600 transition-colors uppercase tracking-widest"
@@ -385,15 +391,15 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[85vh]">
-        <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 bg-white">
+      <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col max-h-[85vh]">
+        <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600"><Settings size={24} /></div>
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl text-indigo-600"><Settings size={24} /></div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">Settings</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition-all"
             title="Close"
           >
             <X size={24} />
@@ -405,24 +411,24 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Endpoint URL</label>
               <input
                 type="text"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
+                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-900 dark:text-white"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
               />
             </div>
             <div className="flex gap-3 pt-4">
-              <button onClick={onClose} className="flex-1 py-3 bg-slate-100 text-slate-600 dark:text-slate-300 rounded-xl font-bold">Cancel</button>
+              <button onClick={onClose} className="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold">Cancel</button>
               <button onClick={() => { setApiBaseOverride(url); window.location.reload(); }} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-lg">Apply</button>
             </div>
 
-            <div className="pt-6 border-t border-slate-100">
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest dark:text-white">Subject Credits (CBCS)</h4>
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest dark:text-slate-300">Subject Credits (CBCS)</h4>
                 <div className="flex gap-2">
                   <button
                     onClick={loadSubjects}
                     disabled={subjectsLoading}
-                    className="px-3 py-2 bg-slate-100 text-slate-700 dark:text-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                    className="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
                   >
                     {subjectsLoading ? 'Loading…' : 'Load'}
                   </button>
@@ -440,27 +446,27 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               </p>
 
               {subjectsError && (
-                <div className="mt-3 p-3 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
+                <div className="mt-3 p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
                   {subjectsError}
                 </div>
               )}
               {subjectsMessage && (
-                <div className="mt-3 p-3 bg-emerald-50 border border-emerald-100 rounded-2xl text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl text-emerald-700 dark:text-emerald-300 text-xs font-bold">
                   {subjectsMessage}
                 </div>
               )}
 
               {subjects.length > 0 && (
-                <div className="mt-4 max-h-72 overflow-auto rounded-2xl border border-slate-100">
+                <div className="mt-4 max-h-72 overflow-auto rounded-2xl border border-slate-100 dark:border-slate-800">
                   <table className="w-full text-left">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-slate-50 dark:bg-slate-800">
                       <tr className="text-slate-400 text-[10px] font-black uppercase tracking-widest">
                         <th className="px-4 py-3">Code</th>
                         <th className="px-4 py-3">Name</th>
                         <th className="px-4 py-3 w-24">Credits</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-50 bg-white">
+                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800 bg-white dark:bg-slate-900">
                       {subjects.map((s, i) => (
                         <tr key={s.code}>
                           <td className="px-4 py-3 text-xs font-black text-slate-800 dark:text-slate-100">{s.code}</td>
@@ -470,7 +476,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                               type="number"
                               min={0}
                               max={50}
-                              className="w-20 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 dark:text-slate-200 text-xs"
+                              className="w-20 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-bold text-slate-700 dark:text-slate-200 text-xs"
                               value={s.credits ?? ''}
                               onChange={(e) => {
                                 const v = e.target.value;
@@ -492,16 +498,16 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               )}
             </div>
 
-            <div className="pt-6 border-t border-slate-100">
+            <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest dark:text-white">Danger Zone</h4>
-                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 px-2 py-1 rounded-lg">Irreversible</span>
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest dark:text-slate-300">Danger Zone</h4>
+                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg">Irreversible</span>
               </div>
 
-              <div className="mt-4 p-4 bg-orange-50 rounded-2xl border border-orange-100">
-                <label className="text-xs font-black text-orange-700 uppercase tracking-widest block mb-2">Active Batch Filter</label>
+              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-100 dark:border-orange-800">
+                <label className="text-xs font-black text-orange-700 dark:text-orange-300 uppercase tracking-widest block mb-2">Active Batch Filter</label>
                 <select
-                  className="w-full px-4 py-3 bg-white border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-slate-700 dark:text-slate-200 dark:bg-slate-800 dark:border-slate-700"
+                  className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-orange-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-slate-700 dark:text-slate-200"
                   value={purgeBatch}
                   onChange={(e) => setPurgeBatch(e.target.value)}
                   disabled={purgeBusy !== null}
@@ -511,17 +517,17 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                     <option key={b} value={b}>{b}</option>
                   ))}
                 </select>
-                <p className="text-[10px] text-orange-600 mt-2 font-medium italic">Purge actions below will be restricted to this batch if selected.</p>
+                <p className="text-[10px] text-orange-600 dark:text-orange-400 mt-2 font-medium italic">Purge actions below will be restricted to this batch if selected.</p>
               </div>
 
               <div className="mt-4 space-y-4">
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Purge Candidate (USN)</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="text"
                       placeholder="USN (e.g., 1SV24AI037)"
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
                       value={purgeUsn}
                       onChange={(e) => setPurgeUsn(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -529,7 +535,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                     <input
                       type="text"
                       placeholder="Type DELETE to confirm"
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
                       value={confirmCandidate}
                       onChange={(e) => setConfirmCandidate(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -544,13 +550,13 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                   </div>
                 </div>
 
-                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Purge Semester</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="number"
                       placeholder="Semester number (e.g., 1)"
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
                       value={purgeSem}
                       onChange={(e) => setPurgeSem(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -558,7 +564,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                     <input
                       type="text"
                       placeholder="Type DELETE to confirm"
-                      className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
                       value={confirmSemester}
                       onChange={(e) => setConfirmSemester(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -573,14 +579,14 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                   </div>
                 </div>
 
-                <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100">
+                <div className="p-4 bg-rose-50 dark:bg-rose-900/20 rounded-2xl border border-rose-100 dark:border-rose-800">
                   <p className="text-sm font-bold text-rose-800 dark:text-rose-200">Delete ALL Records</p>
                   <p className="text-[11px] font-medium text-rose-700 dark:text-rose-300 mt-1">This wipes students, subjects, semesters, results, and upload logs.</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="text"
                       placeholder="Type DELETE_ALL to confirm"
-                      className="w-full px-4 py-3 bg-white border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
+                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
                       value={confirmAll}
                       onChange={(e) => setConfirmAll(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -596,7 +602,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                 </div>
 
                 {purgeError && (
-                  <div className="p-3 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
+                  <div className="p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
                     {purgeError}
                   </div>
                 )}
@@ -615,53 +621,13 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
   );
 };
 
-const ProfileDropdown = ({ isOpen, onClose, onOpenSettings }: { isOpen: boolean, onClose: () => void, onOpenSettings: () => void }) => {
-  if (!isOpen) return null;
-  return (
-    <>
-      <div className="fixed inset-0 z-[60]" onClick={onClose} />
-      <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[70] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-        <div className="p-5 border-b border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50">
-          <h4 className="font-bold text-slate-900 dark:text-white">Registrar</h4>
-          <p className="text-xs text-slate-500 dark:text-slate-400">Administrator</p>
-        </div>
-        <div className="p-2 space-y-1">
-          <button onClick={() => { onClose(); onOpenSettings(); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 transition-all text-sm font-bold">
-            <Settings size={18} />
-            Settings
-          </button>
-        </div>
-      </div>
-    </>
-  );
-};
-
-// ==================== LAYOUT & ROUTING ====================
+// Removed ProfileDropdown
 
 const DashboardLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [isSettingsOpen, setSettingsOpen] = useState(false);
-  const [isProfileOpen, setProfileOpen] = useState(false);
-  const [theme, setTheme] = useState(() => {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      return localStorage.getItem('theme') || 'light';
-    }
-    return 'light';
-  });
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
-  };
-
   const location = useLocation();
+  
 
   const navItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -672,12 +638,14 @@ const DashboardLayout = () => {
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/subject-analysis', icon: LibraryBig, label: 'Subject Analysis' },
     { to: '/export', icon: Download, label: 'Exports' },
-    { to: '/notifications', icon: Bell, label: 'Notifications' },
+    { to: '/settings', icon: Settings, label: 'Settings' },
   ];
+
+  // All users can access admin panel for now
+  navItems.push({ to: '/admin', icon: ShieldCheck, label: 'Admin Panel' });
 
   return (
     <div className="flex h-screen overflow-hidden bg-white dark:bg-slate-950 relative transition-colors duration-300">
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {/* Mobile Sidebar Backdrop */}
       {isSidebarOpen && (
@@ -748,46 +716,6 @@ const DashboardLayout = () => {
           ))}
         </nav>
 
-        {/* Bottom Actions (Theme, Notifs, Profile) */}
-        <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
-
-          <div className={`flex flex-col ${isSidebarCollapsed ? 'items-center gap-1' : 'gap-1'}`}>
-            <button
-              onClick={toggleTheme}
-              className={`flex items-center p-2 text-slate-500 dark:text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-slate-800 rounded-xl transition-all ${!isSidebarCollapsed ? 'gap-3 w-full' : 'justify-center w-10 h-10'}`}
-              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
-            >
-              {theme === 'light' ? <Moon size={20} className="shrink-0" /> : <Sun size={20} className="shrink-0" />}
-              {!isSidebarCollapsed && <span className="text-sm font-semibold">Theme</span>}
-            </button>
-          </div>
-
-          <div className="relative mt-1">
-            <button
-              onClick={() => setProfileOpen(!isProfileOpen)}
-              className={`flex items-center gap-3 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-800 transition-all border border-transparent hover:border-slate-300 dark:hover:border-slate-700 w-full ${isSidebarCollapsed ? 'p-1 justify-center' : 'p-2'}`}
-            >
-              <img
-                src="/student-avatar.svg"
-                alt="Avatar"
-                className="w-8 h-8 rounded-lg object-cover bg-indigo-100 shrink-0"
-              />
-              {!isSidebarCollapsed && (
-                <>
-                  <div className="text-left flex-1 overflow-hidden">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">Registrar</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Administrator</p>
-                  </div>
-                  <ChevronRight size={14} className={`text-slate-400 transition-transform ${isProfileOpen ? 'rotate-90' : ''}`} />
-                </>
-              )}
-            </button>
-            <div className={isSidebarCollapsed || window.innerWidth < 768 ? "absolute bottom-0 left-full ml-2" : "absolute bottom-full left-0 mb-2 w-full"}>
-              <ProfileDropdown isOpen={isProfileOpen} onClose={() => setProfileOpen(false)} onOpenSettings={() => setSettingsOpen(true)} />
-            </div>
-          </div>
-
-        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -823,25 +751,28 @@ export default function App() {
   const RouterComponent = isBlobEnvironment ? MemoryRouter : BrowserRouter;
   return (
     <RouterComponent>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Routes>
+          {/* Public Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* Dashboard routes */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/upload" element={<UploadPage />} />
+            <Route path="/results" element={<ResultsExplorer />} />
+            <Route path="/profile" element={<StudentProfile />} />
+            <Route path="/sgpa" element={<SGPACalculator />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/subject-analysis" element={<SubjectAnalysis />} />
+            <Route path="/export" element={<ExportPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+          </Route>
 
-        {/* Dashboard Layout Wraps these routes */}
-        <Route element={<DashboardLayout />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/upload" element={<UploadPage />} />
-          <Route path="/results" element={<ResultsExplorer />} />
-          <Route path="/profile" element={<StudentProfile />} />
-          <Route path="/sgpa" element={<SGPACalculator />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/subject-analysis" element={<SubjectAnalysis />} />
-          <Route path="/export" element={<ExportPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-        </Route>
-
-        {/* Catch all - redirect to Landing or Dashboard */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
     </RouterComponent>
   );
 }

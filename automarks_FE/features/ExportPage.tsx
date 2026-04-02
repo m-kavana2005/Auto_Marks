@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect } from 'react';
 import {
   FileSpreadsheet,
@@ -67,7 +67,7 @@ const ExportPage: React.FC = () => {
         <div>
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Batch</label>
           <select
-            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:bg-slate-800 dark:border-slate-700"
+            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
             value={batch}
             onChange={(e) => setBatch(e.target.value)}
             disabled={isExporting}
@@ -82,7 +82,7 @@ const ExportPage: React.FC = () => {
         <div>
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Branch</label>
           <select
-            className={`w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:bg-slate-800 dark:border-slate-700 dark:text-white ${!batch ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${!batch ? 'opacity-50 cursor-not-allowed' : ''}`}
             value={branch}
             onChange={(e) => setBranch(e.target.value)}
             disabled={isExporting || !batch}
@@ -110,10 +110,10 @@ const ExportPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-6 bg-slate-50/50 rounded-2xl space-y-4 mb-8 border border-slate-100/50">
+          <div className="p-6 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl space-y-4 mb-8 border border-slate-100 dark:border-slate-700">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Select Semester</label>
             <select
-              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 transition-all dark:bg-slate-800 dark:border-slate-700"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
               value={semester}
               onChange={(e) => setSemester(e.target.value === '' ? '' : parseInt(e.target.value))}
             >
@@ -143,10 +143,10 @@ const ExportPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-6 bg-slate-50/50 rounded-2xl space-y-4 mb-8 border border-slate-100/50">
+          <div className="p-6 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl space-y-4 mb-8 border border-slate-100 dark:border-slate-700">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Select Semester</label>
             <select
-              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-slate-500 transition-all dark:bg-slate-800 dark:border-slate-700"
+              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-slate-500 transition-all"
               value={semester}
               onChange={(e) => setSemester(e.target.value === '' ? '' : parseInt(e.target.value))}
             >

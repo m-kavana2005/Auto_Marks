@@ -37,8 +37,8 @@ const LandingPage = () => {
 
             {/* Navbar */}
             <Navbar variant="transparent">
-                <Button onClick={() => navigate('/dashboard')} rightIcon={ArrowRight} className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:text-white dark:hover:bg-slate-100">
-                    Login
+                <Button onClick={() => navigate('/dashboard')} rightIcon={ArrowRight} className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
+                    Open Dashboard
                 </Button>
             </Navbar>
 
@@ -256,7 +256,7 @@ const LandingPage = () => {
                         Join 50+ institutions that trust Auto Marks for fast, accurate result processing.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button size="lg" onClick={() => navigate('/dashboard')} className="bg-white text-slate-900 dark:text-white hover:bg-slate-100 border-none shadow-2xl">
+                        <Button size="lg" onClick={() => navigate('/dashboard')} className="bg-white text-slate-900 hover:bg-slate-100 border-none shadow-2xl">
                             Start Free Trial
                         </Button>
                         <Button size="lg" variant="outline" className="border-slate-700 text-white hover:bg-white/10 hover:text-white">

@@ -34,11 +34,12 @@ export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}
 
   let url = `${API_BASE}${endpoint}`;
   if (params) {
-    const query = Object.entries(params)
-      .filter(([_, v]) => v !== undefined)
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
-      .join('&');
-    if (query) url += `?${query}`;
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) searchParams.append(key, value.toString());
+    });
+    const queryString = searchParams.toString();
+    if (queryString) url += `?${queryString}`;
   }
 
   try {
@@ -54,24 +55,35 @@ export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}
     const contentType = response.headers.get('content-type') || '';
     const looksJson = contentType.includes('application/json');
 
-    const readBodyText = async () => response.clone().text().catch(() => '');
+    const readBodyText = async () => {
+      try {
+        return await response.clone().text();
+      } catch {
+        return '';
+      }
+    };
 
     if (!response.ok) {
       const bodyText = await readBodyText();
-      if (looksJson) {
+      let errorDetail = '';
+
+      // Try parsing even if header is missing, if it looks like JSON
+      if (looksJson || bodyText.trim().startsWith('{')) {
         try {
-          const data = JSON.parse(bodyText || '{}');
-          if (data?.detail) {
-            throw new Error(data.detail);
-          }
+          const data = JSON.parse(bodyText);
+          errorDetail = data.detail || '';
         } catch {
-          // Fall through to generic handler below
+          // ignore
         }
+      }
+
+      if (errorDetail) {
+        throw new Error(errorDetail);
       }
 
       const snippet = bodyText ? bodyText.slice(0, 300) : '[empty body]';
       throw new Error(
-        `API error ${response.status} (${response.statusText}). Body looks non-JSON (maybe an HTML page). Snippet: ${snippet}`
+        `API error ${response.status} (${response.statusText}). Error: ${snippet}`
       );
     }
 

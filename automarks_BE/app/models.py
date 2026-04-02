@@ -140,3 +140,6 @@ class Notification(Base):
     level = Column(String(20), nullable=False, index=True, default="info")
     cleared = Column(Boolean, nullable=False, default=False, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+
+

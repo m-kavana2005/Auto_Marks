@@ -1,9 +1,96 @@
 :root {
     --font-inter: 'Inter', sans-serif;
+
+    /* Light theme tokens */
+    --color-bg:        #f8fafc;
+    --color-surface:   #ffffff;
+    --color-border:    #e2e8f0;
+    --color-text:      #0f172a;
+    --color-muted:     #64748b;
+    --color-input-bg:  #f8fafc;
+}
+
+.dark {
+    --color-bg:        #020617;
+    --color-surface:   #0f172a;
+    --color-border:    #1e293b;
+    --color-text:      #f1f5f9;
+    --color-muted:     #94a3b8;
+    --color-input-bg:  #0f172a;
 }
 
 body {
     font-family: var(--font-inter);
+    background-color: var(--color-bg);
+    color: var(--color-text);
+}
+
+/* ── Global dark-mode overrides for native form elements ─── */
+.dark input,
+.dark textarea,
+.dark select {
+    background-color: var(--color-input-bg);
+    border-color: var(--color-border);
+    color: var(--color-text);
+    color-scheme: dark;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #475569;
+}
+
+/* Modals & dropdowns that use plain bg-white */
+.dark [data-modal],
+.dark .notification-dropdown,
+.dark .settings-modal {
+    background-color: var(--color-surface);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+/* Ensure table cells inside dark glass-card inherit correctly */
+.dark .glass-card table td,
+.dark .glass-card table th {
+    color: var(--color-muted);
+    border-color: var(--color-border);
+}
+
+/* Badge/pill backgrounds that use pure bg-slate-50 */
+.dark .bg-slate-50 {
+    background-color: #1e293b !important;
+}
+.dark .bg-slate-100 {
+    background-color: #1e293b !important;
+}
+/* Default text colours in dark mode for elements without explicit dark: variants */
+.dark p,
+.dark span,
+.dark li,
+.dark td,
+.dark th,
+.dark label {
+    color: inherit;
+}
+.dark .text-slate-700 { color: #cbd5e1; }
+.dark .text-slate-800 { color: #e2e8f0; }
+.dark .text-slate-900 { color: #f1f5f9; }
+/* Borders that didn't get dark variants */
+.dark .border-slate-100 {
+    border-color: #1e293b !important;
+}
+.dark .border-slate-200 {
+    border-color: #334155 !important;
+}
+
+/* bg-white fallback for containers inside dark mode */
+.dark .bg-white {
+    background-color: #0f172a !important;
+}
+
+/* Inline Tailwind bg-slate-50/50 often used as subtle section background */
+.dark .bg-slate-50\/50 {
+    background-color: rgba(30, 41, 59, 0.5) !important;
 }
 
 /* Glassmorphism Utilities */
