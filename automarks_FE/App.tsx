@@ -205,11 +205,7 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
     <>
       <div className="fixed inset-0 z-[60]" onClick={onClose} />
       <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] sm:w-80 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[70] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-<<<<<<< HEAD
-        <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50">
-=======
         <div className="p-5 border-b border-slate-50 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
           <h4 className="font-bold text-slate-900 dark:text-white">Notifications</h4>
           {notifications.length > 0 && (
             <span className="px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-[10px] font-black rounded-full uppercase tracking-widest">
@@ -227,11 +223,7 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
               const m = mapLevel(n.level);
               const Icon = m.icon;
               return (
-<<<<<<< HEAD
-                <div key={n.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors flex gap-4 border-b border-slate-50 dark:border-slate-800 last:border-0 cursor-pointer">
-=======
                 <div key={n.id} className="p-4 hover:bg-slate-50 dark:bg-slate-800 transition-colors flex gap-4 border-b border-slate-50 dark:border-slate-800 last:border-0 cursor-pointer">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   <div className={`shrink-0 w-11 h-11 rounded-2xl ${m.bg} flex items-center justify-center ${m.color}`}>
                     <Icon size={20} />
                   </div>
@@ -248,11 +240,7 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
                       e.stopPropagation();
                       handleDismissOne(n.id);
                     }}
-<<<<<<< HEAD
-                    className="shrink-0 w-9 h-9 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-=======
                     className="shrink-0 w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-800 transition-colors"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                     aria-label="Dismiss notification"
                     title="Dismiss"
                   >
@@ -263,11 +251,7 @@ const NotificationDropdown = ({ isOpen, onClose }: { isOpen: boolean, onClose: (
             })
           )}
         </div>
-<<<<<<< HEAD
-        <div className="p-3 bg-slate-50/50 dark:bg-slate-800/50 border-t border-slate-50 dark:border-slate-800">
-=======
         <div className="p-3 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-50 dark:border-slate-800">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
           <button
             onClick={handleClearAll}
             className="w-full py-2.5 text-center text-[11px] font-black text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:text-indigo-400 transition-colors uppercase tracking-widest"
@@ -435,20 +419,12 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
       <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] w-full max-w-md shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden flex flex-col max-h-[85vh]">
         <div className="flex items-center justify-between px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex items-center gap-3">
-<<<<<<< HEAD
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl text-indigo-600"><Settings size={24} /></div>
-=======
             <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl text-indigo-600 dark:text-indigo-400"><Settings size={24} /></div>
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">Settings</h3>
           </div>
           <button
             onClick={onClose}
-<<<<<<< HEAD
-            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 rounded-xl transition-all"
-=======
             className="p-2 text-slate-400 hover:text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:bg-rose-500/10 rounded-xl transition-all"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
             title="Close"
           >
             <X size={24} />
@@ -460,11 +436,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Endpoint URL</label>
               <input
                 type="text"
-<<<<<<< HEAD
-                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-900 dark:text-white"
-=======
                 className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-medium"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
               />
@@ -499,20 +471,12 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               </p>
 
               {subjectsError && (
-<<<<<<< HEAD
-                <div className="mt-3 p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
-=======
                 <div className="mt-3 p-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-100 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   {subjectsError}
                 </div>
               )}
               {subjectsMessage && (
-<<<<<<< HEAD
-                <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-=======
                 <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 rounded-2xl text-emerald-700 dark:text-emerald-300 text-xs font-bold">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   {subjectsMessage}
                 </div>
               )}
@@ -527,11 +491,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                         <th className="px-4 py-3 w-24">Credits</th>
                       </tr>
                     </thead>
-<<<<<<< HEAD
-                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800 bg-white dark:bg-slate-900">
-=======
                     <tbody className="divide-y divide-slate-50 bg-white dark:bg-slate-900">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       {subjects.map((s, i) => (
                         <tr key={s.code}>
                           <td className="px-4 py-3 text-xs font-black text-slate-800 dark:text-slate-100">{s.code}</td>
@@ -565,16 +525,6 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
 
             <div className="pt-6 border-t border-slate-100 dark:border-slate-800">
               <div className="flex items-center justify-between">
-<<<<<<< HEAD
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest dark:text-slate-300">Danger Zone</h4>
-                <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 dark:bg-rose-900/30 px-2 py-1 rounded-lg">Irreversible</span>
-              </div>
-
-              <div className="mt-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-2xl border border-orange-100 dark:border-orange-800">
-                <label className="text-xs font-black text-orange-700 dark:text-orange-300 uppercase tracking-widest block mb-2">Active Batch Filter</label>
-                <select
-                  className="w-full px-4 py-3 bg-white dark:bg-slate-800 border border-orange-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-slate-700 dark:text-slate-200"
-=======
                 <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest dark:text-white">Danger Zone</h4>
                 <span className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 px-2 py-1 rounded-lg">Irreversible</span>
               </div>
@@ -583,7 +533,6 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                 <label className="text-xs font-black text-orange-700 uppercase tracking-widest block mb-2">Active Batch Filter</label>
                 <select
                   className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-orange-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none font-bold text-slate-700 dark:text-slate-200 dark:bg-slate-800 dark:border-slate-700"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   value={purgeBatch}
                   onChange={(e) => setPurgeBatch(e.target.value)}
                   disabled={purgeBusy !== null}
@@ -597,21 +546,13 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               </div>
 
               <div className="mt-4 space-y-4">
-<<<<<<< HEAD
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
-=======
                 <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Purge Candidate (USN)</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="text"
                       placeholder="USN (e.g., 1SV24AI037)"
-<<<<<<< HEAD
-                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
-=======
                       className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       value={purgeUsn}
                       onChange={(e) => setPurgeUsn(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -619,11 +560,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                     <input
                       type="text"
                       placeholder="Type DELETE to confirm"
-<<<<<<< HEAD
-                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
-=======
                       className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       value={confirmCandidate}
                       onChange={(e) => setConfirmCandidate(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -638,21 +575,13 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                   </div>
                 </div>
 
-<<<<<<< HEAD
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
-=======
                 <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-800">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Purge Semester</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="number"
                       placeholder="Semester number (e.g., 1)"
-<<<<<<< HEAD
-                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
-=======
                       className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       value={purgeSem}
                       onChange={(e) => setPurgeSem(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -660,11 +589,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                     <input
                       type="text"
                       placeholder="Type DELETE to confirm"
-<<<<<<< HEAD
-                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
-=======
                       className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       value={confirmSemester}
                       onChange={(e) => setConfirmSemester(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -679,22 +604,14 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                   </div>
                 </div>
 
-<<<<<<< HEAD
-                <div className="p-4 bg-rose-50 dark:bg-rose-900/20 rounded-2xl border border-rose-100 dark:border-rose-800">
-=======
                 <div className="p-4 bg-rose-50 dark:bg-rose-500/10 rounded-2xl border border-rose-100">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                   <p className="text-sm font-bold text-rose-800 dark:text-rose-200">Delete ALL Records</p>
                   <p className="text-[11px] font-medium text-rose-700 dark:text-rose-300 mt-1">This wipes students, subjects, semesters, results, and upload logs.</p>
                   <div className="mt-3 grid grid-cols-1 gap-3">
                     <input
                       type="text"
                       placeholder="Type DELETE_ALL to confirm"
-<<<<<<< HEAD
-                      className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-rose-200 dark:border-rose-800 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium text-slate-900 dark:text-white"
-=======
                       className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-rose-200 rounded-xl focus:ring-2 focus:ring-rose-500 outline-none font-medium"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                       value={confirmAll}
                       onChange={(e) => setConfirmAll(e.target.value)}
                       disabled={purgeBusy !== null}
@@ -710,11 +627,7 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                 </div>
 
                 {purgeError && (
-<<<<<<< HEAD
-                  <div className="p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
-=======
                   <div className="p-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-100 rounded-2xl text-rose-700 dark:text-rose-300 text-xs font-bold">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                     {purgeError}
                   </div>
                 )}
@@ -733,9 +646,6 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
   );
 };
 
-<<<<<<< HEAD
-// Removed ProfileDropdown
-=======
 const ProfileDropdown = ({ isOpen, onClose, onOpenSettings }: { isOpen: boolean, onClose: () => void, onOpenSettings: () => void }) => {
   if (!isOpen) return null;
   return (
@@ -758,12 +668,28 @@ const ProfileDropdown = ({ isOpen, onClose, onOpenSettings }: { isOpen: boolean,
 };
 
 // ==================== LAYOUT & ROUTING ====================
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
 
 const DashboardLayout = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isProfileOpen, setProfileOpen] = useState(false);
+  const [isSettingsOpen, setSettingsOpen] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+  
   const location = useLocation();
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') root.classList.add('dark');
+    else if (theme === 'light') root.classList.remove('dark');
+    else {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.classList.toggle('dark', systemTheme === 'dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
   
 
   const navItems = [
@@ -853,8 +779,6 @@ const DashboardLayout = () => {
           ))}
         </nav>
 
-<<<<<<< HEAD
-=======
         {/* Bottom Actions (Theme, Notifs, Profile) */}
         <div className="p-3 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-2">
 
@@ -895,7 +819,6 @@ const DashboardLayout = () => {
           </div>
 
         </div>
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
       </aside>
 
       {/* Main Content Area */}

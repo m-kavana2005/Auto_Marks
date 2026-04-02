@@ -67,11 +67,7 @@ const ExportPage: React.FC = () => {
         <div>
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Batch</label>
           <select
-<<<<<<< HEAD
-            className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-=======
             className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:bg-slate-800 dark:border-slate-700"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
             value={batch}
             onChange={(e) => setBatch(e.target.value)}
             disabled={isExporting}
@@ -86,11 +82,7 @@ const ExportPage: React.FC = () => {
         <div>
           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3">Branch</label>
           <select
-<<<<<<< HEAD
-            className={`w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${!batch ? 'opacity-50 cursor-not-allowed' : ''}`}
-=======
             className={`w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 transition-all dark:bg-slate-800 dark:border-slate-700 dark:text-white ${!batch ? 'opacity-50 cursor-not-allowed' : ''}`}
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
             value={branch}
             onChange={(e) => setBranch(e.target.value)}
             disabled={isExporting || !batch}
@@ -118,17 +110,10 @@ const ExportPage: React.FC = () => {
             </p>
           </div>
 
-<<<<<<< HEAD
-          <div className="p-6 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl space-y-4 mb-8 border border-slate-100 dark:border-slate-700">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Select Semester</label>
-            <select
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-=======
           <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl space-y-4 mb-8 border border-slate-100 dark:border-slate-800/50">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Select Semester</label>
             <select
               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 transition-all dark:bg-slate-800 dark:border-slate-700"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
               value={semester}
               onChange={(e) => setSemester(e.target.value === '' ? '' : parseInt(e.target.value))}
             >
@@ -158,17 +143,10 @@ const ExportPage: React.FC = () => {
             </p>
           </div>
 
-<<<<<<< HEAD
-          <div className="p-6 bg-slate-50/50 dark:bg-slate-800/30 rounded-2xl space-y-4 mb-8 border border-slate-100 dark:border-slate-700">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Select Semester</label>
-            <select
-              className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-slate-500 transition-all"
-=======
           <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl space-y-4 mb-8 border border-slate-100 dark:border-slate-800/50">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Select Semester</label>
             <select
               className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3.5 font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-slate-500 transition-all dark:bg-slate-800 dark:border-slate-700"
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
               value={semester}
               onChange={(e) => setSemester(e.target.value === '' ? '' : parseInt(e.target.value))}
             >

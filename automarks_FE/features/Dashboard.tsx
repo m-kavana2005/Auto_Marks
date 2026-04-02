@@ -144,7 +144,7 @@ const OverviewTab: React.FC<{ stats: any; isLoading: boolean; semesterOverview: 
               <h3 className="text-xl font-bold text-slate-900 dark:text-white">Semester Performance</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 relative z-10">
-              {items.sort((a, b) => a.semester - b.semester).map((s) => (
+              {(items as SemesterOverviewItem[]).sort((a, b) => a.semester - b.semester).map((s) => (
                 <div key={s.semester} className="p-5 rounded-[1.75rem] bg-white/60 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-700 hover:border-indigo-200 transition-colors shadow-sm">
                   <div className="flex justify-between items-start mb-2">
                     <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">Sem {s.semester}</p>
@@ -274,7 +274,6 @@ const SettingsTab: React.FC = () => {
             <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Choose how Auto Marks looks.</p>
           </div>
         </div>
-<<<<<<< HEAD
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {themeOptions.map(({ value, label, icon: Icon, desc }) => (
             <button
@@ -303,21 +302,6 @@ const SettingsTab: React.FC = () => {
               )}
             </button>
           ))}
-=======
-        <div className="flex flex-wrap gap-3">
-          <Link
-            to="/profile?mode=manual"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-100 px-6 py-4 sm:py-3.5 rounded-2xl font-bold hover:bg-indigo-50 dark:bg-indigo-900/20 transition-all active:scale-95"
-          >
-            <Edit2 size={20} /> <span className="text-sm">Manual Entry</span>
-          </Link>
-          <Link
-            to="/upload"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white px-8 py-4 sm:py-3.5 rounded-2xl font-black shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95"
-          >
-            <UploadCloud size={20} /> <span className="text-sm">Batch Import</span>
-          </Link>
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
         </div>
       </div>
 
@@ -328,7 +312,6 @@ const SettingsTab: React.FC = () => {
             <div className="w-10 h-10 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
               <Bell size={20} />
             </div>
-<<<<<<< HEAD
             <div>
               <p className="font-black text-slate-900 dark:text-white text-base leading-tight">Notifications</p>
               <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
@@ -343,79 +326,6 @@ const SettingsTab: React.FC = () => {
             >
               <Trash2 size={14} /> Clear All
             </button>
-=======
-          ))
-        ) : (
-          <>
-            <StatCard title="Overall Pass Rate" value={`${stats.passRate}%`} icon={CheckCircle2} color="bg-emerald-600" />
-            <StatCard title="Average CGPA" value={stats.avgCgpa.toFixed(2)} icon={Award} color="bg-indigo-600" />
-            <StatCard title="Total Batches" value={totalBatches.toLocaleString()} icon={BarChart2} color="bg-slate-900" />
-            <StatCard title="Total Branches" value={totalBranches.toLocaleString()} icon={Users} color="bg-amber-600" />
-          </>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-        <div className="lg:col-span-2 space-y-6">
-          {/* Semester Overview Grouped by Batch */}
-          {isLoading ? (
-            <div className="glass-card rounded-[2.5rem] p-6 sm:p-10 space-y-8 animate-pulse">
-              <div className="h-8 w-40 bg-slate-100 dark:bg-slate-800 rounded-lg mb-6"></div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3].map(i => <div key={i} className="h-40 bg-slate-50 dark:bg-slate-800 rounded-2xl"></div>)}
-              </div>
-            </div>
-          ) : semesterOverview.length === 0 ? (
-            <div className="glass-card rounded-[2.5rem] p-10 flex flex-col items-center justify-center text-center">
-              <div className="p-4 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-full mb-4">
-                <Zap size={32} />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Result Data</h3>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Upload results to see analytics.</p>
-            </div>
-          ) : (
-            // Group by batch and render
-            Object.entries(semesterOverview.reduce((acc, curr) => {
-              if (!acc[curr.batch]) acc[curr.batch] = [];
-              acc[curr.batch].push(curr);
-              return acc;
-            }, {} as Record<string, SemesterOverviewItem[]>)).sort((a, b) => b[0].localeCompare(a[0])).map(([batch, items]: [string, SemesterOverviewItem[]]) => (
-              <div key={batch} className="glass-card rounded-[2.5rem] p-6 sm:p-10 mb-8 border border-white/50 relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-6 opacity-5">
-                  <Users size={120} />
-                </div>
-                <div className="flex items-center gap-3 mb-8 relative z-10">
-                  <div className="p-2.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl font-black text-xs uppercase tracking-widest shadow-sm border border-indigo-100/50">
-                    Batch {batch}
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">Semester Performance</h3>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 relative z-10">
-                  {items.sort((a, b) => a.semester - b.semester).map((s) => (
-                    <div key={s.semester} className="p-5 rounded-[1.75rem] bg-white dark:bg-slate-900/60 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 hover:border-indigo-200 transition-colors shadow-sm group">
-                      <div className="flex justify-between items-start mb-2">
-                        <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">Sem {s.semester}</p>
-                        <p className={`font-black text-lg tracking-tight ${s.pass_rate >= 80 ? 'text-emerald-600 dark:text-emerald-400' : s.pass_rate >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                          {Math.round(s.pass_rate)}% <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider ml-1">Pass</span>
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 mt-4">
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 border border-slate-100 dark:border-slate-800/50">
-                          <p className="text-slate-400 font-black text-[9px] uppercase tracking-widest">Avg Marks</p>
-                          <p className="text-slate-700 dark:text-white font-black text-sm mt-0.5">{s.avg_total_marks.toFixed(1)}</p>
-                        </div>
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 border border-slate-100 dark:border-slate-800/50">
-                          <p className="text-slate-400 font-black text-[9px] uppercase tracking-widest">Students</p>
-                          <p className="text-slate-700 dark:text-white font-black text-sm mt-0.5">{s.total_students.toLocaleString()}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
           )}
         </div>
 
@@ -423,7 +333,6 @@ const SettingsTab: React.FC = () => {
           <div className="flex items-center justify-center py-10">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
           </div>
-<<<<<<< HEAD
         ) : notifications.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <div className="w-14 h-14 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-3">
@@ -462,30 +371,6 @@ const SettingsTab: React.FC = () => {
                 </div>
               );
             })}
-=======
-          <div className="relative z-10">
-            <h3 className="text-2xl font-black mb-2 tracking-tight dark:text-white">Data Insights</h3>
-            <p className="text-indigo-100 text-sm font-medium leading-relaxed mb-10 opacity-80">
-              Explore detailed analytics and performance trends across all semesters.
-            </p>
-            <Link to="/analytics" className="inline-flex items-center gap-2 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 px-6 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">
-              View Analytics
-            </Link>
-          </div>
-        </div>
-
-        <div className="glass-card rounded-[2.5rem] p-8">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 dark:text-white">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <Link to="/profile" className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:bg-indigo-900/20 hover:text-indigo-600 dark:text-indigo-400 transition-all group">
-              <UserCircle size={24} />
-              <span className="text-[10px] font-black uppercase tracking-widest">Find USN</span>
-            </Link>
-            <Link to="/export" className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:bg-indigo-900/20 hover:text-indigo-600 dark:text-indigo-400 transition-all group">
-              <Download size={24} />
-              <span className="text-[10px] font-black uppercase tracking-widest">Export</span>
-            </Link>
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
           </div>
         )}
       </div>

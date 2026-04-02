@@ -37,13 +37,9 @@ const LandingPage = () => {
 
             {/* Navbar */}
             <Navbar variant="transparent">
-<<<<<<< HEAD
+
                 <Button onClick={() => navigate('/dashboard')} rightIcon={ArrowRight} className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100">
                     Open Dashboard
-=======
-                <Button onClick={() => navigate('/dashboard')} rightIcon={ArrowRight} className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:bg-slate-900 dark:text-slate-900 dark:text-white dark:hover:bg-slate-100 dark:bg-slate-800">
-                    Login
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                 </Button>
             </Navbar>
 
@@ -261,11 +257,7 @@ const LandingPage = () => {
                         Join 50+ institutions that trust Auto Marks for fast, accurate result processing.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
-<<<<<<< HEAD
-                        <Button size="lg" onClick={() => navigate('/dashboard')} className="bg-white text-slate-900 hover:bg-slate-100 border-none shadow-2xl">
-=======
                         <Button size="lg" variant="secondary" onClick={() => navigate('/dashboard')} className="bg-white dark:bg-slate-800 !text-slate-900 dark:!text-white hover:bg-slate-100 dark:hover:bg-slate-700 border-none shadow-2xl">
->>>>>>> cff7087d21966a6ce19187e87fbbe2e34e665847
                             Start Free Trial
                         </Button>
                         <Button size="lg" variant="secondary" className="bg-white dark:bg-slate-800 !text-slate-900 dark:!text-white hover:bg-slate-100 dark:hover:bg-slate-700 border-none shadow-2xl">
