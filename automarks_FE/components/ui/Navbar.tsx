@@ -33,7 +33,7 @@ const Navbar: React.FC<NavbarProps> = ({ children, variant = 'default', classNam
     const baseStyles = 'relative z-50 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto';
 
     const variantStyles = {
-        default: 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800',
+        default: 'bg-white dark:bg-slate-900/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800',
         transparent: '',
     };
 

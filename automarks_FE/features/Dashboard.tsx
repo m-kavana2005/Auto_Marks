@@ -143,7 +143,7 @@ const Dashboard: React.FC = () => {
         <div className="flex flex-wrap gap-3">
           <Link
             to="/profile?mode=manual"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white text-indigo-600 border-2 border-indigo-100 px-6 py-4 sm:py-3.5 rounded-2xl font-bold hover:bg-indigo-50 transition-all active:scale-95"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-100 px-6 py-4 sm:py-3.5 rounded-2xl font-bold hover:bg-indigo-50 dark:bg-indigo-900/20 transition-all active:scale-95"
           >
             <Edit2 size={20} /> <span className="text-sm">Manual Entry</span>
           </Link>
@@ -178,14 +178,14 @@ const Dashboard: React.FC = () => {
           {/* Semester Overview Grouped by Batch */}
           {isLoading ? (
             <div className="glass-card rounded-[2.5rem] p-6 sm:p-10 space-y-8 animate-pulse">
-              <div className="h-8 w-40 bg-slate-100 rounded-lg mb-6"></div>
+              <div className="h-8 w-40 bg-slate-100 dark:bg-slate-800 rounded-lg mb-6"></div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3].map(i => <div key={i} className="h-40 bg-slate-50 rounded-2xl"></div>)}
+                {[1, 2, 3].map(i => <div key={i} className="h-40 bg-slate-50 dark:bg-slate-800 rounded-2xl"></div>)}
               </div>
             </div>
           ) : semesterOverview.length === 0 ? (
             <div className="glass-card rounded-[2.5rem] p-10 flex flex-col items-center justify-center text-center">
-              <div className="p-4 bg-slate-50 text-slate-400 rounded-full mb-4">
+              <div className="p-4 bg-slate-50 dark:bg-slate-800 text-slate-400 rounded-full mb-4">
                 <Zap size={32} />
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Result Data</h3>
@@ -203,7 +203,7 @@ const Dashboard: React.FC = () => {
                   <Users size={120} />
                 </div>
                 <div className="flex items-center gap-3 mb-8 relative z-10">
-                  <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl font-black text-xs uppercase tracking-widest shadow-sm border border-indigo-100/50">
+                  <div className="p-2.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl font-black text-xs uppercase tracking-widest shadow-sm border border-indigo-100/50">
                     Batch {batch}
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white">Semester Performance</h3>
@@ -211,19 +211,19 @@ const Dashboard: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 relative z-10">
                   {items.sort((a, b) => a.semester - b.semester).map((s) => (
-                    <div key={s.semester} className="p-5 rounded-[1.75rem] bg-white/60 dark:bg-slate-900/60 border border-slate-100 hover:border-indigo-200 transition-colors shadow-sm group">
+                    <div key={s.semester} className="p-5 rounded-[1.75rem] bg-white dark:bg-slate-900/60 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 hover:border-indigo-200 transition-colors shadow-sm group">
                       <div className="flex justify-between items-start mb-2">
-                        <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-lg">Sem {s.semester}</p>
-                        <p className={`font-black text-lg tracking-tight ${s.pass_rate >= 80 ? 'text-emerald-600' : s.pass_rate >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
+                        <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg">Sem {s.semester}</p>
+                        <p className={`font-black text-lg tracking-tight ${s.pass_rate >= 80 ? 'text-emerald-600 dark:text-emerald-400' : s.pass_rate >= 50 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'}`}>
                           {Math.round(s.pass_rate)}% <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider ml-1">Pass</span>
                         </p>
                       </div>
                       <div className="grid grid-cols-2 gap-3 mt-4">
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 border border-slate-100/50">
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 border border-slate-100 dark:border-slate-800/50">
                           <p className="text-slate-400 font-black text-[9px] uppercase tracking-widest">Avg Marks</p>
                           <p className="text-slate-700 dark:text-white font-black text-sm mt-0.5">{s.avg_total_marks.toFixed(1)}</p>
                         </div>
-                        <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 border border-slate-100/50">
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 border border-slate-100 dark:border-slate-800/50">
                           <p className="text-slate-400 font-black text-[9px] uppercase tracking-widest">Students</p>
                           <p className="text-slate-700 dark:text-white font-black text-sm mt-0.5">{s.total_students.toLocaleString()}</p>
                         </div>
@@ -247,7 +247,7 @@ const Dashboard: React.FC = () => {
             <p className="text-indigo-100 text-sm font-medium leading-relaxed mb-10 opacity-80">
               Explore detailed analytics and performance trends across all semesters.
             </p>
-            <Link to="/analytics" className="inline-flex items-center gap-2 bg-white text-indigo-600 px-6 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+            <Link to="/analytics" className="inline-flex items-center gap-2 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 px-6 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all">
               View Analytics
             </Link>
           </div>
@@ -256,11 +256,11 @@ const Dashboard: React.FC = () => {
         <div className="glass-card rounded-[2.5rem] p-8">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 dark:text-white">Quick Actions</h3>
           <div className="grid grid-cols-2 gap-4">
-            <Link to="/profile" className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all group">
+            <Link to="/profile" className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:bg-indigo-900/20 hover:text-indigo-600 dark:text-indigo-400 transition-all group">
               <UserCircle size={24} />
               <span className="text-[10px] font-black uppercase tracking-widest">Find USN</span>
             </Link>
-            <Link to="/export" className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 hover:text-indigo-600 transition-all group">
+            <Link to="/export" className="p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 hover:bg-indigo-50 dark:bg-indigo-900/20 hover:text-indigo-600 dark:text-indigo-400 transition-all group">
               <Download size={24} />
               <span className="text-[10px] font-black uppercase tracking-widest">Export</span>
             </Link>

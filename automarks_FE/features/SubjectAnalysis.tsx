@@ -91,10 +91,10 @@ const SubjectRow: React.FC<{
             {/* ── Subject summary row ── */}
             <button
                 onClick={fetchFailed}
-                className="w-full flex items-center gap-4 px-5 py-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors text-left"
+                className="w-full flex items-center gap-4 px-5 py-4 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-800/60 transition-colors text-left"
             >
                 {/* Subject code badge */}
-                <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300
+                <span className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-50 dark:bg-indigo-900/200/10 text-indigo-700 dark:text-indigo-300
                     text-[11px] font-black rounded-lg border border-indigo-100 dark:border-indigo-500/20 whitespace-nowrap shrink-0">
                     {subject.subject_code}
                 </span>
@@ -140,14 +140,14 @@ const SubjectRow: React.FC<{
                 {/* Expand/Collapse icon — only if students failed */}
                 {subject.students_failed > 0 ? (
                     <div className={`flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-xl text-xs font-black transition-all
-                        ${open ? 'bg-rose-500 text-white' : 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400'}`}>
+                        ${open ? 'bg-rose-50 dark:bg-rose-500/100 text-white' : 'bg-rose-50 dark:bg-rose-50 dark:bg-rose-500/100/10 text-rose-600 dark:text-rose-400'}`}>
                         <UserX size={13} />
                         <span>{subject.students_failed} Failed</span>
                         {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                     </div>
                 ) : (
                     <div className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-xl text-xs font-black
-                        bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                        bg-emerald-50 dark:bg-emerald-50 dark:bg-emerald-500/100/10 text-emerald-600 dark:text-emerald-400">
                         <CheckCircle size={13} />
                         <span>All Passed</span>
                     </div>
@@ -156,7 +156,7 @@ const SubjectRow: React.FC<{
 
             {/* ── Expanded: failed students panel ── */}
             {open && subject.students_failed > 0 && (
-                <div className="bg-rose-50/40 dark:bg-rose-500/5 border-t border-rose-100 dark:border-rose-500/10 px-5 py-4">
+                <div className="bg-rose-50 dark:bg-rose-500/10/40 dark:bg-rose-50 dark:bg-rose-500/100/5 border-t border-rose-100 dark:border-rose-500/10 px-5 py-4">
 
                     {/* Search */}
                     <div className="flex items-center justify-between mb-3 gap-3">
@@ -197,7 +197,7 @@ const SubjectRow: React.FC<{
                                 </thead>
                                 <tbody className="divide-y divide-rose-50 dark:divide-slate-800">
                                     {filtered.map((s, i) => (
-                                        <tr key={s.usn} className="bg-white dark:bg-slate-900 hover:bg-rose-50/60 dark:hover:bg-rose-500/5 transition-colors">
+                                        <tr key={s.usn} className="bg-white dark:bg-slate-900 hover:bg-rose-50 dark:bg-rose-500/10/60 dark:hover:bg-rose-50 dark:bg-rose-500/100/5 transition-colors">
                                             <td className="px-4 py-3 text-xs font-bold text-slate-400">{i + 1}</td>
                                             <td className="px-4 py-3">
                                                 <span className="font-black text-slate-700 dark:text-slate-200 font-mono text-xs">
@@ -312,7 +312,7 @@ const SubjectAnalysis: React.FC = () => {
         <button
             onClick={() => { if (sortKey === k) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortKey(k); setSortDir('asc'); } }}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all
-                ${sortKey === k ? 'bg-indigo-600 text-white shadow' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:bg-slate-200'}`}
+                ${sortKey === k ? 'bg-indigo-600 text-white shadow' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:bg-slate-700'}`}
         >
             {label} {sortKey === k && (sortDir === 'asc' ? '↑' : '↓')}
         </button>
@@ -329,8 +329,8 @@ const SubjectAnalysis: React.FC = () => {
                         Click any subject to see the list of students who failed it.
                     </p>
                     {batch && branch && (
-                        <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-xl">
-                            <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                        <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-indigo-50 dark:bg-indigo-50 dark:bg-indigo-900/200/10 border border-indigo-100 dark:border-indigo-500/20 rounded-xl">
+                            <span className="w-2 h-2 rounded-full bg-indigo-50 dark:bg-indigo-900/200 animate-pulse" />
                             <span className="text-xs font-black text-indigo-700 dark:text-indigo-300">
                                 Showing: {batch} &bull; {branch} &bull; Sem {semester}
                             </span>
@@ -380,7 +380,7 @@ const SubjectAnalysis: React.FC = () => {
             {/* ── Require batch + branch ─────────────────────────────────────── */}
             {(!batch || !branch) && (
                 <div className="glass-card rounded-[2.5rem] p-12 flex flex-col items-center justify-center text-center gap-4">
-                    <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-500/10 rounded-3xl flex items-center justify-center text-indigo-500">
+                    <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-50 dark:bg-indigo-900/200/10 rounded-3xl flex items-center justify-center text-indigo-500">
                         <Filter size={32} />
                     </div>
                     <h3 className="text-xl font-black text-slate-900 dark:text-white">Select a Batch and Branch</h3>
@@ -394,7 +394,7 @@ const SubjectAnalysis: React.FC = () => {
             {batch && branch && error && !isLoading && (
                 <div className="glass-card rounded-[2.5rem] p-10 flex flex-col items-center gap-4 text-center">
                     <WifiOff size={40} className="text-rose-400" />
-                    <p className="font-bold text-slate-500">{error}</p>
+                    <p className="font-bold text-slate-500 dark:text-slate-400">{error}</p>
                     <button onClick={fetchData}
                         className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all active:scale-95">
                         <RefreshCcw size={16} /> Retry

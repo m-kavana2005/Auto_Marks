@@ -336,7 +336,7 @@ const StudentProfile: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowManualEntry(true)}
-              className="bg-white text-indigo-600 border-2 border-indigo-100 px-6 py-4 rounded-2xl font-bold hover:bg-indigo-50 transition-all active:scale-95 flex items-center gap-2"
+              className="bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-100 px-6 py-4 rounded-2xl font-bold hover:bg-indigo-50 dark:bg-indigo-900/20 transition-all active:scale-95 flex items-center gap-2"
             >
               <Plus size={20} /> <span className="hidden sm:inline">Manual Entry</span>
             </button>
@@ -354,13 +354,13 @@ const StudentProfile: React.FC = () => {
                 <button
                   key={s.usn}
                   onClick={() => selectStudent(s.usn)}
-                  className="w-full text-left p-4 hover:bg-indigo-50 dark:hover:bg-slate-800/50 rounded-xl transition-colors flex items-center justify-between group"
+                  className="w-full text-left p-4 hover:bg-indigo-50 dark:bg-indigo-900/20 dark:hover:bg-slate-800/50 rounded-xl transition-colors flex items-center justify-between group"
                 >
                   <div>
                     <p className="font-black text-slate-900 dark:text-white">{s.student_name}</p>
                     <p className="text-xs text-slate-500 dark:text-slate-400 font-bold">{s.usn}</p>
                   </div>
-                  <span className="text-xs font-bold text-slate-400 group-hover:text-indigo-600">{s.batch} • {s.branch}</span>
+                  <span className="text-xs font-bold text-slate-400 group-hover:text-indigo-600 dark:text-indigo-400">{s.batch} • {s.branch}</span>
                 </button>
               ))}
             </div>
@@ -370,7 +370,7 @@ const StudentProfile: React.FC = () => {
 
       {error && (
         <div className="glass-card p-10 text-center rounded-[2.5rem]">
-          <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="text-rose-500" size={32} />
           </div>
           <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{error}</h3>
@@ -389,27 +389,27 @@ const StudentProfile: React.FC = () => {
               <button
                 onClick={isEditing ? saveChanges : startEditing}
                 className={`absolute top-6 right-6 p-3 rounded-xl transition-all shadow-sm z-20 ${isEditing
-                  ? 'bg-emerald-500 text-white hover:bg-emerald-600'
-                  : 'bg-white text-slate-400 hover:text-indigo-600'
+                  ? 'bg-emerald-50 dark:bg-emerald-500/100 text-white hover:bg-emerald-600'
+                  : 'bg-white dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:text-indigo-400'
                   }`}
                 disabled={isLoading}
               >
                 {isEditing ? <Save size={20} /> : <Edit2 size={20} />}
               </button>
 
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 opacity-50"></div>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full -mr-16 -mt-16 opacity-50"></div>
               <img
                 src="/student-avatar.svg"
                 alt="Student"
-                className="w-32 h-32 rounded-3xl mx-auto mb-6 border-4 border-white shadow-xl relative z-10 bg-indigo-50"
+                className="w-32 h-32 rounded-3xl mx-auto mb-6 border-4 border-white shadow-xl relative z-10 bg-indigo-50 dark:bg-indigo-900/20"
               />
               <h3 className="text-2xl font-black text-slate-900 dark:text-white">{student.student_name}</h3>
-              <p className="text-indigo-600 font-bold mb-6">{student.usn}</p>
+              <p className="text-indigo-600 dark:text-indigo-400 font-bold mb-6">{student.usn}</p>
 
-              <div className="space-y-4 text-left border-t border-slate-100 pt-6">
+              <div className="space-y-4 text-left border-t border-slate-100 dark:border-slate-800 pt-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400">
                       <Award size={18} />
                     </div>
                     <div>
@@ -419,12 +419,12 @@ const StudentProfile: React.FC = () => {
                   </div>
                   {gpa?.gpa?.length ? (
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                      <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                         <div className="font-serif font-black text-lg">A+</div>
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">CGPA</p>
-                        <p className="text-lg font-black text-indigo-600 mt-1">
+                        <p className="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-1">
                           {gpa.gpa[gpa.gpa.length - 1].cgpa.toFixed(2)}
                         </p>
                       </div>
@@ -434,7 +434,7 @@ const StudentProfile: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400">
+                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400">
                       <BookOpen size={18} />
                     </div>
                     <div>
@@ -444,12 +444,12 @@ const StudentProfile: React.FC = () => {
                   </div>
                   {gpa?.gpa?.length ? (
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                      <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
                         <Hash size={18} />
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Credits</p>
-                        <p className="text-lg font-black text-emerald-600 mt-1">
+                        <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">
                           {gpa.gpa.reduce((sum, s) => sum + s.total_credits, 0)}
                         </p>
                       </div>
@@ -466,23 +466,23 @@ const StudentProfile: React.FC = () => {
                 <div>
                   <div className="flex justify-between mb-2">
                     <span className="text-sm font-bold text-slate-600 dark:text-slate-300">Completion</span>
-                    <span className="text-sm font-black text-indigo-600">
+                    <span className="text-sm font-black text-indigo-600 dark:text-indigo-400">
                       {summary ? Math.round((summary.semesters.filter(s => s.passed_count + s.failed_count > 0).length / summary.semesters.length) * 100) : 0}%
                     </span>
                   </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                     <div className="bg-indigo-600 h-full rounded-full" style={{ width: `${summary ? Math.round((summary.semesters.filter(s => s.passed_count + s.failed_count > 0).length / summary.semesters.length) * 100) : 0}%` }}></div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-emerald-50 rounded-2xl">
-                    <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Passed</p>
+                  <div className="p-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl">
+                    <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-1">Passed</p>
                     <p className="text-xl font-black text-slate-900 dark:text-white">
                       {summary ? summary.semesters.reduce((sum, s) => sum + s.passed_count, 0) : 0}
                     </p>
                   </div>
-                  <div className="p-4 bg-rose-50 rounded-2xl">
-                    <p className="text-[10px] font-bold text-rose-600 uppercase mb-1">Backlogs</p>
+                  <div className="p-4 bg-rose-50 dark:bg-rose-500/10 rounded-2xl">
+                    <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase mb-1">Backlogs</p>
                     <p className="text-xl font-black text-slate-900 dark:text-white">
                       {summary ? summary.semesters.reduce((sum, s) => sum + s.failed_count, 0) : 0}
                     </p>
@@ -527,9 +527,9 @@ const StudentProfile: React.FC = () => {
           <div className="lg:col-span-2 space-y-8">
             <div className="flex items-center justify-between">
               <h4 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-                <GraduationCap size={24} className="text-indigo-600" /> Academic History
+                <GraduationCap size={24} className="text-indigo-600 dark:text-indigo-400" /> Academic History
               </h4>
-              {isEditing && <span className="text-xs font-bold text-emerald-600 px-3 py-1 bg-emerald-50 rounded-lg">EDIT MODE ACTIVE</span>}
+              {isEditing && <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 px-3 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg">EDIT MODE ACTIVE</span>}
             </div>
 
             <div className="space-y-6">
@@ -538,14 +538,14 @@ const StudentProfile: React.FC = () => {
                 const isExpanded = expandedSemesters.includes(sem.semester);
 
                 return (
-                  <div key={sem.semester} className={`glass-card rounded-[2rem] overflow-hidden transition-all border ${isExpanded ? 'ring-4 ring-indigo-50 border-indigo-200' : 'border-slate-100'}`}>
+                  <div key={sem.semester} className={`glass-card rounded-[2rem] overflow-hidden transition-all border ${isExpanded ? 'ring-4 ring-indigo-50 border-indigo-200' : 'border-slate-100 dark:border-slate-800'}`}>
                     {/* Semester Header / Summary */}
                     <div
-                      className="p-6 cursor-pointer hover:bg-slate-50 transition-colors flex items-center justify-between select-none"
+                      className="p-6 cursor-pointer hover:bg-slate-50 dark:bg-slate-800 transition-colors flex items-center justify-between select-none"
                       onClick={() => toggleSemester(sem.semester)}
                     >
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl transition-colors ${isExpanded ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600'
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl transition-colors ${isExpanded ? 'bg-indigo-600 text-white' : 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
                           }`}>
                           {sem.semester}
                         </div>
@@ -554,7 +554,7 @@ const StudentProfile: React.FC = () => {
                           <div className="flex gap-3 text-xs font-bold text-slate-500 dark:text-slate-400 mt-0.5">
                             <span>Avg: {sem.avg.toFixed(1)}%</span>
                             <span>•</span>
-                            <span className="text-emerald-600">{sem.passed_count} Passed</span>
+                            <span className="text-emerald-600 dark:text-emerald-400">{sem.passed_count} Passed</span>
                             <span>•</span>
                             <span className="text-rose-500">{sem.failed_count} Failed</span>
                           </div>
@@ -570,7 +570,7 @@ const StudentProfile: React.FC = () => {
 
                     {/* Expanded Content: Result Table */}
                     {isExpanded && (
-                      <div className="p-6 pt-0 border-t border-slate-100 bg-slate-50/30 animate-in fade-in slide-in-from-top-2">
+                      <div className="p-6 pt-0 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30 animate-in fade-in slide-in-from-top-2">
                         <div className="mt-4 overflow-x-auto">
                           <table className="w-full text-left border-collapse">
                             <thead>
@@ -584,18 +584,18 @@ const StudentProfile: React.FC = () => {
                             </thead>
                             <tbody className="space-y-2">
                               {results.map((res) => (
-                                <tr key={res.id} className="group hover:bg-white transition-colors rounded-lg">
-                                  <td className="py-3 pl-2 border-b border-slate-100 group-last:border-0">
+                                <tr key={res.id} className="group hover:bg-white dark:bg-slate-900 transition-colors rounded-lg">
+                                  <td className="py-3 pl-2 border-b border-slate-100 dark:border-slate-800 group-last:border-0">
                                     <div className="font-bold text-slate-900 dark:text-white">{res.subject_name}</div>
                                     <div className="text-xs text-slate-500 dark:text-slate-400 font-bold font-mono">{res.subject_code}</div>
                                   </td>
 
                                   {/* Internal Marks */}
-                                  <td className="py-3 text-center border-b border-slate-100 group-last:border-0 font-medium text-slate-600 dark:text-slate-300">
+                                  <td className="py-3 text-center border-b border-slate-100 dark:border-slate-800 group-last:border-0 font-medium text-slate-600 dark:text-slate-300">
                                     {isEditing ? (
                                       <input
                                         type="number"
-                                        className="w-16 p-1 text-center bg-slate-50 border border-slate-200 rounded-lg font-bold"
+                                        className="w-16 p-1 text-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-bold"
                                         value={editData[res.id]?.internal_marks ?? res.internal_marks}
                                         onChange={(e) => handleEditChange(res.id, 'internal_marks', e.target.value)}
                                       />
@@ -603,11 +603,11 @@ const StudentProfile: React.FC = () => {
                                   </td>
 
                                   {/* External Marks */}
-                                  <td className="py-3 text-center border-b border-slate-100 group-last:border-0 font-medium text-slate-600 dark:text-slate-300">
+                                  <td className="py-3 text-center border-b border-slate-100 dark:border-slate-800 group-last:border-0 font-medium text-slate-600 dark:text-slate-300">
                                     {isEditing ? (
                                       <input
                                         type="number"
-                                        className="w-16 p-1 text-center bg-slate-50 border border-slate-200 rounded-lg font-bold"
+                                        className="w-16 p-1 text-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-bold"
                                         value={editData[res.id]?.external_marks ?? res.external_marks}
                                         onChange={(e) => handleEditChange(res.id, 'external_marks', e.target.value)}
                                       />
@@ -615,11 +615,11 @@ const StudentProfile: React.FC = () => {
                                   </td>
 
                                   {/* Total Marks */}
-                                  <td className="py-3 text-center border-b border-slate-100 group-last:border-0 font-black text-slate-900 dark:text-white">
+                                  <td className="py-3 text-center border-b border-slate-100 dark:border-slate-800 group-last:border-0 font-black text-slate-900 dark:text-white">
                                     {isEditing ? (
                                       <input
                                         type="number"
-                                        className="w-16 p-1 text-center bg-slate-50 border border-slate-200 rounded-lg font-black"
+                                        className="w-16 p-1 text-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-black"
                                         value={editData[res.id]?.total_marks ?? res.total_marks}
                                         onChange={(e) => handleEditChange(res.id, 'total_marks', e.target.value)}
                                       />
@@ -627,10 +627,10 @@ const StudentProfile: React.FC = () => {
                                   </td>
 
                                   {/* Result Status */}
-                                  <td className="py-3 pr-2 text-right border-b border-slate-100 group-last:border-0">
+                                  <td className="py-3 pr-2 text-right border-b border-slate-100 dark:border-slate-800 group-last:border-0">
                                     {isEditing ? (
                                       <select
-                                        className="p-1 rounded-lg text-xs font-bold bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                                        className="p-1 rounded-lg text-xs font-bold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                                         value={editData[res.id]?.result_status ?? res.result_status}
                                         onChange={(e) => handleEditChange(res.id, 'result_status', e.target.value)}
                                       >
@@ -675,15 +675,15 @@ const StudentProfile: React.FC = () => {
       )}
 
       {!student && !isLoading && searchResults.length === 0 && (
-        <div className="glass-card p-20 text-center rounded-[3rem] border-2 border-dashed border-slate-200 bg-slate-50/50">
-          <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm">
+        <div className="glass-card p-20 text-center rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+          <div className="w-24 h-24 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm">
             <Search size={40} className="text-slate-300" />
           </div>
           <h3 className="text-2xl font-black text-slate-400 dark:text-white">Search to view profile</h3>
           <p className="text-slate-400 mt-2 max-w-xs mx-auto">Enter Name or USN to see detailed performance metrics and history.</p>
           <button
             onClick={() => setShowManualEntry(true)}
-            className="mt-8 text-indigo-600 font-bold hover:underline"
+            className="mt-8 text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
           >
             Or add a record manually
           </button>
@@ -694,14 +694,14 @@ const StudentProfile: React.FC = () => {
       {showManualEntry && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 w-full max-w-3xl max-h-[90vh] rounded-[2rem] shadow-2xl flex flex-col animate-in slide-in-from-bottom-4 zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 rounded-t-[2rem]">
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 rounded-t-[2rem]">
               <div>
                 <h3 className="text-xl font-black text-slate-900 dark:text-white">Manual Entry</h3>
                 <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Add a new student record or semester result</p>
               </div>
               <button
                 onClick={() => setShowManualEntry(false)}
-                className="p-2 hover:bg-slate-200 rounded-full transition-colors text-slate-400 hover:text-slate-600 dark:text-slate-300"
+                className="p-2 hover:bg-slate-200 dark:bg-slate-700 rounded-full transition-colors text-slate-400 hover:text-slate-600 dark:text-slate-300"
               >
                 <X size={20} />
               </button>
@@ -710,7 +710,7 @@ const StudentProfile: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-6 space-y-8">
               {/* Student Details */}
               <div className="space-y-4">
-                <h4 className="flex items-center gap-2 text-sm font-black text-indigo-600 uppercase tracking-wider dark:text-white">
+                <h4 className="flex items-center gap-2 text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider dark:text-white">
                   <User size={16} /> Student Details
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -759,14 +759,14 @@ const StudentProfile: React.FC = () => {
 
               {/* Semester Details */}
               <div className="space-y-4">
-                <h4 className="flex items-center gap-2 text-sm font-black text-indigo-600 uppercase tracking-wider dark:text-white">
+                <h4 className="flex items-center gap-2 text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider dark:text-white">
                   <Calendar size={16} /> Semester Info
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500 dark:text-slate-400 ml-1">Semester <span className="text-rose-500">*</span></label>
                     <select
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                      className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                       value={manualEntryData.semester}
                       onChange={(e) => handleManualEntryChange('semester', e.target.value)}
                     >
@@ -777,7 +777,7 @@ const StudentProfile: React.FC = () => {
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-500 dark:text-slate-400 ml-1">Exam Month <span className="text-rose-500">*</span></label>
                     <select
-                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                      className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                       value={manualEntryData.exam_month}
                       onChange={(e) => handleManualEntryChange('exam_month', e.target.value)}
                     >
@@ -801,12 +801,12 @@ const StudentProfile: React.FC = () => {
               {/* Subjects */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="flex items-center gap-2 text-sm font-black text-indigo-600 uppercase tracking-wider dark:text-white">
+                  <h4 className="flex items-center gap-2 text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider dark:text-white">
                     <BookOpen size={16} /> Subjects
                   </h4>
                   <button
                     onClick={addSubjectRow}
-                    className="px-3 py-1 bg-indigo-50 text-indigo-600 text-xs font-bold rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1"
+                    className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-1"
                   >
                     <Plus size={14} /> Add Subject
                   </button>
@@ -814,7 +814,7 @@ const StudentProfile: React.FC = () => {
 
                 <div className="space-y-3">
                   {manualEntryData.subjects.map((subj, idx) => (
-                    <div key={idx} className="p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 relative group">
+                    <div key={idx} className="p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50 relative group">
                       <button
                         onClick={() => removeSubjectRow(idx)}
                         className="absolute -top-2 -right-2 w-6 h-6 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-200"
@@ -876,7 +876,7 @@ const StudentProfile: React.FC = () => {
                         <div className="md:col-span-2 space-y-1">
                           <label className="text-[10px] font-bold text-slate-400 uppercase">Result</label>
                           <select
-                            className="w-full p-2 bg-white border border-slate-200 rounded-lg text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                            className="w-full p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold dark:bg-slate-800 dark:border-slate-700 dark:text-white"
                             value={subj.result_status}
                             onChange={(e) => handleSubjectChange(idx, 'result_status', e.target.value)}
                           >
@@ -892,10 +892,10 @@ const StudentProfile: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-6 border-t border-slate-100 bg-slate-50/50 rounded-b-[2rem] flex justify-end gap-3">
+            <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 rounded-b-[2rem] flex justify-end gap-3">
               <button
                 onClick={() => setShowManualEntry(false)}
-                className="px-6 py-3 font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-200 rounded-xl transition-colors"
+                className="px-6 py-3 font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:bg-slate-700 rounded-xl transition-colors"
               >
                 Cancel
               </button>

@@ -140,14 +140,14 @@ const Analytics: React.FC = () => {
   if (error) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-12 text-center animate-in fade-in">
-        <div className="w-24 h-24 bg-rose-50 rounded-[2.5rem] flex items-center justify-center text-rose-500 mb-8">
+        <div className="w-24 h-24 bg-rose-50 dark:bg-rose-500/10 rounded-[2.5rem] flex items-center justify-center text-rose-500 mb-8">
           <WifiOff size={48} />
         </div>
         <h2 className="text-3xl font-black text-slate-900 dark:text-white mb-3 tracking-tight">Analytics Offline</h2>
         <p className="text-slate-500 dark:text-slate-400 max-w-lg mx-auto mb-10 font-medium leading-relaxed">
           {error || (
             <>
-              We encountered a connection error while trying to reach the analytics engine at <code className="bg-slate-100 px-1 rounded font-bold">{getApiBase()}</code>.
+              We encountered a connection error while trying to reach the analytics engine at <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded font-bold">{getApiBase()}</code>.
               Please verify your backend service is active.
             </>
           )}
@@ -172,10 +172,10 @@ const Analytics: React.FC = () => {
           <p className="text-slate-500 dark:text-slate-400 font-medium">Comparative analytics and student performance metrics.</p>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
             <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Batch</span>
             <select
-              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none dark:bg-slate-800 dark:border-slate-700"
+              className="h-10 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none dark:bg-slate-800 dark:border-slate-700"
               value={batch || ''}
               onChange={(e) => setBatch(e.target.value ? e.target.value : undefined)}
             >
@@ -186,10 +186,10 @@ const Analytics: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
             <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Branch</span>
             <select
-              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none dark:bg-slate-800 dark:border-slate-700"
+              className="h-10 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none dark:bg-slate-800 dark:border-slate-700"
               value={branch || ''}
               onChange={(e) => setBranch(e.target.value ? e.target.value : undefined)}
             >
@@ -200,10 +200,10 @@ const Analytics: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex items-center gap-3 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800">
             <span className="pl-3 text-xs font-bold text-slate-400 uppercase tracking-widest">Semester</span>
             <select
-              className="h-10 px-3 bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none min-w-[80px] dark:bg-slate-800 dark:border-slate-700"
+              className="h-10 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none appearance-none min-w-[80px] dark:bg-slate-800 dark:border-slate-700"
               value={semester || ''}
               onChange={(e) => setSemester(e.target.value ? parseInt(e.target.value) : undefined)}
             >
@@ -234,7 +234,7 @@ const Analytics: React.FC = () => {
           </div>
           <div className="h-[300px] flex-1">
             {isLoading ? (
-              <div className="w-full h-full flex items-center justify-center bg-slate-50/50 rounded-2xl animate-pulse">
+              <div className="w-full h-full flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl animate-pulse">
                 <BarChart3 size={32} className="text-slate-200" />
               </div>
             ) : subjectStats.length > 0 ? (
@@ -399,7 +399,7 @@ const Analytics: React.FC = () => {
                 )}
               </ResponsiveContainer>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl text-slate-400">
+              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-slate-400">
                 <AlertTriangle size={32} className="mb-2 opacity-20" />
                 <p className="font-bold">No Subject Stats Available</p>
               </div>
@@ -422,7 +422,7 @@ const Analytics: React.FC = () => {
           </div>
           <div className="h-[300px] flex-1">
             {isLoading ? (
-              <div className="w-full h-full flex items-center justify-center bg-slate-50/50 rounded-2xl animate-pulse">
+              <div className="w-full h-full flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl animate-pulse">
                 <TrendingUp size={32} className="text-slate-200" />
               </div>
             ) : subjectStats.length > 0 ? (
@@ -487,7 +487,7 @@ const Analytics: React.FC = () => {
                 )}
               </ResponsiveContainer>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl text-slate-400">
+              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl text-slate-400">
                 <AlertTriangle size={32} className="mb-2 opacity-20" />
                 <p className="font-bold">No Trend Data Available</p>
               </div>
@@ -497,14 +497,14 @@ const Analytics: React.FC = () => {
 
         <div className="glass-card rounded-[2.5rem] p-8 min-h-[400px] flex flex-col">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+            <div className="p-2.5 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl">
               <Award size={20} />
             </div>
             <h3 className="text-xl font-bold text-slate-900 dark:text-white">Grade Distribution</h3>
           </div>
           <div className="h-[300px] flex-1">
             {isLoading ? (
-              <div className="w-full h-full flex items-center justify-center bg-slate-50/50 rounded-2xl animate-pulse">
+              <div className="w-full h-full flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl animate-pulse">
                 <BarChart3 size={32} className="text-slate-200" />
               </div>
             ) : Object.keys(gradeDistribution).length > 0 ? (
@@ -573,16 +573,16 @@ const Analytics: React.FC = () => {
                 {isLoading ? (
                   [1, 2, 3, 4].map(i => (
                     <tr key={i} className="animate-pulse">
-                      <td colSpan={4} className="px-8 py-6"><div className="h-4 bg-slate-100 rounded w-full"></div></td>
+                      <td colSpan={4} className="px-8 py-6"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded w-full"></div></td>
                     </tr>
                   ))
                 ) : topPerformers.length > 0 ? (
                   topPerformers.map((p, idx) => (
-                    <tr key={p.usn} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                    <tr key={p.usn} className="hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-8 py-5">
-                        <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${idx === 0 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300' :
-                          idx === 1 ? 'bg-slate-200 text-slate-700 dark:bg-slate-500/20 dark:text-slate-200' :
-                            idx === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300' : 'bg-slate-50 text-slate-400 dark:bg-slate-800/50 dark:text-slate-400'
+                        <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${idx === 0 ? 'bg-amber-100 text-amber-700 dark:text-amber-300 dark:bg-amber-50 dark:bg-amber-500/100/20 dark:text-amber-300' :
+                          idx === 1 ? 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 dark:bg-slate-50 dark:bg-slate-8000/20 dark:text-slate-200' :
+                            idx === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-50 dark:bg-orange-500/100/20 dark:text-orange-300' : 'bg-slate-50 dark:bg-slate-800 text-slate-400 dark:bg-slate-800/50 dark:text-slate-400'
                           }`}>
                           {idx + 1}
                         </span>
@@ -597,7 +597,7 @@ const Analytics: React.FC = () => {
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-full max-w-[60px] bg-slate-100 h-1.5 rounded-full">
+                          <div className="w-full max-w-[60px] bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full">
                             <div className="bg-indigo-600 h-full rounded-full" style={{ width: `${p.percentage ?? 0}%` }}></div>
                           </div>
                           <span className="text-xs font-black text-slate-900 dark:text-white">{p.percentage ?? 0}%</span>
@@ -625,16 +625,16 @@ const Analytics: React.FC = () => {
 
           {isLoading ? (
             <div className="flex-1 flex flex-col gap-6">
-              <div className="h-32 bg-slate-50 rounded-3xl animate-pulse"></div>
+              <div className="h-32 bg-slate-50 dark:bg-slate-800 rounded-3xl animate-pulse"></div>
               <div className="space-y-4">
-                <div className="h-4 bg-slate-50 rounded w-full animate-pulse"></div>
-                <div className="h-4 bg-slate-50 rounded w-3/4 animate-pulse"></div>
-                <div className="h-4 bg-slate-50 rounded w-1/2 animate-pulse"></div>
+                <div className="h-4 bg-slate-50 dark:bg-slate-800 rounded w-full animate-pulse"></div>
+                <div className="h-4 bg-slate-50 dark:bg-slate-800 rounded w-3/4 animate-pulse"></div>
+                <div className="h-4 bg-slate-50 dark:bg-slate-800 rounded w-1/2 animate-pulse"></div>
               </div>
             </div>
           ) : failureAnalysis ? (
             <div className="space-y-8 flex-1">
-              <div className="bg-rose-50 dark:bg-rose-500/10 p-6 rounded-[2rem] text-center border border-rose-100 dark:border-rose-500/20">
+              <div className="bg-rose-50 dark:bg-rose-50 dark:bg-rose-500/100/10 p-6 rounded-[2rem] text-center border border-rose-100 dark:border-rose-500/20">
                 <p className="text-sm font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-1">Semester Fail Rate</p>
                 <p className="text-5xl font-black text-rose-700 dark:text-rose-300">{(failureAnalysis.failure_rate ?? 0).toFixed(1)}%</p>
                 <p className="text-xs text-rose-400 dark:text-rose-500 mt-2">{failureAnalysis.total_failures ?? 0} students failed in one or more subjects</p>
@@ -659,7 +659,7 @@ const Analytics: React.FC = () => {
                 </div>
               </div>
 
-              <div className="mt-auto pt-6 border-t border-slate-100">
+              <div className="mt-auto pt-6 border-t border-slate-100 dark:border-slate-800">
                 <p className="text-xs text-slate-400 leading-relaxed italic">
                   Subjects with fail rates above 25% are flagged for faculty review automatically.
                 </p>
@@ -679,7 +679,7 @@ const Analytics: React.FC = () => {
           â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-rose-50 text-rose-600 rounded-2xl">
+          <div className="p-3 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-2xl">
             <BookX size={24} />
           </div>
           <div>
@@ -696,7 +696,7 @@ const Analytics: React.FC = () => {
             <p className="text-xs text-slate-400 font-medium mb-6">X = number of failed subjects, Y = number of students</p>
             <div className="flex-1 h-[240px]">
               {isLoading ? (
-                <div className="w-full h-full flex items-center justify-center bg-slate-50/50 rounded-2xl animate-pulse">
+                <div className="w-full h-full flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl animate-pulse">
                   <BarChart3 size={28} className="text-slate-200" />
                 </div>
               ) : backlogData && backlogData.distribution.length > 0 ? (
@@ -744,15 +744,15 @@ const Analytics: React.FC = () => {
           <div className="flex flex-col gap-4 justify-center">
             {isLoading ? (
               [1, 2, 3].map(i => (
-                <div key={i} className="h-20 bg-slate-100 rounded-2xl animate-pulse" />
+                <div key={i} className="h-20 bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse" />
               ))
             ) : backlogData && backlogData.distribution.length > 0 ? (
               backlogData.distribution.map((d) => {
                 const pct = backlogData.students.length > 0
                   ? ((d.count / backlogData.students.length) * 100).toFixed(1)
                   : '0';
-                const bgMap = ['bg-amber-50 border-amber-100 text-amber-700 dark:text-amber-300',
-                  'bg-orange-50 border-orange-100 text-orange-700',
+                const bgMap = ['bg-amber-50 dark:bg-amber-500/10 border-amber-100 text-amber-700 dark:text-amber-300',
+                  'bg-orange-50 dark:bg-orange-500/10 border-orange-100 text-orange-700',
                   'bg-red-50 border-red-100 text-red-700'];
                 const cls = bgMap[Math.min(d.backlogs - 1, bgMap.length - 1)];
                 return (
@@ -764,7 +764,7 @@ const Analytics: React.FC = () => {
                       <p className="text-2xl font-black mt-0.5">{d.count} students</p>
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className={`px-3 py-1 rounded-lg text-sm font-black mb-1 ${d.backlogs === 1 ? 'bg-amber-200 text-amber-900 border border-amber-300' :
+                      <span className={`px-3 py-1 rounded-lg text-sm font-black mb-1 ${d.backlogs === 1 ? 'bg-amber-200 text-amber-900 dark:text-amber-100 border border-amber-300' :
                         d.backlogs === 2 ? 'bg-orange-200 text-orange-900 border border-orange-300' :
                           'bg-red-200 text-red-900 border border-red-300'
                         }`}>
@@ -815,12 +815,12 @@ const Analytics: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50 bg-white dark:bg-slate-900">
                   {filteredBacklogStudents.map((s) => (
-                    <tr key={s.usn} className="hover:bg-rose-50/30 dark:hover:bg-rose-900/20 transition-colors">
-                      <td className="px-6 py-4 text-xs font-bold text-indigo-600 whitespace-nowrap">{s.usn}</td>
+                    <tr key={s.usn} className="hover:bg-rose-50 dark:bg-rose-500/10/30 dark:hover:bg-rose-900/20 transition-colors">
+                      <td className="px-6 py-4 text-xs font-bold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">{s.usn}</td>
                       <td className="px-6 py-4 text-sm font-semibold text-slate-800 dark:text-slate-100">{s.name}</td>
                       <td className="px-6 py-4 text-center">
-                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-sm font-black ${s.backlog_count === 1 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 dark:border dark:border-amber-500/30'
-                          : s.backlog_count === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300 dark:border dark:border-orange-500/30'
+                        <span className={`inline-flex items-center justify-center w-8 h-8 rounded-xl text-sm font-black ${s.backlog_count === 1 ? 'bg-amber-100 text-amber-700 dark:text-amber-300 dark:bg-amber-50 dark:bg-amber-500/100/20 dark:text-amber-300 dark:border dark:border-amber-500/30'
+                          : s.backlog_count === 2 ? 'bg-orange-100 text-orange-700 dark:bg-orange-50 dark:bg-orange-500/100/20 dark:text-orange-300 dark:border dark:border-orange-500/30'
                             : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300 dark:border dark:border-red-500/30'
                           }`}>
                           {s.backlog_count}
@@ -832,7 +832,7 @@ const Analytics: React.FC = () => {
                             <span
                               key={f.code}
                               title={f.name}
-                              className="inline-block px-2 py-0.5 bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-[11px] font-black rounded-lg whitespace-nowrap cursor-default"
+                              className="inline-block px-2 py-0.5 bg-rose-100 text-rose-700 dark:text-rose-300 dark:bg-rose-50 dark:bg-rose-500/100/20 dark:text-rose-300 border border-rose-200 dark:border-rose-500/30 text-[11px] font-black rounded-lg whitespace-nowrap cursor-default"
                             >
                               {f.code}
                             </span>

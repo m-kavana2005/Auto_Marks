@@ -29,7 +29,7 @@ const AverageSGPADisplay = ({ sgpa, totalStudents }: { sgpa: number; totalStuden
                         'from-amber-500  to-orange-500';
 
     return (
-        <div className="sgpa-result-card relative overflow-hidden bg-white/50 dark:bg-slate-800/50 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-700 p-6 flex items-center shadow-sm">
+        <div className="sgpa-result-card relative overflow-hidden bg-white dark:bg-slate-900/50 dark:bg-slate-800/50 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-700 p-6 flex items-center shadow-sm">
             <div className={`sgpa-score-circle w-20 h-20 rounded-full flex flex-col items-center justify-center text-white shadow-lg bg-gradient-to-br ${color} shrink-0`}>
                 <span className="sgpa-score-value text-2xl font-black tracking-tight">{sgpa.toFixed(2)}</span>
                 <span className="sgpa-score-label text-[10px] font-medium uppercase tracking-wider opacity-90">Avg SGPA</span>
@@ -123,7 +123,7 @@ export default function SGPACalculator() {
         <div className="sgpa-page max-w-5xl mx-auto p-4 md:p-8 space-y-6">
             {/* Header */}
             <div className="sgpa-header flex items-center gap-4 bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                <div className="sgpa-header-icon shrink-0 w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                <div className="sgpa-header-icon shrink-0 w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-50 dark:bg-indigo-900/200/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                     <Calculator size={28} />
                 </div>
                 <div>
@@ -234,7 +234,7 @@ export default function SGPACalculator() {
 
             {/* Error */}
             {error && (
-                <div className="sgpa-error text-rose-600 bg-rose-50 dark:bg-rose-500/10 dark:text-rose-400 p-4 rounded-xl border border-rose-200 dark:border-rose-500/20 text-sm font-medium flex items-start gap-3">
+                <div className="sgpa-error text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-50 dark:bg-rose-500/100/10 dark:text-rose-400 p-4 rounded-xl border border-rose-200 dark:border-rose-500/20 text-sm font-medium flex items-start gap-3">
                     <AlertTriangle size={18} className="shrink-0 mt-0.5" />
                     <span>{error}</span>
                 </div>
@@ -250,7 +250,7 @@ export default function SGPACalculator() {
                     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                         <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
                             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Batch Results ({filteredStudents.length}/{result.students.length})</h2>
-                            {sgpaFilter > 0 && <span className="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:text-indigo-300 dark:bg-indigo-500/20 dark:text-indigo-400">Filter: SGPA ≥ {sgpaFilter.toFixed(1)}</span>}
+                            {sgpaFilter > 0 && <span className="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:text-indigo-300 dark:bg-indigo-50 dark:bg-indigo-900/200/20 dark:text-indigo-400">Filter: SGPA ≥ {sgpaFilter.toFixed(1)}</span>}
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm whitespace-nowrap">
@@ -265,7 +265,7 @@ export default function SGPACalculator() {
                                 <tbody>
                                     {filteredStudents.length > 0 ? (
                                         filteredStudents.map((s, i) => (
-                                            <tr key={s.usn} className={`border-b last:border-0 border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/20 transition-colors ${i % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50/50 dark:bg-slate-800/50'}`}>
+                                            <tr key={s.usn} className={`border-b last:border-0 border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700/20 transition-colors ${i % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50'}`}>
                                                 <td className="px-6 py-4 font-mono font-medium text-slate-900 dark:text-white text-xs">{s.usn}</td>
                                                 <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-300 max-w-[200px] truncate" title={s.student_name}>{s.student_name}</td>
                                                 <td className="px-6 py-4 text-center text-slate-500 dark:text-slate-400">{s.semester}</td>
