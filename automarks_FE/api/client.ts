@@ -13,7 +13,13 @@ import {
 // Detect environment variables from both Vite and Next.js naming conventions
 const getInitialApiBase = () => {
   const env = (import.meta as any).env || {};
-  return env.VITE_API_BASE || env.NEXT_PUBLIC_API_BASE || 'http://127.0.0.1:8000';
+  if (env.VITE_API_BASE) return env.VITE_API_BASE;
+  if (env.NEXT_PUBLIC_API_BASE) return env.NEXT_PUBLIC_API_BASE;
+  
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return 'http://127.0.0.1:8000';
+  }
+  return 'http://127.0.0.1:8000';
 };
 
 let API_BASE = localStorage.getItem('vtu_api_base_override') || getInitialApiBase();

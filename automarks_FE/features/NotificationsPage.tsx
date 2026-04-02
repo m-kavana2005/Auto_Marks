@@ -26,10 +26,10 @@ const formatAgo = (iso?: string | null) => {
 
 const mapLevel = (level: string) => {
     const l = (level || '').toLowerCase();
-    if (l === 'success') return { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50', badge: 'bg-emerald-100 text-emerald-700 dark:text-emerald-300', label: 'Success' };
-    if (l === 'warning') return { icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-50', badge: 'bg-amber-100 text-amber-700 dark:text-amber-300', label: 'Warning' };
-    if (l === 'error') return { icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50', badge: 'bg-rose-100 text-rose-700 dark:text-rose-300', label: 'Error' };
-    return { icon: BarChart3, color: 'text-indigo-500', bg: 'bg-indigo-50', badge: 'bg-indigo-100 text-indigo-700 dark:text-indigo-300', label: 'Info' };
+    if (l === 'success') return { icon: CheckCircle2, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10', badge: 'bg-emerald-100 text-emerald-700 dark:text-emerald-300', label: 'Success' };
+    if (l === 'warning') return { icon: AlertCircle, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10', badge: 'bg-amber-100 text-amber-700 dark:text-amber-300', label: 'Warning' };
+    if (l === 'error') return { icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-50 dark:bg-rose-500/10', badge: 'bg-rose-100 text-rose-700 dark:text-rose-300', label: 'Error' };
+    return { icon: BarChart3, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/20', badge: 'bg-indigo-100 text-indigo-700 dark:text-indigo-300', label: 'Info' };
 };
 
 const NotificationsPage: React.FC = () => {
@@ -100,7 +100,7 @@ const NotificationsPage: React.FC = () => {
                 {notifications.length > 0 && (
                     <button
                         onClick={handleClearAll}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-100 rounded-xl transition-colors"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 border border-rose-100 rounded-xl transition-colors"
                     >
                         <Trash2 size={16} />
                         Clear All
@@ -129,7 +129,7 @@ const NotificationsPage: React.FC = () => {
                         return (
                             <div
                                 key={n.id}
-                                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 flex gap-4 items-start hover:border-slate-200 dark:hover:border-slate-700 transition-colors"
+                                className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 flex gap-4 items-start hover:border-slate-200 dark:border-slate-700 dark:hover:border-slate-700 transition-colors"
                             >
                                 <div className={`shrink-0 w-12 h-12 rounded-2xl ${m.bg} flex items-center justify-center ${m.color}`}>
                                     <Icon size={22} />
@@ -151,7 +151,7 @@ const NotificationsPage: React.FC = () => {
                                 </div>
                                 <button
                                     onClick={() => handleDismiss(n.id)}
-                                    className="shrink-0 w-9 h-9 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                                    className="shrink-0 w-9 h-9 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:bg-rose-500/10 dark:hover:bg-rose-900/20 transition-colors"
                                     title="Dismiss"
                                 >
                                     <X size={16} />
