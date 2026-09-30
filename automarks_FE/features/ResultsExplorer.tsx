@@ -15,7 +15,7 @@ import { ResultMatrix } from '../types';
 
 const ResultsExplorer: React.FC = () => {
   const [matrix, setMatrix] = useState<ResultMatrix | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Meta options
@@ -31,7 +31,16 @@ const ResultsExplorer: React.FC = () => {
     status: '' as '' | 'pass' | 'fail',  // '' = show all
   });
 
+  const hasAllFilters = Boolean(filters.batch && filters.branch && filters.semester);
+
   const fetchData = async () => {
+    if (!hasAllFilters) {
+      setMatrix(null);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     try {
@@ -65,10 +74,15 @@ const ResultsExplorer: React.FC = () => {
   }, [filters.batch, filters.branch]);
 
   useEffect(() => {
-    // Configurable: Fetch on any filter change or wait for manual sync?
-    // For typical "Explorer", auto-fetch is better UX if dataset isn't massive.
+    if (!hasAllFilters) {
+      setMatrix(null);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     fetchData();
-  }, [filters.batch, filters.branch, filters.semester]);
+  }, [filters.batch, filters.branch, filters.semester, hasAllFilters]);
 
 
   const handleExport = () => {
@@ -247,7 +261,14 @@ const ResultsExplorer: React.FC = () => {
 
       {/* Main Content */}
       <div className="glass-card rounded-[2rem] overflow-hidden shadow-sm min-h-[400px] flex flex-col border border-slate-200 dark:border-slate-700/60">
-        {error ? (
+        {!hasAllFilters ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-20">
+            <Search size={48} className="mb-4 opacity-20 text-slate-400" />
+            <p className="font-bold text-lg text-slate-700 dark:text-slate-200">
+              Please select a Batch, Branch, and Semester to view the results.
+            </p>
+          </div>
+        ) : error ? (
           <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
             <div className="w-20 h-20 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center text-rose-500 mb-6">
               <WifiOff size={40} />

@@ -37,6 +37,8 @@ class Student(Base):
     batch = Column(String(9), index=True, nullable=True)
     # Branch extracted from USN (e.g. "1SV22AD005" -> "AD")
     branch = Column(String(10), index=True, nullable=True)
+    # Nullable preserves every existing student as a legacy-scheme student.
+    scheme = Column(String(20), index=True, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -68,10 +70,31 @@ class Subject(Base):
     subject_name = Column(String(500), nullable=False)
     # CBCS credit value for GPA calculations. Use 0 for mandatory non-credit courses.
     credits = Column(Integer, nullable=True)
+    # Metadata for scheme-aware catalog entries; existing subjects remain NULL/legacy.
+    scheme = Column(String(20), index=True, nullable=True)
+    semester_number = Column(Integer, nullable=True)
+    branch = Column(String(50), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     results = relationship("Result", back_populates="subject", cascade="all, delete-orphan")
+
+
+class SubjectSchemeCredit(Base):
+    """Scheme-specific credit mapping without altering legacy subject records."""
+    __tablename__ = "subject_scheme_credits"
+    __table_args__ = (
+        UniqueConstraint("subject_code", "scheme", name="uq_subject_scheme_credit"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    subject_code = Column(String(20), nullable=False, index=True)
+    subject_name = Column(String(500), nullable=True)
+    credits = Column(Integer, nullable=False)
+    scheme = Column(String(20), nullable=False, index=True)
+    semester_number = Column(Integer, nullable=True)
+    branch = Column(String(50), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
 class Result(Base):
@@ -140,6 +163,5 @@ class Notification(Base):
     level = Column(String(20), nullable=False, index=True, default="info")
     cleared = Column(Boolean, nullable=False, default=False, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-
 
 

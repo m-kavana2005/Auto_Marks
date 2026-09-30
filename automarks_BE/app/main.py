@@ -17,7 +17,7 @@ import asyncio
 import json
 import aiofiles  # Added for async file operations
 from logging.handlers import RotatingFileHandler
-from sqlalchemy import inspect, text, distinct, or_
+from sqlalchemy import inspect, text, distinct, or_, func
 import pandas as pd
 
 from app.database import get_db, init_db, engine
@@ -33,6 +33,8 @@ from app.schemas import (
 from app.services.extractor import extract_pdf, VTUResultExtractor, _extract_branch_from_usn
 from app.services.analyzer import ResultAnalyzer
 import logging
+
+
 
 # Load environment variables
 load_dotenv()
@@ -84,6 +86,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
+
+@app.get("/health", tags=["System"])
+def health_check():
+    """Lightweight readiness check for the frontend and local launch scripts."""
+    return {"status": "ok"}
+
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -101,7 +110,18 @@ app.add_middleware(
 
 
 
+
 # Initialize database on startup
+@app.on_event("startup")
+def startup():
+    print(f"DEBUG: Initializing database tables...")
+    from app.database import engine
+    from app.database import Base
+    # Import all models to ensure they are registered
+    import app.models
+    Base.metadata.create_all(bind=engine)
+    print(f"DEBUG: Registered tables: {list(Base.metadata.tables.keys())}")
+    print("Application startup complete.")
 
 # ==================== WEBSOCKET & LOGGING SETUP ====================
 
@@ -178,12 +198,12 @@ async def startup_event():
 
         if "batch" not in student_cols:
             with engine.begin() as conn:
-                conn.execute(text("ALTER TABLE students ADD COLUMN IF NOT EXISTS batch VARCHAR(9) NULL"))
+                conn.execute(text("ALTER TABLE students ADD COLUMN batch VARCHAR(9) NULL"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS ix_students_batch ON students (batch)"))
 
         if "branch" not in student_cols:
             with engine.begin() as conn:
-                conn.execute(text("ALTER TABLE students ADD COLUMN IF NOT EXISTS branch VARCHAR(10) NULL"))
+                conn.execute(text("ALTER TABLE students ADD COLUMN branch VARCHAR(10) NULL"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS ix_students_branch ON students (branch)"))
 
         # Track upload batch UUID on results for batch-level deletes/auditing
@@ -194,14 +214,14 @@ async def startup_event():
 
         if "upload_batch_id" not in result_cols:
             with engine.begin() as conn:
-                conn.execute(text("ALTER TABLE results ADD COLUMN IF NOT EXISTS upload_batch_id VARCHAR(50) NULL"))
+                conn.execute(text("ALTER TABLE results ADD COLUMN upload_batch_id VARCHAR(50) NULL"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS ix_results_upload_batch_id ON results (upload_batch_id)"))
 
         # marks_source: tracks whether marks came from 'original', 'rv', or 'final' upload
         if "marks_source" not in result_cols:
             with engine.begin() as conn:
                 conn.execute(text(
-                    "ALTER TABLE results ADD COLUMN IF NOT EXISTS marks_source VARCHAR(10) DEFAULT 'original'"
+                    "ALTER TABLE results ADD COLUMN marks_source VARCHAR(10) DEFAULT 'original'"
                 ))
             logger.info("Schema evolution: added marks_source column to results")
 
@@ -213,7 +233,7 @@ async def startup_event():
 
         if "credits" not in subject_cols:
             with engine.begin() as conn:
-                conn.execute(text("ALTER TABLE subjects ADD COLUMN IF NOT EXISTS credits INT NULL"))
+                conn.execute(text("ALTER TABLE subjects ADD COLUMN credits INT NULL"))
 
         # Best-effort backfill for branch on existing students
         try:
@@ -674,6 +694,9 @@ async def get_upload_status(batch_id: str, db: Session = Depends(get_db)):
 
 @app.get("/analytics/matrix", response_model=ResultMatrixResponse)
 def get_result_matrix(
+    semester: Optional[int] = Query(None),
+    batch: Optional[str] = Query(None),
+    branch: Optional[str] = Query(None),
     exam_year: Optional[int] = Query(None),
     exam_month: Optional[str] = Query(None),
     db: Session = Depends(get_db)
@@ -699,7 +722,7 @@ def get_subject_wise_analysis(
     branch: Optional[str] = Query(None),
     exam_year: Optional[int] = Query(None, ge=2000, le=2100),
     exam_month: Optional[str] = Query(None),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db)
 ):
     """
     Subject-wise performance analysis.
@@ -721,6 +744,10 @@ def get_subject_wise_analysis(
 
 @app.get("/analytics/subject-wise/failed-students")
 def get_subject_failed_students(
+    semester: Optional[int] = Query(None),
+    batch: Optional[str] = Query(None),
+    branch: Optional[str] = Query(None),
+    subject_code: str = Query(...),
     exam_year: Optional[int] = Query(None, ge=2000, le=2100),
     exam_month: Optional[str] = Query(None),
     db: Session = Depends(get_db)
@@ -767,7 +794,10 @@ async def get_students(
 
 
 @app.get("/students/{usn}", response_model=StudentResponse)
-async def get_student_by_usn(usn: str, db: Session = Depends(get_db)):
+async def get_student_by_usn(
+    usn: str, 
+    db: Session = Depends(get_db)
+):
     """Get a single student by USN"""
     student = db.query(Student).filter(Student.usn == usn).first()
     if not student:
@@ -776,7 +806,10 @@ async def get_student_by_usn(usn: str, db: Session = Depends(get_db)):
 
 
 @app.post("/student", response_model=StudentResponse)
-async def create_student(student: StudentCreate, db: Session = Depends(get_db)):
+async def create_student(
+    student: StudentCreate, 
+    db: Session = Depends(get_db)
+):
     """Create a new student manually"""
     # Check if student exists
     existing = db.query(Student).filter(Student.usn == student.usn).first()
@@ -861,8 +894,8 @@ def get_student_semester_sgpa(
     Calculate SGPA for a single selected semester for a student.
 
     - Uses fixed VTU CBCS credits (never DB credits).
-    - Passed subjects are included in SGPA calculation.
-    - Failed / backlog subjects are returned separately and excluded from SGPA.
+    - Passed subjects contribute their grade points to SGPA.
+    - Failed / absent / backlog subjects are returned separately and count as 0 grade points.
     - The marks_source field ('original' | 'rv' | 'final') shows how the
       student earned the pass (e.g. 'rv' means passed after Revaluation).
 
@@ -1341,9 +1374,10 @@ async def get_semester_overview(
     if df.empty:
         return []
 
-    # Compute per-semester aggregates, grouped by Batch if available
+    # Compute per-semester aggregates, grouped by batch, branch, and semester
     df["batch"] = df["batch"].fillna("Unknown")
-    group_cols = ["batch", "semester"]
+    df["branch"] = df["branch"].fillna("Unknown")
+    group_cols = ["batch", "branch", "semester"]
     grouped = df.groupby(group_cols).agg(
         total_records=("usn", "count"),
         total_students=("usn", pd.Series.nunique),
@@ -1353,11 +1387,12 @@ async def get_semester_overview(
 
     grouped["avg_total_marks"] = grouped["avg_total_marks"].round(2)
     grouped["pass_rate"] = grouped["pass_rate"].round(2)
-    grouped = grouped.sort_values(["batch", "semester"])
+    grouped = grouped.sort_values(["batch", "branch", "semester"])
 
     return [
         {
             "batch": str(r.batch) if pd.notna(r.batch) else "Unknown",
+            "branch": str(r.branch) if pd.notna(r.branch) else "Unknown",
             "semester": int(r.semester),
             "total_records": int(r.total_records),
             "total_students": int(r.total_students),
@@ -2151,13 +2186,13 @@ def save_extracted_data(
                 raw_name = raw_code
 
             # Get or create subject
-            subject = db.query(Subject).filter(Subject.subject_code == raw_code).first()
+            subject = db.query(Subject).filter(func.upper(Subject.subject_code) == raw_code).first()
 
             # If code looks like it accidentally ate the first letter of the subject name,
             # try matching without a trailing letter.
             if subject is None and len(raw_code) > 1 and raw_code[-1].isalpha():
                 alt_code = raw_code[:-1]
-                alt_subject = db.query(Subject).filter(Subject.subject_code == alt_code).first()
+                alt_subject = db.query(Subject).filter(func.upper(Subject.subject_code) == alt_code).first()
                 if alt_subject is not None:
                     subject = alt_subject
                     raw_code = alt_code

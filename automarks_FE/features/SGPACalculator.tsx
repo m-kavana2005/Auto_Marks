@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Calculator, AlertTriangle, ChevronDown, Award } from 'lucide-react';
 import { endpoints } from '../api/client';
 
@@ -17,6 +17,17 @@ interface BatchSGPAResult {
     average_sgpa: number;
     students: BatchSGPAStudent[];
 }
+
+type SgpaFilter = 'all' | '9.0' | '8.5-9.0' | '8.0-8.5' | '7.5-8.0' | '7.0-7.5';
+
+const SGPA_FILTERS: Array<{ value: SgpaFilter; label: string; matches: (sgpa: number) => boolean }> = [
+    { value: 'all', label: 'All Students', matches: () => true },
+    { value: '9.0', label: 'SGPA ≥ 9.0', matches: (sgpa) => sgpa >= 9.0 },
+    { value: '8.5-9.0', label: 'SGPA ≥ 8.5 and < 9.0', matches: (sgpa) => sgpa >= 8.5 && sgpa < 9.0 },
+    { value: '8.0-8.5', label: 'SGPA ≥ 8.0 and < 8.5', matches: (sgpa) => sgpa >= 8.0 && sgpa < 8.5 },
+    { value: '7.5-8.0', label: 'SGPA ≥ 7.5 and < 8.0', matches: (sgpa) => sgpa >= 7.5 && sgpa < 8.0 },
+    { value: '7.0-7.5', label: 'SGPA ≥ 7.0 and < 7.5', matches: (sgpa) => sgpa >= 7.0 && sgpa < 7.5 },
+];
 
 // ─── SGPA Display ─────────────────────────────────────────────────────────────
 
@@ -54,7 +65,7 @@ export default function SGPACalculator() {
     const [branches, setBranches] = useState<string[]>([]);
     const [selectedBranch, setSelectedBranch] = useState<string>('');
     const [semester, setSemester] = useState(1);
-    const [sgpaFilter, setSgpaFilter] = useState<number>(0);
+    const [sgpaFilter, setSgpaFilter] = useState<SgpaFilter>('all');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [result, setResult] = useState<BatchSGPAResult | null>(null);
@@ -92,9 +103,9 @@ export default function SGPACalculator() {
         fetchBranches();
     }, [selectedBatch]);
 
-    const handleCalculate = async () => {
+    const loadResults = useCallback(async () => {
         if (!selectedBatch) {
-            setError('Please select a batch');
+            setResult(null);
             return;
         }
         setLoading(true);
@@ -108,15 +119,24 @@ export default function SGPACalculator() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [selectedBatch, semester, selectedBranch]);
+
+    // Keep displayed records current whenever a data-defining selection changes.
+    useEffect(() => {
+        void loadResults();
+    }, [loadResults]);
+
+    const activeSgpaFilter = SGPA_FILTERS.find((filter) => filter.value === sgpaFilter) ?? SGPA_FILTERS[0];
 
     // Filter and sort students
-    const filteredStudents = result?.students
-        .filter(s => s.sgpa >= sgpaFilter)
-        .sort((a, b) => a.usn.localeCompare(b.usn)) || [];
+    const filteredStudents = useMemo(() => (
+        result?.students
+            .filter((student) => activeSgpaFilter.matches(student.sgpa))
+            .sort((a, b) => b.sgpa - a.sgpa || a.usn.localeCompare(b.usn)) ?? []
+    ), [result, activeSgpaFilter]);
 
     const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setSgpaFilter(Number(e.target.value));
+        setSgpaFilter(e.target.value as SgpaFilter);
     };
 
     return (
@@ -143,7 +163,7 @@ export default function SGPACalculator() {
                         <select
                             className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             value={selectedBatch}
-                            onChange={(e) => { setSelectedBatch(e.target.value); setResult(null); }}
+                            onChange={(e) => { setSelectedBatch(e.target.value); setSelectedBranch(''); }}
                         >
                             <option value="" disabled>Select a batch</option>
                             {batches.map((b) => (
@@ -161,7 +181,7 @@ export default function SGPACalculator() {
                         <select
                             className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             value={selectedBranch}
-                            onChange={(e) => { setSelectedBranch(e.target.value); setResult(null); }}
+                            onChange={(e) => setSelectedBranch(e.target.value)}
                             disabled={!selectedBatch || branches.length === 0}
                         >
                             <option value="">All Branches</option>
@@ -180,7 +200,7 @@ export default function SGPACalculator() {
                         <select
                             className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-900 dark:text-white appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
                             value={semester}
-                            onChange={(e) => { setSemester(Number(e.target.value)); setResult(null); }}
+                            onChange={(e) => setSemester(Number(e.target.value))}
                         >
                             {[1, 2, 3, 4, 5, 6, 7, 8].map((s) => (
                                 <option key={s} value={s}>Semester {s}</option>
@@ -199,12 +219,9 @@ export default function SGPACalculator() {
                             value={sgpaFilter}
                             onChange={handleFilterChange}
                         >
-                            <option value={0}>All Students</option>
-                            <option value={9.0}>SGPA ≥ 9.0</option>
-                            <option value={8.5}>SGPA ≥ 8.5</option>
-                            <option value={8.0}>SGPA ≥ 8.0</option>
-                            <option value={7.5}>SGPA ≥ 7.5</option>
-                            <option value={7.0}>SGPA ≥ 7.0</option>
+                            {SGPA_FILTERS.map((filter) => (
+                                <option key={filter.value} value={filter.value}>{filter.label}</option>
+                            ))}
                         </select>
                         <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     </div>
@@ -213,7 +230,7 @@ export default function SGPACalculator() {
                 {/* Calculate Button */}
                 <div className="sgpa-btn-wrapper">
                     <button
-                        onClick={handleCalculate}
+                        onClick={loadResults}
                         disabled={loading || !selectedBatch}
                         className="w-full h-[42px] bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm px-4 flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -250,7 +267,7 @@ export default function SGPACalculator() {
                     <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                         <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center">
                             <h2 className="text-sm font-bold text-slate-900 dark:text-white">Batch Results ({filteredStudents.length}/{result.students.length})</h2>
-                            {sgpaFilter > 0 && <span className="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:text-indigo-300 dark:bg-indigo-50 dark:bg-indigo-900/200/20 dark:text-indigo-400">Filter: SGPA ≥ {sgpaFilter.toFixed(1)}</span>}
+                            {sgpaFilter !== 'all' && <span className="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 text-indigo-700 dark:text-indigo-300 dark:bg-indigo-50 dark:bg-indigo-900/200/20 dark:text-indigo-400">Filter: {activeSgpaFilter.label}</span>}
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm whitespace-nowrap">

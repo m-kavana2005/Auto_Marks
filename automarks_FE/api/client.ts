@@ -10,23 +10,47 @@ import {
   ResultMatrix
 } from '../types';
 
+const DEFAULT_API_BASE = 'http://127.0.0.1:8000';
+
+const normalizeApiBase = (value?: string | null) => {
+  if (!value) return DEFAULT_API_BASE;
+
+  const trimmed = value.trim();
+  if (!trimmed) return DEFAULT_API_BASE;
+
+  try {
+    const url = new URL(trimmed);
+    return `${url.protocol}//${url.host}`;
+  } catch {
+    return DEFAULT_API_BASE;
+  }
+};
+
 // Detect environment variables from both Vite and Next.js naming conventions
 const getInitialApiBase = () => {
   const env = (import.meta as any).env || {};
-  if (env.VITE_API_BASE) return env.VITE_API_BASE;
-  if (env.NEXT_PUBLIC_API_BASE) return env.NEXT_PUBLIC_API_BASE;
-  
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    return 'http://127.0.0.1:8000';
+  const envBase = env.VITE_API_BASE || env.NEXT_PUBLIC_API_BASE;
+  if (envBase) return normalizeApiBase(envBase);
+
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (['localhost', '127.0.0.1', '::1', '0.0.0.0'].includes(hostname)) {
+      return DEFAULT_API_BASE;
+    }
   }
-  return 'http://127.0.0.1:8000';
+
+  return DEFAULT_API_BASE;
 };
 
-let API_BASE = localStorage.getItem('vtu_api_base_override') || getInitialApiBase();
+let API_BASE = typeof window !== 'undefined'
+  ? normalizeApiBase(localStorage.getItem('vtu_api_base_override')) || getInitialApiBase()
+  : getInitialApiBase();
 
 export const setApiBaseOverride = (url: string) => {
-  API_BASE = url;
-  localStorage.setItem('vtu_api_base_override', url);
+  API_BASE = normalizeApiBase(url);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('vtu_api_base_override', API_BASE);
+  }
 };
 
 export const getApiBase = () => API_BASE;
@@ -38,7 +62,8 @@ interface RequestOptions extends RequestInit {
 export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { params, ...rest } = options;
 
-  let url = `${API_BASE}${endpoint}`;
+  const base = API_BASE.replace(/\/$/, '');
+  let url = `${base}${endpoint}`;
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -574,4 +599,5 @@ export const endpoints = {
   }>> => {
     return apiFetch('/analytics/subject-wise/failed-students', { params: opts as any });
   },
+
 };

@@ -8,7 +8,7 @@ import numpy as np
 from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from app.models import Student, Result, Subject, Semester
+from app.models import Student, Result, Subject, Semester, SubjectSchemeCredit
 from app.schemas import (
     SubjectStatistics, SemesterSummary, ResultMatrixResponse,
     StudentHistoryResponse, StudentHistorySemester, StudentHistorySubject, StudentResponse
@@ -76,14 +76,19 @@ VTU_CREDITS: dict[str, int] = {
     # ---- Semester IV (Total = 19) ----
     "BCS401": 3,
     "BAI402": 4,
+    "BAD402": 4,
     "BCS403": 4,
     "BCSL404": 1,
     "BCS405A": 3, "BCS405B": 3, "BCS405C": 3,
+    "BCS405": 3,
     "BXX405A": 3, "BXX405B": 3,
     "BBOK407": 2,
+    "BBOC407": 2,
     "BUHK408": 1,
     "BDS456A": 1, "BDS456B": 1,
+    "BDSL456": 1,
     "BXX456A": 1,
+    "BNSK459": 0,
     # ---- Semester V (Total = 22) ----
     "BCS501": 3,
     "BCS502": 4,
@@ -97,13 +102,16 @@ VTU_CREDITS: dict[str, int] = {
     # ---- Semester VI (Total = 18) ----
     "BAD601": 4,
     "BCS602": 4,
+    "BIKS609": 0,
     "BCS613A": 3, "BCS613B": 3, "BCS613C": 3,
     "BXX613A": 3, "BXX613B": 3, "BXX613C": 3,
     "BCS654A": 3, "BCS654B": 3,
     "BXX654A": 3, "BXX654B": 3,
     "BAD685": 2,
+    "BNSK658": 0,
     "BCSL606": 1,
     "BCS657A": 1, "BCS657B": 1,
+    "BCSL657D": 1,
     "BXX657A": 1,
     # ---- Semester VII (Total = 24) ----
     "BAI701": 4,
@@ -177,8 +185,13 @@ class ResultAnalyzer:
         if percent >= 40: return 4
         return 0
 
-    @staticmethod
-    def _get_vtu_credits(subject_code: str, semester: Optional[int] = None) -> int:
+    def _get_vtu_credits(
+        self,
+        subject_code: str,
+        semester: Optional[int] = None,
+        scheme: Optional[str] = None,
+        catalog_credits: Optional[int] = None,
+    ) -> int:
         """
         Return the FIXED VTU credit value for a subject code.
         Lookup order:
@@ -186,9 +199,22 @@ class ResultAnalyzer:
           2. Upper-cased exact match
           3. Prefix match in _VTU_SEM_DEFAULTS for the given semester
           4. Fallback: 3 credits (most common for theory papers)
-        Credits from the database are NEVER used.
+        For a 2025 student, the scheme catalog is authoritative.  Legacy students
+        keep the existing fixed-credit lookup unchanged.
         """
         code = (subject_code or "").strip().upper()
+        # 2025-coded subjects are safe to recognize during PDF imports even before
+        # a student has been explicitly assigned a scheme.  Legacy codes never use
+        # the ``1B...`` namespace, so existing batches retain their prior lookup.
+        if str(scheme or "").strip() == "2025" or code.startswith("1B"):
+            mapping = self.db.query(SubjectSchemeCredit.credits).filter(
+                func.upper(SubjectSchemeCredit.subject_code) == code,
+                SubjectSchemeCredit.scheme == "2025",
+            ).scalar()
+            if mapping is not None:
+                return int(mapping)
+            if catalog_credits is not None:
+                return int(catalog_credits)
         if code in VTU_CREDITS:
             return VTU_CREDITS[code]
         # Try prefix matching from semester-specific defaults
@@ -237,6 +263,7 @@ class ResultAnalyzer:
             Student.student_name,
             Student.batch,
             Student.branch,
+            Student.scheme,
             Semester.semester_number,
             Semester.exam_month,
             Semester.exam_year,
@@ -269,7 +296,7 @@ class ResultAnalyzer:
         results = query.all()
 
         df = pd.DataFrame(results, columns=[
-            'usn', 'student_name', 'batch', 'branch', 'semester', 'exam_month', 'exam_year',
+            'usn', 'student_name', 'batch', 'branch', 'scheme', 'semester', 'exam_month', 'exam_year',
             'subject_id', 'subject_code', 'subject_name', 'credits',
             'internal_marks', 'external_marks', 'total_marks',
             'result_status', 'announced_date'
@@ -440,7 +467,7 @@ class ResultAnalyzer:
 
         # Apply FIXED VTU credits — DB credits are intentionally ignored
         df['vtu_credits'] = df.apply(
-            lambda r: self._get_vtu_credits(r['subject_code'], r['semester']), axis=1
+            lambda r: self._get_vtu_credits(r['subject_code'], r['semester'], r.get('scheme'), r.get('credits')), axis=1
         )
         df['credits_earned'] = df.apply(
             lambda r: r['vtu_credits'] if str(r['result_status']).upper() in ('P', 'PASS') else 0, axis=1
@@ -536,7 +563,7 @@ class ResultAnalyzer:
                     return self._percentage_to_grade_points(pct, r['result_status'])
 
                 fixed_credits = group.apply(
-                    lambda r: self._get_vtu_credits(r['subject_code'], r['semester']), axis=1
+                    lambda r: self._get_vtu_credits(r['subject_code'], r['semester'], r.get('scheme'), r.get('credits')), axis=1
                 )
                 weighted_gp = (group.apply(calc_gp, axis=1) * fixed_credits).sum()
                 total_credits = fixed_credits.sum()
@@ -745,7 +772,7 @@ class ResultAnalyzer:
 
         df['grade_points'] = df.apply(calc_gp, axis=1)
         df['vtu_credits'] = df.apply(
-            lambda r: self._get_vtu_credits(r['subject_code'], r.get('semester')), axis=1
+            lambda r: self._get_vtu_credits(r['subject_code'], r.get('semester'), r.get('scheme'), r.get('credits')), axis=1
         )
 
         # Calculate average GPA per student using fixed credits
@@ -987,7 +1014,7 @@ class ResultAnalyzer:
         df['grade_points'] = df.apply(calculate_gp, axis=1)
         # Fixed VTU credits per subject code
         df['vtu_credits'] = df.apply(
-            lambda r: self._get_vtu_credits(r['subject_code'], r['semester']), axis=1
+            lambda r: self._get_vtu_credits(r['subject_code'], r['semester'], r.get('scheme'), r.get('credits')), axis=1
         )
         df['credits_earned'] = df.apply(
             lambda r: r['vtu_credits'] if str(r['result_status']).upper() in ('P', 'PASS') else 0, axis=1
@@ -1160,7 +1187,7 @@ class ResultAnalyzer:
             marks = row.total_marks
             source = row.marks_source or "original"
 
-            credits = self._get_vtu_credits(code, semester)
+            credits = self._get_vtu_credits(code, semester, student.scheme)
             pct = self._marks_to_percentage(marks) if is_passed else None
             gp = self._percentage_to_grade_points(pct, row.result_status) if is_passed else 0
             gl = self._percentage_to_grade_letter(pct, row.result_status) if is_passed else "F"
@@ -1175,17 +1202,25 @@ class ResultAnalyzer:
                 credits=credits,
             )
 
+            # PP / non-credit subjects are retained for display but omitted from
+            # the SGPA totals below, regardless of marks or result status.
             if is_passed:
                 passed_subjects.append(detail)
             else:
                 failed_subjects.append(detail)
 
         # ── 5. Compute SGPA ──────────────────────────────────────────────────
-        # SGPA is calculated over PASSED subjects only.
-        # Failed subjects are excluded from both numerator and denominator.
-        total_credits = sum(s.credits for s in passed_subjects)
-        weighted_gp   = sum(s.grade_point * s.credits for s in passed_subjects)
+        # Failed and absent subjects are F-grade subjects: 0 grade points, but
+        # their credits still count in SGPA. Zero-credit courses stay omitted.
+        credit_bearing_subjects = [
+            subject
+            for subject in [*passed_subjects, *failed_subjects]
+            if subject.credits > 0
+        ]
+        total_credits = sum(subject.credits for subject in credit_bearing_subjects)
+        weighted_gp = sum(subject.grade_point * subject.credits for subject in credit_bearing_subjects)
         sgpa = round(weighted_gp / total_credits, 2) if total_credits > 0 else 0.0
+        passed_credits = sum(subject.credits for subject in passed_subjects if subject.credits > 0)
 
         # Sort both lists by subject code for consistency
         passed_subjects.sort(key=lambda s: s.subject_code)
@@ -1196,7 +1231,7 @@ class ResultAnalyzer:
             student_name=student.student_name,
             semester=semester,
             sgpa=sgpa,
-            total_credits_passed=total_credits,
+            total_credits_passed=passed_credits,
             passed_subjects=passed_subjects,
             failed_subjects=failed_subjects,
         )
@@ -1215,6 +1250,7 @@ class ResultAnalyzer:
             return BatchSGPAResponse(batch=batch, semester=semester, average_sgpa=0.0, students=[])
 
         usns = {s.usn: s.student_name for s in students}
+        student_schemes = {s.usn: s.scheme for s in students}
 
         rows_query = (
             self.db.query(
@@ -1269,14 +1305,19 @@ class ResultAnalyzer:
             for row in rows_for_usn:
                 status = str(row.result_status or "").upper()
                 is_passed = status in ("P", "PASS")
-                if is_passed:
-                    credits = self._get_vtu_credits(row.subject_code, semester)
-                    pct = self._marks_to_percentage(row.total_marks)
-                    gp = self._percentage_to_grade_points(pct, row.result_status)
-                    total_credits += credits
-                    weighted_gp += (gp * credits)
+                credits = self._get_vtu_credits(
+                    row.subject_code, semester, student_schemes.get(usn)
+                )
+                # A zero-credit course (for example PP) is not an SGPA subject:
+                # it contributes to neither numerator nor denominator.
+                if credits <= 0:
+                    continue
+                pct = self._marks_to_percentage(row.total_marks) if is_passed else None
+                gp = self._percentage_to_grade_points(pct, row.result_status) if is_passed else 0
+                total_credits += credits
+                weighted_gp += (gp * credits)
 
-            # SGPA is computed from passed subjects only; failed ones are already excluded above.
+            # Failed and absent subjects stay in the denominator with 0 grade points.
             sgpa = round(weighted_gp / total_credits, 2) if total_credits > 0 else 0.0
 
             batch_students.append(BatchSGPAStudent(
@@ -1288,7 +1329,7 @@ class ResultAnalyzer:
 
         avg_sgpa = round(sum(s.sgpa for s in batch_students) / len(batch_students), 2) if batch_students else 0.0
 
-        batch_students.sort(key=lambda x: x.usn)
+        batch_students.sort(key=lambda student: (-student.sgpa, student.usn))
 
         return BatchSGPAResponse(
             batch=batch,

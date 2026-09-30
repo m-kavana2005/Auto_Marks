@@ -7,7 +7,6 @@ import {
   Route,
   Link,
   useLocation,
-  useNavigate,
   Outlet,
   Navigate
 } from 'react-router-dom';
@@ -28,7 +27,6 @@ import {
   Clock,
   Sun,
   Moon,
-  LogOut,
   GraduationCap,
   LibraryBig,
   ShieldCheck
@@ -647,13 +645,14 @@ const SettingsModal = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
 };
 
 const ProfileDropdown = ({ isOpen, onClose, onOpenSettings }: { isOpen: boolean, onClose: () => void, onOpenSettings: () => void }) => {
+
   if (!isOpen) return null;
   return (
     <>
       <div className="fixed inset-0 z-[60]" onClick={onClose} />
       <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 z-[70] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-        <div className="p-5 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 dark:bg-slate-800/50">
-          <h4 className="font-bold text-slate-900 dark:text-white">Registrar</h4>
+        <div className="p-5 border-b border-slate-50 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+          <h4 className="font-bold text-slate-900 dark:text-white truncate">Auto Marks</h4>
           <p className="text-xs text-slate-500 dark:text-slate-400">Administrator</p>
         </div>
         <div className="p-2 space-y-1">
@@ -701,11 +700,9 @@ const DashboardLayout = () => {
     { to: '/analytics', icon: BarChart3, label: 'Analytics' },
     { to: '/subject-analysis', icon: LibraryBig, label: 'Subject Analysis' },
     { to: '/export', icon: Download, label: 'Exports' },
+    { to: '/admin', icon: ShieldCheck, label: 'Admin Panel' },
     { to: '/settings', icon: Settings, label: 'Settings' },
   ];
-
-  // All users can access admin panel for now
-  navItems.push({ to: '/admin', icon: ShieldCheck, label: 'Admin Panel' });
 
   return (
     <div className="flex h-screen overflow-hidden bg-white dark:bg-slate-950 relative transition-colors duration-300">
@@ -806,8 +803,8 @@ const DashboardLayout = () => {
               {!isSidebarCollapsed && (
                 <>
                   <div className="text-left flex-1 overflow-hidden">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">Registrar</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Administrator</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate">Auto Marks</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate uppercase tracking-tighter">Administrator</p>
                   </div>
                   <ChevronRight size={14} className={`text-slate-400 transition-transform ${isProfileOpen ? 'rotate-90' : ''}`} />
                 </>
@@ -854,28 +851,28 @@ export default function App() {
   const RouterComponent = isBlobEnvironment ? MemoryRouter : BrowserRouter;
   return (
     <RouterComponent>
-        <Routes>
-          {/* Public Landing Page */}
-          <Route path="/" element={<LandingPage />} />
-          
-          {/* Dashboard routes */}
-          <Route element={<DashboardLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/upload" element={<UploadPage />} />
-            <Route path="/results" element={<ResultsExplorer />} />
-            <Route path="/profile" element={<StudentProfile />} />
-            <Route path="/sgpa" element={<SGPACalculator />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/subject-analysis" element={<SubjectAnalysis />} />
-            <Route path="/export" element={<ExportPage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Route>
+      <Routes>
+        {/* Public Landing Page */}
+        <Route path="/" element={<LandingPage />} />
 
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        {/* Dashboard routes - all public, no auth required */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/upload" element={<UploadPage />} />
+          <Route path="/results" element={<ResultsExplorer />} />
+          <Route path="/profile" element={<StudentProfile />} />
+          <Route path="/sgpa" element={<SGPACalculator />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/subject-analysis" element={<SubjectAnalysis />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/export" element={<ExportPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Route>
+
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
     </RouterComponent>
   );
 }

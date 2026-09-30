@@ -1,0 +1,5 @@
+c:/Users/mkava/Desktop/projects/.venv/Scripts/Activate.ps1
+in automarks_BE
+        python -m uv run python run_api.py
+in automarks_FE
+    npm run dev

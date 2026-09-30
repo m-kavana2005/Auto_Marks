@@ -11,9 +11,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 if __name__ == "__main__":
+    host = os.getenv("API_HOST", "127.0.0.1").strip() or "127.0.0.1"
     uvicorn.run(
         "app.main:app",
-        host=os.getenv("API_HOST", "0.0.0.0"),
+        host=host,
         port=int(os.getenv("API_PORT", 8000)),
         reload=os.getenv("API_RELOAD", "True") == "True",
         reload_dirs=["app"],

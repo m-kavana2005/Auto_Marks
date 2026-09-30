@@ -45,6 +45,7 @@ const StudentProfile: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [gpa, setGpa] = useState<StudentGpaProgression | null>(null);
   const [expandedSemesters, setExpandedSemesters] = useState<number[]>([]);
+  const [selectedSemester, setSelectedSemester] = useState<number | ''>('');
 
   // Edit Mode State
   const [isEditing, setIsEditing] = useState(false);
@@ -231,6 +232,7 @@ const StudentProfile: React.FC = () => {
       setSummary(summaryData);
       setGpa(gpaData);
       setAllResults(resultsData);
+      setSelectedSemester(latestSemester ?? '');
 
       if (latestSemester) {
         setExpandedSemesters([latestSemester]);
@@ -381,85 +383,18 @@ const StudentProfile: React.FC = () => {
       {student && summary && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-20 animate-in fade-in duration-500">
 
-          {/* Left Column: Stats & Graphs */}
+          {/* Left Column: Simplified Profile Summary */}
           <div className="space-y-8">
-            {/* Student Card */}
             <div className="glass-card rounded-[2.5rem] p-8 text-center relative overflow-hidden">
-              {/* Edit Button */}
-              <button
-                onClick={isEditing ? saveChanges : startEditing}
-                className={`absolute top-6 right-6 p-3 rounded-xl transition-all shadow-sm z-20 ${isEditing
-                  ? 'bg-emerald-50 dark:bg-emerald-500/100 text-white hover:bg-emerald-600'
-                  : 'bg-white dark:bg-slate-900 text-slate-400 hover:text-indigo-600 dark:text-indigo-400'
-                  }`}
-                disabled={isLoading}
-              >
-                {isEditing ? <Save size={20} /> : <Edit2 size={20} />}
-              </button>
-
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/20 rounded-full -mr-16 -mt-16 opacity-50"></div>
               <img
                 src="/student-avatar.svg"
                 alt="Student"
                 className="w-32 h-32 rounded-3xl mx-auto mb-6 border-4 border-white shadow-xl relative z-10 bg-indigo-50 dark:bg-indigo-900/20"
               />
               <h3 className="text-2xl font-black text-slate-900 dark:text-white">{student.student_name}</h3>
-              <p className="text-indigo-600 dark:text-indigo-400 font-bold mb-6">{student.usn}</p>
-
-              <div className="space-y-4 text-left border-t border-slate-100 dark:border-slate-800 pt-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400">
-                      <Award size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Avg %</p>
-                      <p className="text-lg font-black text-slate-900 dark:text-white mt-1">{summary.overall_avg.toFixed(2)}%</p>
-                    </div>
-                  </div>
-                  {gpa?.gpa?.length ? (
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                        <div className="font-serif font-black text-lg">A+</div>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">CGPA</p>
-                        <p className="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-1">
-                          {gpa.gpa[gpa.gpa.length - 1].cgpa.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400">
-                      <BookOpen size={18} />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Sem</p>
-                      <p className="text-lg font-black text-slate-900 dark:text-white mt-1">{student.current_semester || 'N/A'}</p>
-                    </div>
-                  </div>
-                  {gpa?.gpa?.length ? (
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                        <Hash size={18} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Credits</p>
-                        <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                          {gpa.gpa.reduce((sum, s) => sum + s.total_credits, 0)}
-                        </p>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
+              <p className="text-indigo-600 dark:text-indigo-400 font-bold">{student.usn}</p>
             </div>
 
-            {/* Quick Stats */}
             <div className="glass-card rounded-[2.5rem] p-8">
               <h4 className="text-lg font-black text-slate-900 dark:text-white mb-6">Overview</h4>
               <div className="space-y-6">
@@ -489,38 +424,32 @@ const StudentProfile: React.FC = () => {
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* GPA Graph */}
-            {gpa?.gpa?.length ? (
-              <div className="glass-card rounded-[2.5rem] p-8">
-                <h4 className="text-lg font-black text-slate-900 dark:text-white mb-6">Performance Trend</h4>
-                <div className="h-56">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={gpa.gpa} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="semester" tickLine={false} axisLine={false} tick={{ fontSize: 11, fontWeight: 700, fill: '#94a3b8' }} />
-                      <YAxis tickLine={false} axisLine={false} domain={[0, 10]} tick={{ fontSize: 11, fontWeight: 700, fill: '#94a3b8' }} />
-                      <Tooltip
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontWeight: 'bold' }}
-                      />
-                      <Line type="monotone" dataKey="sgpa" stroke="#4f46e5" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} />
-                      <Line type="monotone" dataKey="cgpa" stroke="#0f172a" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} />
-                    </LineChart>
-                  </ResponsiveContainer>
+              {summary?.semesters?.length ? (
+                <div className="mt-6">
+                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-2 block">
+                    Semester
+                  </label>
+                  <select
+                    value={selectedSemester}
+                    onChange={(e) => {
+                      const nextSemester = e.target.value ? Number(e.target.value) : '';
+                      setSelectedSemester(nextSemester);
+                      if (typeof nextSemester === 'number') {
+                        setExpandedSemesters([nextSemester]);
+                      }
+                    }}
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm font-semibold text-slate-900 dark:text-white outline-none shadow-sm appearance-none"
+                  >
+                    {summary.semesters.map((semester) => (
+                      <option key={semester.semester} value={semester.semester}>
+                        Semester {semester.semester}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <div className="flex justify-center gap-4 mt-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-1 bg-indigo-600 rounded-full"></div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">SGPA</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-1 bg-slate-900 rounded-full"></div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">CGPA</span>
-                  </div>
-                </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
 
           {/* Right Column: Full History */}

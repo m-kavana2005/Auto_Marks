@@ -47,6 +47,7 @@ class StudentBase(BaseModel):
     student_name: str = Field(..., max_length=255)
     batch: Optional[str] = Field(None, max_length=9)
     branch: Optional[str] = Field(None, max_length=10)
+    scheme: Optional[str] = Field(None, max_length=20)
 
 
 class StudentCreate(StudentBase):
@@ -290,7 +291,7 @@ class SGPAResponse(BaseModel):
     sgpa: float
     total_credits_passed: int   # sum of credits of passed subjects only
     passed_subjects: List[SGPASubjectDetail]
-    failed_subjects: List[SGPASubjectDetail]  # shown separately; NOT in SGPA
+    failed_subjects: List[SGPASubjectDetail]  # shown separately; counted as 0 GP in SGPA
 
 
 class BatchSGPAStudent(BaseModel):
